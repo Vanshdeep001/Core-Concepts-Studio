@@ -41,13 +41,13 @@ export default function Loader() {
             </div>
             <div className="loader-letters">
                 <div className="loader-letter">C</div>
-                <div className="loader-letter">P</div>
+                <div className="loader-letter">S</div>
             </div>
             <div className="loader-progress-bar">
                 <div className="loader-progress-fill" />
             </div>
             <div style={{ position: 'relative', zIndex: 2, fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.2em', opacity: 0.7 }}>
-                CPU SCHEDULING PLATFORM
+                CORE CONCEPTS STUDIO
             </div>
         </div>
     );

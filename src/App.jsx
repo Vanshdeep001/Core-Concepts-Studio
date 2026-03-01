@@ -32,11 +32,16 @@ import MemoryLifecycleSim from './modules/oops/MemoryLifecycleSim';
 import PolymorphismSim from './modules/oops/PolymorphismSim';
 import ObserverPatternSim from './modules/oops/ObserverPatternSim';
 
+// Git Module
+import GitLanding from './modules/git/GitLanding';
+import GitSim from './modules/git/GitSim';
+
 const MODULE_LABELS = {
   '/os': '🖥 OS',
   '/dbms': '🗄 DBMS',
   '/networks': '🌐 Networks',
   '/oops': '🧱 OOP',
+  '/git': '🌿 Git',
 };
 
 function Footer() {
@@ -53,7 +58,7 @@ function Footer() {
         )}
       </div>
       <div style={{ opacity: 0.6, fontSize: '0.78rem' }}>
-        OS · DBMS · Networks · OOP
+        OS · DBMS · Networks · OOP · Git
       </div>
     </footer>
   );
@@ -94,6 +99,10 @@ function AppContent() {
           <Route path="/oops/memory" element={<MemoryLifecycleSim />} />
           <Route path="/oops/polymorphism" element={<PolymorphismSim />} />
           <Route path="/oops/observer" element={<ObserverPatternSim />} />
+
+          {/* Git Module */}
+          <Route path="/git" element={<GitLanding />} />
+          <Route path="/git/sim" element={<GitSim />} />
 
           {/* Fallback */}
           <Route path="*" element={<LandingPage />} />

@@ -158,30 +158,7 @@ const hexGlow = (color) => `0 0 15px ${color}, 0 0 5px ${color}`;
 
 // ── COMPONENTS ──
 
-const SignalBeam = ({ signal, stepId }) => {
-    if (!signal) return null;
-    let path = "";
-    if (signal === 'ptr-to-obj') path = "M 150 150 C 200 150, 250 200, 300 150";
-    if (signal === 'obj-to-vtable') path = "M 450 150 L 450 350";
-    if (signal === 'vtable-resolved') path = "M 450 450 C 450 500, 300 500, 150 500";
 
-    return (
-        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10 }}>
-            <motion.path
-                key={signal + stepId}
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                exit={{ opacity: 0 }}
-                d={path}
-                stroke="var(--cyan)"
-                strokeWidth="4"
-                strokeDasharray="10, 5"
-                fill="none"
-                style={{ filter: 'drop-shadow(0 0 5px var(--cyan))' }}
-            />
-        </svg>
-    );
-};
 
 const MemoryNode = ({ label, value, addr, color, isDeep, active }) => (
     <motion.div
@@ -207,8 +184,7 @@ const MemoryNode = ({ label, value, addr, color, isDeep, active }) => (
 
 const DispatchHub = ({ step, config, currentStep }) => {
     return (
-        <div id="dispatch-engine" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '2rem', padding: '1.5rem', position: 'relative', overflow: 'hidden' }}>
-            <SignalBeam signal={step?.activeSignal} stepId={currentStep} />
+        <div id="dispatch-engine" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '2rem', padding: '1.5rem', overflow: 'hidden' }}>
 
             {/* Top Layer: Pointer & Object Interaction */}
             <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', flex: 1 }}>
@@ -224,8 +200,6 @@ const DispatchHub = ({ step, config, currentStep }) => {
                     />
                 </div>
 
-                {/* Connection Arrow Conceptual */}
-                <div style={{ fontSize: '2rem', opacity: 0.2 }}>⟹</div>
 
                 {/* Object Node */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
@@ -447,7 +421,7 @@ export default function PolymorphismSim() {
             currentStepNum={Math.max(0, currentStep + 1)} totalSteps={steps.length}
             phaseName={curStep?.phase ?? 'System Standby'} centerContent={<DispatchHub step={curStep} config={config} currentStep={currentStep} />} leftContent={LEFT} rightContent={RIGHT}
             timelineItems={steps.map((s, i) => ({ id: i, label: s.phase, done: i < currentStep, active: i === currentStep }))}
-            legend={[{ color: 'var(--yellow)', label: 'Static Context' }, { color: 'var(--cyan)', label: 'Runtime Resolution' }, { color: 'var(--pink)', label: 'Override Active' }]}>
+            legend={[]}>
             <div className="main-content">
                 <div style={{ marginBottom: '0.5rem' }}><Link to="/oops" style={{ fontSize: '0.85rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← OOP Module</Link></div>
                 <h1 style={{ fontSize: '2.2rem', fontWeight: 800, letterSpacing: '-0.02em' }}>⚡ Polymorphism Dispatch Engine</h1>

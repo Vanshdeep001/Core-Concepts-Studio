@@ -6,6 +6,7 @@ const MODULE_LABELS = {
     '/dbms': { label: '🗄 DBMS', color: 'var(--cyan)' },
     '/networks': { label: '🌐 Networks', color: 'var(--pink)' },
     '/oops': { label: '🧱 OOP', color: 'var(--green)' },
+    '/git': { label: '🌿 Git', color: 'var(--green)' },
 };
 
 export default function Navbar() {
@@ -53,6 +54,7 @@ export default function Navbar() {
                     <NavLink to="/dbms" className={({ isActive }) => `nav-link${location.pathname.startsWith('/dbms') ? ' active' : ''}`}>🗄 DB</NavLink>
                     <NavLink to="/networks" className={({ isActive }) => `nav-link${location.pathname.startsWith('/networks') ? ' active' : ''}`}>🌐 Net</NavLink>
                     <NavLink to="/oops" className={({ isActive }) => `nav-link${location.pathname.startsWith('/oops') ? ' active' : ''}`}>🧱 OOP</NavLink>
+                    <NavLink to="/git" className={({ isActive }) => `nav-link${location.pathname.startsWith('/git') ? ' active' : ''}`}>🌿 Git</NavLink>
 
                     <button className="nav-theme-btn" onClick={toggleTheme} aria-label="Toggle theme">
                         {theme === 'dark' ? '☀' : '🌙'}

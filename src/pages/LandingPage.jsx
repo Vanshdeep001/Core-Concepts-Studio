@@ -38,6 +38,15 @@ const MODULES = [
         sims: ['Stack/Heap', 'Dynamic Dispatch', 'Observer', 'Destructor'],
         path: '/oops',
     },
+    {
+        id: 'git',
+        label: 'Git & GitHub',
+        icon: '🌿',
+        color: '#a8e6cf',
+        description: 'Commit DAG · Branching · Merge · Rebase · Remote Sync',
+        sims: ['DAG Viz', 'Branch', 'Merge', 'Rebase', 'Push/Pull'],
+        path: '/git',
+    },
 ];
 
 const cardVariants = {
@@ -61,9 +70,10 @@ export default function LandingPage() {
                         fontWeight: 700,
                         lineHeight: 1.1,
                         marginBottom: '0.75rem',
+                        letterSpacing: '-0.01em',
                     }}
                 >
-                    Core CS Visualized,{' '}
+                    Core{' '}
                     <span
                         style={{
                             background: 'var(--yellow)',
@@ -72,8 +82,9 @@ export default function LandingPage() {
                             display: 'inline-block',
                         }}
                     >
-                        Step by Step
+                        Concepts
                     </span>
+                    {' '}Studio
                 </h1>
                 <p style={{ opacity: 0.6, fontSize: '1rem', maxWidth: 560, margin: '0 auto' }}>
                     Pick a module and watch algorithms execute in real-time — tick by tick,
@@ -172,9 +183,9 @@ export default function LandingPage() {
             {/* Stats row */}
             <div className="stat-cards" style={{ marginBottom: '2rem' }}>
                 {[
-                    { label: 'Modules', value: '4', unit: 'topics', color: 'yellow' },
-                    { label: 'Simulators', value: '13', unit: 'interactive', color: 'cyan' },
-                    { label: 'Algorithms', value: '25+', unit: 'visualized', color: 'pink' },
+                    { label: 'Modules', value: '5', unit: 'topics', color: 'yellow' },
+                    { label: 'Simulators', value: '14+', unit: 'interactive', color: 'cyan' },
+                    { label: 'Algorithms', value: '30+', unit: 'visualized', color: 'pink' },
                     { label: 'Real-time', value: '∞', unit: 'step-by-step', color: 'green' },
                 ].map((s) => (
                     <div key={s.label} className={`stat-card ${s.color}`}>

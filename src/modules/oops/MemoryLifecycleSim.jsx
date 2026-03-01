@@ -105,52 +105,10 @@ function buildStepsFromProgram(input) {
 const LEGEND = [
     { color: 'var(--cyan)', label: 'Stack Slot' },
     { color: 'var(--green)', label: 'Heap Nexus' },
-    { color: 'var(--purple)', label: 'Energy Tether' },
     { color: 'var(--pink)', label: 'Dangling / Fault' },
 ];
 
-// Helper component for tethers to avoid crash on first render
-const EnergyTethers = ({ vars }) => {
-    const [tethers, setTethers] = useState([]);
-    const containerRef = useRef(null);
 
-    useEffect(() => {
-        const updateTethers = () => {
-            const newTethers = [];
-            vars.forEach(v => {
-                if (v.val === 'null' || !v.targetId) return;
-                const sEl = document.getElementById(v.id);
-                const tEl = document.getElementById(v.targetId);
-                const pEl = document.getElementById('memory-forge-container');
-                if (sEl && tEl && pEl) {
-                    const sR = sEl.getBoundingClientRect();
-                    const tR = tEl.getBoundingClientRect();
-                    const pR = pEl.getBoundingClientRect();
-                    newTethers.push({
-                        id: v.id,
-                        x1: sR.right - pR.left,
-                        y1: sR.top + sR.height / 2 - pR.top,
-                        x2: tR.left - pR.left,
-                        y2: tR.top + tR.height / 2 - pR.top
-                    });
-                }
-            });
-            setTethers(newTethers);
-        };
-        updateTethers();
-        window.addEventListener('resize', updateTethers);
-        return () => window.removeEventListener('resize', updateTethers);
-    }, [vars]);
-
-    return (
-        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10 }}>
-            <defs><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
-            {tethers.map(t => (
-                <motion.path key={t.id} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} d={`M ${t.x1} ${t.y1} C ${t.x1 + 100} ${t.y1}, ${t.x2 - 100} ${t.y2}, ${t.x2} ${t.y2}`} stroke="var(--purple)" strokeWidth="3" fill="none" filter="url(#glow)" strokeDasharray="5,5" />
-            ))}
-        </svg>
-    );
-};
 
 export default function MemoryLifecycleSim() {
     const [speed, setSpeed] = useState(900);
@@ -179,8 +137,7 @@ export default function MemoryLifecycleSim() {
     const handleStep = () => { setIsSimMode(true); advanceStep(stepRef.current); };
 
     const centerContent = (
-        <div id="memory-forge-container" style={{ display: 'flex', height: '100%', flexDirection: 'column', gap: '1rem', position: 'relative', overflow: 'hidden' }}>
-            <EnergyTethers vars={curStep?.stack[0]?.vars || []} />
+        <div id="memory-forge-container" style={{ display: 'flex', height: '100%', flexDirection: 'column', gap: '1rem', overflow: 'hidden' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(52, 152, 219, 0.05)', borderRadius: '12px', padding: '1rem', border: '2px solid rgba(52, 152, 219, 0.2)', overflow: 'hidden' }}>
                 <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--cyan)', marginBottom: '0.5rem' }}>MEMORY DOCK (STACK)</div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column-reverse', gap: '0.5rem', overflowY: 'auto' }}>
@@ -200,12 +157,34 @@ export default function MemoryLifecycleSim() {
                 <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--green)', marginBottom: '0.5rem' }}>MEMORY NEXUS (HEAP)</div>
                 <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: '1rem', overflowY: 'auto', alignContent: 'flex-start' }}>
                     <AnimatePresence>
-                        {curStep?.heap.map(obj => (
-                            <motion.div id={obj.id} key={obj.id} initial={{ scale: 0 }} animate={{ scale: 1, opacity: obj.state === 'freed' ? 0.3 : 1 }} style={{ width: 140, border: '2px solid var(--border)', background: obj.color, borderRadius: '8px', padding: '0.4rem', boxShadow: obj.state === 'active' ? '0 0 15px var(--cyan)' : '4px 4px 0 var(--border)' }}>
-                                <div style={{ fontSize: '0.75rem', fontWeight: 800, borderBottom: '1px solid rgba(0,0,0,0.1)', marginBottom: '0.3rem' }}>{obj.label} ({obj.id.replace('obj-', '')})</div>
-                                {obj.fields.map((f, i) => <div key={i} style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)' }}>{f}</div>)}
-                            </motion.div>
-                        ))}
+                        {curStep?.heap.map(obj => {
+                            // find if any stack var points to this obj
+                            const isLinked = (curStep?.stack[0]?.vars || []).some(v => v.targetId === obj.id && v.val !== 'null');
+                            return (
+                                <motion.div
+                                    id={obj.id} key={obj.id}
+                                    initial={{ scale: 0 }}
+                                    animate={{
+                                        scale: 1,
+                                        opacity: obj.state === 'freed' ? 0.3 : 1,
+                                        boxShadow: obj.state === 'active'
+                                            ? '0 0 18px var(--cyan), 0 0 6px var(--cyan)'
+                                            : isLinked
+                                                ? '0 0 12px rgba(102,217,239,0.5)'
+                                                : '4px 4px 0 var(--border)',
+                                        borderColor: obj.state === 'active' ? 'var(--cyan)' : isLinked ? 'var(--cyan)' : 'var(--border)',
+                                    }}
+                                    transition={{ borderColor: { duration: 0.3 }, boxShadow: { duration: 0.3 } }}
+                                    style={{ width: 140, border: '2px solid var(--border)', background: obj.color, borderRadius: '8px', padding: '0.4rem' }}
+                                >
+                                    <div style={{ fontSize: '0.75rem', fontWeight: 800, borderBottom: '1px solid rgba(0,0,0,0.1)', marginBottom: '0.3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>{obj.label} ({obj.id.replace('obj-', '')})</span>
+                                        {isLinked && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} style={{ fontSize: '0.6rem', background: 'rgba(0,0,0,0.15)', padding: '0.05rem 0.25rem', borderRadius: 3, fontWeight: 900 }}>🔗</motion.span>}
+                                    </div>
+                                    {obj.fields.map((f, i) => <div key={i} style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)' }}>{f}</div>)}
+                                </motion.div>
+                            );
+                        })}
                     </AnimatePresence>
                 </div>
             </div>
