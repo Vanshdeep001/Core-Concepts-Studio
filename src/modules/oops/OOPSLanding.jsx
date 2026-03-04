@@ -26,6 +26,14 @@ const OOP_SIMS = [
         color: 'var(--pink)',
         badge: 'Pub/Sub · Notify · Event',
     },
+    {
+        path: '/oops/strings',
+        icon: '🧵',
+        label: 'String Internals & Mutability',
+        desc: 'String Pool · immutability · StringBuilder · StringBuffer · capacity expansion · intern()',
+        color: 'var(--green)',
+        badge: 'Pool · Immutable · Builder · Buffer',
+    },
 ];
 
 export default function OOPSLanding() {
