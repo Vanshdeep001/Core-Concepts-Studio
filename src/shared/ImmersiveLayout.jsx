@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SPEED_OPTIONS } from '../core/SimulationController';
 
@@ -30,12 +30,12 @@ export default function ImmersiveLayout({
     isPaused,
     isFinished,
     speed,
-    onSpeedChange,
-    onStart,
-    onPause,
-    onResume,
-    onReset,
-    onStep,
+    onSpeedChange = () => {},
+    onStart = () => {},
+    onPause = () => {},
+    onResume = () => {},
+    onReset = () => {},
+    onStep = () => {},
     currentStepNum = 0,
     totalSteps = 1,
     phaseName = '',
@@ -45,8 +45,11 @@ export default function ImmersiveLayout({
     timelineItems = [],
     legend = [],
     conceptMode = false,
-    onConceptModeToggle,
+    onConceptModeToggle = () => {},
 }) {
+    const [leftOpen, setLeftOpen] = useState(false);
+    const [rightOpen, setRightOpen] = useState(false);
+
     // Lock body scroll in simulation mode
     useEffect(() => {
         if (isActive) {
@@ -203,70 +206,151 @@ export default function ImmersiveLayout({
                     </div>
                 </header>
 
-                {/* ─── MAIN CONTENT AREA (Grid) ─── */}
-                <main style={{ flex: 1, display: 'grid', gridTemplateColumns: '20% 60% 20%', overflow: 'hidden', background: '#f8f9fa' }}>
+                {/* ─── MAIN CONTENT AREA ─── */}
+                <main style={{ flex: 1, display: 'flex', overflow: 'hidden', background: '#f8f9fa' }}>
 
-                    {/* LEFT PANEL: State & Data */}
-                    <aside style={{
-                        borderRight: '3px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--white)',
-                        overflow: 'hidden'
-                    }}>
+                    {/* LEFT PANEL: System States */}
+                    <motion.aside
+                        animate={{ width: leftOpen ? '22%' : 0 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        style={{
+                            borderRight: leftOpen ? '3px solid var(--border)' : 'none',
+                            display: 'flex', flexDirection: 'column', background: 'var(--white)',
+                            overflow: 'hidden', flexShrink: 0,
+                        }}
+                    >
                         <div style={{
                             padding: '0.75rem 1rem', background: 'var(--cyan)', borderBottom: '3px solid var(--border)',
-                            fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em'
+                            fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0
                         }}>
-                            📊 System States
+                            <span>System States</span>
+                            <button
+                                onClick={() => setLeftOpen(false)}
+                                title="Collapse System States"
+                                style={{
+                                    background: 'rgba(0,0,0,0.12)', border: '2px solid var(--border)',
+                                    borderRadius: '4px', cursor: 'pointer', fontWeight: 900,
+                                    fontSize: '0.7rem', lineHeight: 1, padding: '2px 6px',
+                                    display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0
+                                }}
+                            >
+                                ◀ Hide
+                            </button>
                         </div>
                         <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', scrollbarWidth: 'thin' }}>
                             {leftContent}
                         </div>
-                    </aside>
+                    </motion.aside>
+
+                    {/* LEFT COLLAPSED TAB — inline flex strip, pushes center, never overlaps */}
+                    <AnimatePresence>
+                        {!leftOpen && (
+                            <motion.button
+                                key="left-tab"
+                                initial={{ width: 0, opacity: 0 }}
+                                animate={{ width: 32, opacity: 1 }}
+                                exit={{ width: 0, opacity: 0 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                onClick={() => setLeftOpen(true)}
+                                title="Expand System States"
+                                style={{
+                                    flexShrink: 0, height: '100%',
+                                    background: 'var(--cyan)',
+                                    border: 'none', borderRight: '3px solid var(--border)',
+                                    cursor: 'pointer', overflow: 'hidden', padding: 0,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}
+                            >
+                                <span style={{
+                                    transform: 'rotate(-90deg)',
+                                    whiteSpace: 'nowrap',
+                                    fontWeight: 800, fontSize: '0.65rem',
+                                    textTransform: 'uppercase', letterSpacing: '0.06em',
+                                    color: 'var(--text)', pointerEvents: 'none',
+                                }}>
+                                    System States
+                                </span>
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
 
                     {/* CENTER PANEL: Primary Visualizer */}
                     <section style={{
-                        position: 'relative', display: 'flex', flexDirection: 'column',
-                        overflow: 'hidden', padding: '1rem'
+                        flex: 1, display: 'flex', flexDirection: 'column',
+                        overflow: 'hidden', minWidth: 0,
+                        background: 'var(--white)',
+                        borderLeft: '1px solid var(--border)',
+                        borderRight: '1px solid var(--border)',
                     }}>
-                        <div style={{
-                            flex: 1, background: 'var(--white)', border: '3px solid var(--border)', borderRadius: '12px',
-                            boxShadow: '4px 4px 0 var(--border)', position: 'relative', overflow: 'hidden',
-                            display: 'flex', flexDirection: 'column'
-                        }}>
-                            {centerContent}
-                        </div>
-
-                        {/* Legend Overlay */}
-                        {legend.length > 0 && (
-                            <div style={{
-                                position: 'absolute', bottom: '2rem', right: '2rem',
-                                background: 'white', border: '2px solid var(--border)', padding: '0.5rem 0.75rem',
-                                borderRadius: '8px', boxShadow: '3px 3px 0 var(--border)', display: 'flex', gap: '1rem'
-                            }}>
-                                {legend.map((l, i) => (
-                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', fontWeight: 700 }}>
-                                        <div style={{ width: 12, height: 12, background: l.color, border: '1.5px solid var(--border)', borderRadius: '2px' }} />
-                                        {l.label}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        {centerContent}
                     </section>
 
+                    {/* RIGHT COLLAPSED TAB — inline flex strip, pushes center, never overlaps */}
+                    <AnimatePresence>
+                        {!rightOpen && (
+                            <motion.button
+                                key="right-tab"
+                                initial={{ width: 0, opacity: 0 }}
+                                animate={{ width: 32, opacity: 1 }}
+                                exit={{ width: 0, opacity: 0 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                onClick={() => setRightOpen(true)}
+                                title="Expand Learning Lab"
+                                style={{
+                                    flexShrink: 0, height: '100%',
+                                    background: 'var(--pink)',
+                                    border: 'none', borderLeft: '3px solid var(--border)',
+                                    cursor: 'pointer', overflow: 'hidden', padding: 0,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}
+                            >
+                                <span style={{
+                                    transform: 'rotate(90deg)',
+                                    whiteSpace: 'nowrap',
+                                    fontWeight: 800, fontSize: '0.65rem',
+                                    textTransform: 'uppercase', letterSpacing: '0.06em',
+                                    color: 'var(--text)', pointerEvents: 'none',
+                                }}>
+                                    Learning Lab
+                                </span>
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
+
                     {/* RIGHT PANEL: Educational/Explanations */}
-                    <aside style={{
-                        borderLeft: '3px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--white)',
-                        overflow: 'hidden'
-                    }}>
+                    <motion.aside
+                        animate={{ width: rightOpen ? '22%' : 0 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        style={{
+                            borderLeft: rightOpen ? '3px solid var(--border)' : 'none',
+                            display: 'flex', flexDirection: 'column', background: 'var(--white)',
+                            overflow: 'hidden', flexShrink: 0
+                        }}
+                    >
                         <div style={{
                             padding: '0.75rem 1rem', background: 'var(--pink)', borderBottom: '3px solid var(--border)',
-                            fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em'
+                            fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0
                         }}>
-                            📖 Learning Lab
+                            <span>Learning Lab</span>
+                            <button
+                                onClick={() => setRightOpen(false)}
+                                title="Collapse Learning Lab"
+                                style={{
+                                    background: 'rgba(0,0,0,0.12)', border: '2px solid var(--border)',
+                                    borderRadius: '4px', cursor: 'pointer', fontWeight: 900,
+                                    fontSize: '0.7rem', lineHeight: 1, padding: '2px 6px',
+                                    display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0
+                                }}
+                            >
+                                Hide ▶
+                            </button>
                         </div>
                         <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', scrollbarWidth: 'thin' }}>
                             {rightContent}
                         </div>
-                    </aside>
+                    </motion.aside>
                 </main>
 
                 {/* ─── BOTTOM BAR (Fixed height: 80px) ─── */}
@@ -318,6 +402,21 @@ export default function ImmersiveLayout({
                             <div style={{ opacity: 0.3, fontStyle: 'italic', fontSize: '0.85rem' }}>Timeline ready for simulation...</div>
                         )}
                     </div>
+
+                    {/* Legend — moved from absolute overlay to footer right */}
+                    {legend.length > 0 && (
+                        <div style={{
+                            flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.75rem',
+                            borderLeft: '2px solid var(--border)', paddingLeft: '1rem', height: '100%'
+                        }}>
+                            {legend.map((l, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>
+                                    <div style={{ width: 12, height: 12, background: l.color, border: '1.5px solid var(--border)', borderRadius: '2px', flexShrink: 0 }} />
+                                    {l.label}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </footer>
             </motion.div>
         </AnimatePresence>

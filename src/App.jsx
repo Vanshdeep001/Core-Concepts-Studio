@@ -32,6 +32,7 @@ import MemoryLifecycleSim from './modules/oops/MemoryLifecycleSim';
 import PolymorphismSim from './modules/oops/PolymorphismSim';
 import ObserverPatternSim from './modules/oops/ObserverPatternSim';
 import StringMutabilitySim from './modules/oops/StringMutabilitySim';
+import ThreadVisualizer from './modules/oops/ThreadVisualizer';
 
 // Git Module
 import GitLanding from './modules/git/GitLanding';
@@ -101,6 +102,7 @@ function AppContent() {
           <Route path="/oops/polymorphism" element={<PolymorphismSim />} />
           <Route path="/oops/observer" element={<ObserverPatternSim />} />
           <Route path="/oops/strings" element={<StringMutabilitySim />} />
+          <Route path="/oops/threads" element={<ThreadVisualizer />} />
 
           {/* Git Module */}
           <Route path="/git" element={<GitLanding />} />

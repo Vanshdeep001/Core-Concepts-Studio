@@ -83,7 +83,7 @@ export default function PageReplacementSim() {
 
     // Center: Frame table + reference strip
     const centerContent = (
-        <div style={{ padding: '0.75rem', height: '100%', display: 'flex', flexDirection: 'column', gap: '1rem', overflow: 'hidden' }}>
+        <div style={{ padding: '0.75rem', height: '100%', display: 'flex', flexDirection: 'column', gap: '0.75rem', overflow: 'hidden', minHeight: 0 }}>
             {/* Reference string strip */}
             <div style={{ flexShrink: 0 }}>
                 <div style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.5rem', letterSpacing: '0.05em' }}>Reference Stream</div>
@@ -110,21 +110,23 @@ export default function PageReplacementSim() {
             </div>
 
             {/* Memory Rack — The core visual */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                <div style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.8rem', letterSpacing: '0.05em' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.5rem', letterSpacing: '0.05em', flexShrink: 0 }}>
                     Physical Memory (Page Frames)
                 </div>
                 <div style={{
                     flex: 1,
+                    minHeight: 0,
                     background: 'rgba(0,0,0,0.03)',
                     border: '4px solid var(--border)',
                     borderRadius: '12px',
-                    padding: '1.5rem',
+                    padding: '1rem',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
-                    gap: '1rem',
-                    boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.05)'
+                    gap: '0.75rem',
+                    boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.05)',
+                    overflowY: 'auto',
                 }}>
                     {Array.from({ length: frames }, (_, fi) => {
                         const frameData = curStep?.frames?.[fi];
@@ -133,7 +135,7 @@ export default function PageReplacementSim() {
                         const isVictim = curStep?.victim === pageInFrame && curStep.fault;
 
                         return (
-                            <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
                                 <div style={{ fontSize: '0.7rem', fontWeight: 800, opacity: 0.4, width: 30 }}>F{fi}</div>
                                 <motion.div
                                     initial={false}
@@ -146,11 +148,11 @@ export default function PageReplacementSim() {
                                     }}
                                     transition={{ type: 'spring', damping: 15 }}
                                     style={{
-                                        flex: 1, height: 60, border: '3px solid var(--border)', borderRadius: '8px',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.5rem',
+                                        flex: 1, height: 56, border: '3px solid var(--border)', borderRadius: '8px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.25rem',
                                     }}
                                 >
-                                    <div style={{ fontSize: '1.8rem', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>
+                                    <div style={{ fontSize: '1.6rem', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>
                                         {pageInFrame ?? ''}
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
@@ -167,17 +169,17 @@ export default function PageReplacementSim() {
             </div>
 
             {/* Performance Metrics */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                 {[
                     { label: 'Faults', val: totalFaults, color: 'var(--pink)', icon: '🔴' },
                     { label: 'Hits', val: totalHits, color: 'var(--green)', icon: '🟢' },
                     { label: 'Hit Rate', val: `${hitRate}%`, color: 'var(--yellow)', icon: '📈' },
                 ].map(s => (
-                    <div key={s.label} style={{ flex: 1, border: '3px solid var(--border)', borderRadius: '8px', background: s.color, padding: '0.6rem', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
+                    <div key={s.label} style={{ flex: 1, border: '3px solid var(--border)', borderRadius: '8px', background: s.color, padding: '0.5rem', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
                         <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.7, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                             <span>{s.icon}</span> {s.label}
                         </div>
-                        <div style={{ fontSize: '1.4rem', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>{s.val}</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>{s.val}</div>
                     </div>
                 ))}
             </div>
@@ -186,14 +188,14 @@ export default function PageReplacementSim() {
             {curStep && (
                 <AnimatePresence mode="wait">
                     <motion.div key={currentStep}
-                        initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                        initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                         style={{
-                            padding: '0.8rem 1.2rem', borderRadius: '12px', border: '4px solid var(--border)', fontWeight: 800, fontSize: '1rem',
+                            padding: '0.6rem 1rem', borderRadius: '10px', border: '3px solid var(--border)', fontWeight: 800, fontSize: '0.9rem',
                             background: curStep.fault ? 'var(--pink)' : 'var(--green)', boxShadow: 'var(--shadow)', flexShrink: 0,
-                            display: 'flex', alignItems: 'center', gap: '10px'
+                            display: 'flex', alignItems: 'center', gap: '8px'
                         }}
                     >
-                        <span style={{ fontSize: '1.4rem' }}>{curStep.fault ? '⚠️' : '🎯'}</span>
+                        <span style={{ fontSize: '1.2rem' }}>{curStep.fault ? '⚠️' : '🎯'}</span>
                         <span>
                             {curStep.fault
                                 ? `PAGE FAULT: Page ${curStep.page} fetched from disk.`

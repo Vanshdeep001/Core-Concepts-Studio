@@ -24,7 +24,7 @@ const GUIDED_SCENARIOS = {
             { type: 'file', filename: 'README.md', content: '# My Project\nThis is amazing.', narration: '📄 Create README.md — another untracked file in the working directory.' },
             { command: 'git add', args: { file: '.' }, narration: 'Stage README.md. Staging area now has the new file ready to snapshot.' },
             { command: 'git commit', args: { message: 'Add README' }, narration: '📸 Second commit! The DAG grows. Branch pointer "main" advances automatically.' },
-            { command: 'git log', args: {}, narration: ' git log traverses the DAG backward via parentHashes — like following a chain back in time.' },
+            { command: 'git log', args: {}, narration: 'remove git log traverses the DAG backward via parentHashes — like following a chain back in time.' },
             { type: 'file', filename: 'app.js', content: 'const app = require("express")();', narration: '📄 Add app.js — Working Dir has a change again.' },
             { command: 'git add', args: { file: '.' }, narration: ' Stage app.js.' },
             { command: 'git commit', args: { message: 'Add Express app' }, narration: '📸 Third commit! You can see the linear history forming in the DAG.' },

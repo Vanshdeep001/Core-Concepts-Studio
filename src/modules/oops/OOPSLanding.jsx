@@ -34,6 +34,14 @@ const OOP_SIMS = [
         color: 'var(--green)',
         badge: 'Pool · Immutable · Builder · Buffer',
     },
+    {
+        path: '/oops/threads',
+        icon: '🔂',
+        label: 'Threads: Living Entities',
+        desc: 'Creation (Thread vs Runnable) · Lifecycle States · Scheduler · start() vs run() visually explained',
+        color: 'var(--purple)',
+        badge: 'Concurrency · Lifecycle · Scheduler',
+    },
 ];
 
 export default function OOPSLanding() {
