@@ -123,13 +123,6 @@ export default function ImmersiveLayout({
 
                     {/* Progress Detail */}
                     <div style={{ display: 'flex', flex: 1, alignItems: 'center', gap: '1.5rem', minWidth: 0 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                            <span style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4 }}>Current Phase</span>
-                            <span style={{ fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {phaseName || 'Waiting to start...'}
-                            </span>
-                        </div>
-
                         <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                             <span style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4 }}>Step Progress</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -175,25 +168,6 @@ export default function ImmersiveLayout({
                                     {opt.label}
                                 </button>
                             ))}
-                        </div>
-
-                        <div style={{ width: 2, height: 32, background: 'rgba(0,0,0,0.1)', margin: '0 0.5rem' }} />
-
-                        {/* Concept Toggle */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.6 }}>Concept Mode</span>
-                            <button
-                                onClick={onConceptModeToggle}
-                                style={{
-                                    width: 44, height: 22, borderRadius: 11, background: conceptMode ? 'var(--green)' : '#ccc',
-                                    border: '2px solid var(--border)', position: 'relative', cursor: 'pointer', transition: '0.2s'
-                                }}
-                            >
-                                <motion.div
-                                    animate={{ x: conceptMode ? 22 : 2 }}
-                                    style={{ width: 14, height: 14, background: 'white', borderRadius: '50%', border: '2px solid var(--border)', position: 'absolute', top: 2 }}
-                                />
-                            </button>
                         </div>
 
                         <button

@@ -34,6 +34,14 @@ const OS_SIMS = [
         color: 'var(--green)',
         badge: 'Seek Time · Head Position',
     },
+    {
+        path: '/os/sync',
+        icon: '🔄',
+        label: 'Process Synchronization',
+        desc: 'Race conditions, critical sections, Mutex vs Semaphore sandbox, classic IPC, and failure modes.',
+        color: 'var(--purple)',
+        badge: 'Race Condition · Semaphore · Deadlock',
+    },
 ];
 
 export default function OSLanding() {

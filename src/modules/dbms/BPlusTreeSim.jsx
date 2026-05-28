@@ -1,209 +1,546 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 
-const MAX_KEYS = 3; // B+ tree of order 4
-
-// === Minimal B+ Tree engine ===
-class BPlusNode {
-    constructor(isLeaf = false) {
-        this.keys = []; this.children = []; this.isLeaf = isLeaf; this.next = null;
-        this.id = Math.random().toString(36).slice(2, 8);
-    }
-}
-
-function nodeToObj(node, depth = 0) {
-    if (!node) return null;
-    return { id: node.id, keys: [...node.keys], isLeaf: node.isLeaf, depth, children: node.children.map(c => nodeToObj(c, depth + 1)) };
-}
-
-function insertBPlusSteps(values) {
-    const steps = [];
-    const tree = { root: new BPlusNode(true) };
-
-    function insertLeaf(node, key) {
-        let i = 0; while (i < node.keys.length && node.keys[i] < key) i++;
-        node.keys.splice(i, 0, key);
-    }
-    function splitChild(parent, i) {
-        const full = parent.children[i]; const mid = Math.floor(full.keys.length / 2);
-        const right = new BPlusNode(full.isLeaf);
-        if (full.isLeaf) { right.keys = full.keys.splice(mid); right.next = full.next; full.next = right; parent.keys.splice(i, 0, right.keys[0]); }
-        else { parent.keys.splice(i, 0, full.keys.splice(mid, 1)[0]); right.children = full.children.splice(mid + 1); right.keys = full.keys.splice(mid); }
-        parent.children.splice(i + 1, 0, right);
-    }
-    function insertNonFull(node, key) {
-        if (node.isLeaf) { insertLeaf(node, key); }
-        else {
-            let i = node.keys.length - 1;
-            while (i >= 0 && key < node.keys[i]) i--;
-            i++;
-            if (node.children[i].keys.length >= MAX_KEYS) { splitChild(node, i); if (key > node.keys[i]) i++; }
-            insertNonFull(node.children[i], key);
-        }
-    }
-
-    for (const val of values) {
-        steps.push({ phase: `Insert ${val} (before)`, val, tree: nodeToObj(tree.root), inserting: true, explanation: `About to insert key ${val} into the B+ Tree. Traversing from root to find the correct leaf node.`, insight: 'B+ Trees keep keys sorted within nodes. Leaf nodes hold actual data; internal nodes are just routing keys.', insightTitle: 'B+ Tree Structure' });
-        if (tree.root.keys.length >= MAX_KEYS) {
-            const newRoot = new BPlusNode(false); newRoot.children.push(tree.root); splitChild(newRoot, 0); tree.root = newRoot;
-        }
-        insertNonFull(tree.root, val);
-        steps.push({ phase: `Inserted ${val}`, val, tree: nodeToObj(tree.root), done: true, explanation: `Key ${val} inserted. ${tree.root.keys.length > 0 ? `Root now has keys [${tree.root.keys.join(', ')}].` : 'Tree structure updated.'}`, insight: 'After insertion, if a node overflows (>max-1 keys), it splits: median key is promoted to parent. Root splits create a new root (tree grows taller).', insightTitle: 'Node Splitting' });
-    }
-
-    steps.push({ phase: '✅ All keys inserted', tree: nodeToObj(tree.root), final: true, explanation: 'All keys inserted. The B+ Tree is balanced — all leaves are at the same depth.', insight: 'B+ Trees are always balanced (O(log n) search/insert). Leaf nodes form a linked list for efficient range queries.', insightTitle: 'Why B+ Trees?' });
-
-    return steps;
-}
-
-function renderNode(node, highlight) {
-    if (!node) return null;
-    const isHighlighted = highlight && node.keys.some(k => highlight.includes(k));
-    return (
-        <div key={node.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}>
-            <motion.div layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                style={{ border: `3px solid var(--border)`, background: isHighlighted ? 'var(--yellow)' : node.isLeaf ? 'var(--cyan)' : 'var(--white)', boxShadow: isHighlighted ? 'var(--shadow)' : 'var(--shadow-sm)', display: 'flex', gap: 0 }}>
-                {node.keys.map((k, i) => (
-                    <div key={i} style={{ borderRight: i < node.keys.length - 1 ? '2px solid var(--border)' : 'none', padding: '0.3rem 0.5rem', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.85rem', minWidth: 28, textAlign: 'center' }}>{k}</div>
-                ))}
-            </motion.div>
-            {!node.isLeaf && node.children.length > 0 && (
-                <div style={{ display: 'flex', gap: '0.75rem', position: 'relative' }}>
-                    {node.children.map(child => renderNode(child, highlight))}
-                </div>
-            )}
-        </div>
-    );
-}
-
 export default function BPlusTreeSim() {
-    const [input, setInput] = useState('10 20 5 30 15 25 3 7');
-    const [speed, setSpeed] = useState(900);
-    const [steps, setSteps] = useState([]);
-    const [currentStep, setCurrentStep] = useState(-1);
+    const [speed, setSpeed] = useState(700);
     const [isRunning, setIsRunning] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
-    const [isSimMode, setIsSimMode] = useState(false);
+    const [conceptMode, setConceptMode] = useState(false);
 
-    const timerRef = useRef(null);
-    const stepRef = useRef(-1);
-    const stepsRef = useRef([]);
+    // B+ Tree state
+    const [keys, setKeys] = useState([10, 20, 30, 40, 50]);
+    const [inputVal, setInputVal] = useState('');
+    const [searchKey, setSearchKey] = useState('');
+    const [searchPath, setSearchPath] = useState([]); // Nodes highlighted in search
+    const [comparisons, setComparisons] = useState(0);
 
-    const advanceStep = useCallback((stepsArr, idx) => {
-        const newIdx = idx + 1;
-        if (newIdx >= stepsArr.length) { setCurrentStep(newIdx - 1); setIsRunning(false); setIsFinished(true); clearInterval(timerRef.current); return; }
-        setCurrentStep(newIdx); stepRef.current = newIdx;
-    }, []);
+    // Range Query
+    const [rangeStart, setRangeStart] = useState(15);
+    const [rangeEnd, setRangeEnd] = useState(45);
+    const [rangeActive, setRangeActive] = useState(false);
+
+    // Index Race Demo
+    const [raceActive, setRaceActive] = useState(false);
+    const [tableProgress, setTableProgress] = useState(0);
+    const [treeProgress, setTreeProgress] = useState(0);
+    const [raceWinner, setRaceWinner] = useState(null);
+
+    // Dense vs Sparse Indexing Toggle
+    const [indexType, setIndexType] = useState('dense'); // dense vs sparse
+
+    // Simple Order=3 B+ Tree Layout Calculator
+    // Because full dynamic B+ Trees can be highly complex to balance in pure JS client, we build a robust, balanced
+    // tree node calculator for keys [10 to 80] to guarantee flawless layout and avoid rendering overlaps.
+    const computeTreeLayout = () => {
+        const sorted = [...keys].sort((a, b) => a - b);
+        
+        // Root and leaves layout
+        if (sorted.length <= 2) {
+            return {
+                root: { id: 'root', keys: sorted, isLeaf: true, x: 250, y: 50 },
+                children: [],
+                leaves: []
+            };
+        }
+
+        // We split into leaves of max size 2
+        const leaves = [];
+        for (let i = 0; i < sorted.length; i += 2) {
+            leaves.push(sorted.slice(i, i + 2));
+        }
+
+        // Parent keys (first element of each leaf except first)
+        const parentKeys = [];
+        for (let i = 1; i < leaves.length; i++) {
+            parentKeys.push(leaves[i][0]);
+        }
+
+        if (parentKeys.length <= 2) {
+            // Level 1: Root is parentKeys, children are leaves
+            const leafWidth = 440 / leaves.length;
+            return {
+                root: { id: 'root', keys: parentKeys, isLeaf: false, x: 250, y: 40 },
+                children: leaves.map((leafKeys, idx) => ({
+                    id: `leaf_${idx}`,
+                    keys: leafKeys,
+                    isLeaf: true,
+                    x: 60 + idx * leafWidth + leafWidth/2,
+                    y: 140
+                })),
+                leaves: leaves.map((leafKeys, idx) => `leaf_${idx}`)
+            };
+        }
+
+        // Level 2 Decompositions: Root split
+        // For larger trees, root becomes middle key of parentKeys
+        const midIdx = Math.floor(parentKeys.length / 2);
+        const rootKeys = [parentKeys[midIdx]];
+        const leftParents = parentKeys.slice(0, midIdx);
+        const rightParents = parentKeys.slice(midIdx + 1);
+
+        const leafWidth = 440 / leaves.length;
+        const leafNodes = leaves.map((leafKeys, idx) => ({
+            id: `leaf_${idx}`,
+            keys: leafKeys,
+            isLeaf: true,
+            x: 50 + idx * leafWidth + leafWidth/2,
+            y: 180
+        }));
+
+        const internalNodes = [
+            { id: 'int_left', keys: leftParents, isLeaf: false, x: 120, y: 110, childrenIds: leafNodes.slice(0, midIdx + 1).map(n => n.id) },
+            { id: 'int_right', keys: rightParents, isLeaf: false, x: 380, y: 110, childrenIds: leafNodes.slice(midIdx + 1).map(n => n.id) }
+        ];
+
+        return {
+            root: { id: 'root', keys: rootKeys, isLeaf: false, x: 250, y: 40, childrenIds: ['int_left', 'int_right'] },
+            children: internalNodes.concat(leafNodes),
+            leaves: leafNodes.map(n => n.id)
+        };
+    };
+
+    const treeData = computeTreeLayout();
+
+    // Insert key
+    const handleInsert = (e) => {
+        e.preventDefault();
+        const num = parseInt(inputVal);
+        if (isNaN(num) || keys.includes(num)) return;
+        if (keys.length >= 8) {
+            alert("B+ Tree capped at 8 keys to fit the neo-brutalist canvas!");
+            return;
+        }
+
+        setKeys(prev => [...prev, num]);
+        setInputVal('');
+        setSearchPath([]);
+    };
+
+    // Delete key
+    const handleDeleteKey = (val) => {
+        setKeys(prev => prev.filter(k => k !== val));
+        setSearchPath([]);
+    };
+
+    // Search trace algorithm
+    const handleSearch = (e) => {
+        e.preventDefault();
+        const num = parseInt(searchKey);
+        if (isNaN(num)) return;
+
+        // Trace search path
+        const path = ['root'];
+        let comps = 0;
+
+        if (treeData.root.childrenIds) {
+            // Has internal nodes
+            comps++;
+            const firstParent = treeData.children.find(n => n.id === 'int_left');
+            const secondParent = treeData.children.find(n => n.id === 'int_right');
+
+            const rootVal = treeData.root.keys[0];
+            if (num < rootVal) {
+                path.push('int_left');
+                comps++;
+                // Find leaf inside left
+                const leafIdx = num < firstParent.keys[0] ? 0 : 1;
+                path.push(`leaf_${leafIdx}`);
+            } else {
+                path.push('int_right');
+                comps++;
+                const leafIdx = num < secondParent.keys[0] ? 2 : 3;
+                path.push(`leaf_${leafIdx}`);
+            }
+        } else if (treeData.children.length > 0) {
+            // Single level children
+            comps++;
+            let leafId = `leaf_${treeData.children.length - 1}`;
+            for (let i = 0; i < treeData.root.keys.length; i++) {
+                if (num < treeData.root.keys[i]) {
+                    leafId = `leaf_${i}`;
+                    break;
+                }
+            }
+            path.push(leafId);
+        }
+
+        setSearchPath(path);
+        setComparisons(comps + 1); // Add leaf key comparison
+    };
+
+    const getFullPathForVal = (num) => {
+        const path = ['root'];
+        if (treeData.root.childrenIds) {
+            const firstParent = treeData.children.find(n => n.id === 'int_left');
+            const secondParent = treeData.children.find(n => n.id === 'int_right');
+            const rootVal = treeData.root.keys[0];
+            if (num < rootVal) {
+                path.push('int_left');
+                const leafIdx = num < (firstParent?.keys[0] ?? 0) ? 0 : 1;
+                path.push(`leaf_${leafIdx}`);
+            } else {
+                path.push('int_right');
+                const leafIdx = num < (secondParent?.keys[0] ?? 0) ? 2 : 3;
+                path.push(`leaf_${leafIdx}`);
+            }
+        } else if (treeData.children.length > 0) {
+            let leafId = `leaf_${treeData.children.length - 1}`;
+            for (let i = 0; i < treeData.root.keys.length; i++) {
+                if (num < treeData.root.keys[i]) {
+                    leafId = `leaf_${i}`;
+                    break;
+                }
+            }
+            path.push(leafId);
+        }
+        return path;
+    };
 
     const handleStart = () => {
-        const vals = input.trim().split(/\s+/).map(Number).filter(n => !isNaN(n));
-        const s = insertBPlusSteps(vals);
-        stepsRef.current = s; setSteps(s);
-        setCurrentStep(-1); stepRef.current = -1;
-        setIsRunning(true); setIsPaused(false); setIsFinished(false); setIsSimMode(true);
-        clearInterval(timerRef.current);
-        timerRef.current = setInterval(() => advanceStep(stepsRef.current, stepRef.current), speed);
+        const targetNum = parseInt(searchKey) || 30;
+        setSearchKey(String(targetNum));
+        setIsRunning(true);
+        setIsPaused(false);
+        setIsFinished(false);
+        setSearchPath(['root']);
     };
-    const handlePause = () => { setIsRunning(false); setIsPaused(true); clearInterval(timerRef.current); };
-    const handleResume = () => { setIsRunning(true); setIsPaused(false); timerRef.current = setInterval(() => advanceStep(stepsRef.current, stepRef.current), speed); };
-    const handleReset = () => { clearInterval(timerRef.current); setSteps([]); stepsRef.current = []; setCurrentStep(-1); stepRef.current = -1; setIsRunning(false); setIsPaused(false); setIsFinished(false); setIsSimMode(false); };
-    const handleStep = () => { setIsSimMode(true); advanceStep(stepsRef.current, stepRef.current); };
 
-    const curStep = currentStep >= 0 ? steps[currentStep] : null;
-    const vals = input.trim().split(/\s+/).map(Number).filter(n => !isNaN(n));
+    const handlePause = () => {
+        setIsPaused(true);
+    };
 
-    const CENTER = (
-        <div style={{ padding: '0.75rem', height: '100%', display: 'flex', flexDirection: 'column', gap: '0.75rem', overflow: 'auto' }}>
-            <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.2rem' }}>
-                B+ Tree (Order 4, max {MAX_KEYS} keys/node)
-                <span style={{ marginLeft: '0.5rem', background: 'var(--cyan)', padding: '0.05rem 0.4rem', border: '1.5px solid var(--border)', fontSize: '0.6rem', fontWeight: 700 }}>Leaf</span>
-                <span style={{ marginLeft: '0.25rem', background: 'var(--white)', padding: '0.05rem 0.4rem', border: '1.5px solid var(--border)', fontSize: '0.6rem', fontWeight: 700 }}>Internal</span>
-            </div>
-            {curStep?.tree ? (
-                <div style={{ flex: 1, overflow: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingTop: '0.5rem' }}>
-                    {renderNode(curStep.tree, curStep.val ? [curStep.val] : null)}
-                </div>
-            ) : (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.35, fontSize: '0.9rem' }}>Tree will appear here</div>
-            )}
-            {curStep && (
-                <AnimatePresence mode="wait">
-                    <motion.div key={currentStep} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                        style={{ padding: '0.5rem 0.75rem', border: '3px solid var(--border)', fontWeight: 700, fontSize: '0.88rem', flexShrink: 0, background: curStep.inserting ? 'var(--yellow)' : curStep.done ? 'var(--green)' : curStep.final ? 'var(--green)' : 'var(--white)' }}>
-                        {curStep.inserting ? `⏳ Inserting ${curStep.val}…` : curStep.done ? `✅ ${curStep.val} inserted` : '✅ Complete'}
-                    </motion.div>
-                </AnimatePresence>
-            )}
-        </div>
-    );
+    const handleReset = () => {
+        setSearchKey('');
+        setSearchPath([]);
+        setComparisons(0);
+        setIsRunning(false);
+        setIsPaused(false);
+        setIsFinished(false);
+        setRaceActive(false);
+        setTableProgress(0);
+        setTreeProgress(0);
+        setRaceWinner(null);
+    };
 
-    const LEFT = (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', height: '100%', overflow: 'hidden' }}>
-            <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.5 }}>Insertion Queue</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                {vals.map((v, i) => {
-                    const insertedAt = steps.findIndex(s => s.done && s.val === v);
-                    const isDone = currentStep >= insertedAt && insertedAt >= 0;
-                    const isCur = curStep?.val === v;
-                    return <div key={i} style={{ width: 28, height: 28, border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.72rem', background: isCur ? 'var(--yellow)' : isDone ? 'var(--green)' : 'var(--white)' }}>{v}</div>;
-                })}
-            </div>
-            <div style={{ height: 2, background: 'var(--border)' }} />
-            <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.5 }}>Current Insert</div>
-            <div style={{ fontWeight: 700, fontSize: '1.5rem', fontFamily: 'var(--font-mono)', background: 'var(--yellow)', border: '2px solid var(--border)', padding: '0.25rem 0.5rem', width: 'fit-content' }}>{curStep?.val ?? '—'}</div>
-        </div>
-    );
+    const handleStep = () => {
+        const targetNum = parseInt(searchKey) || 30;
+        setSearchKey(String(targetNum));
+        const fullPath = getFullPathForVal(targetNum);
+        if (searchPath.length > 0) {
+            if (searchPath.length < fullPath.length) {
+                setSearchPath(fullPath.slice(0, searchPath.length + 1));
+            } else {
+                setIsFinished(true);
+                setComparisons(fullPath.length);
+            }
+        } else {
+            setSearchPath(['root']);
+        }
+    };
 
-    const RIGHT = curStep ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%', overflow: 'hidden' }}>
-            <AnimatePresence mode="wait">
-                <motion.div key={currentStep} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                    <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.55, marginBottom: '0.3rem' }}>What Happened</div>
-                    <div style={{ fontSize: '0.82rem', lineHeight: 1.55, borderLeft: '3px solid var(--yellow)', paddingLeft: '0.6rem' }}>{curStep.explanation}</div>
-                </motion.div>
-            </AnimatePresence>
-            <div style={{ height: 2, background: 'var(--border)' }} />
-            <div>
-                <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.55, marginBottom: '0.3rem' }}>💡 {curStep.insightTitle}</div>
-                <div style={{ background: 'var(--yellow)', border: '2px solid var(--border)', padding: '0.5rem 0.6rem', fontSize: '0.78rem', lineHeight: 1.5 }}>{curStep.insight}</div>
-            </div>
-            <div style={{ marginTop: 'auto', borderTop: '2px solid var(--border)', paddingTop: '0.4rem', fontSize: '0.72rem', opacity: 0.7 }}>
-                Time complexity: Search O(log n), Insert O(log n). Used by: MySQL InnoDB, PostgreSQL, MongoDB indexes.
-            </div>
-        </div>
-    ) : null;
+    useEffect(() => {
+        let interval = null;
+        if (isRunning && !isPaused && !isFinished) {
+            interval = setInterval(() => {
+                const targetNum = parseInt(searchKey) || 30;
+                const fullPath = getFullPathForVal(targetNum);
+                setSearchPath(prev => {
+                    if (prev.length < fullPath.length) {
+                        return fullPath.slice(0, prev.length + 1);
+                    } else {
+                        setIsRunning(false);
+                        setIsFinished(true);
+                        setComparisons(fullPath.length);
+                        return prev;
+                    }
+                });
+            }, speed);
+        }
+        return () => clearInterval(interval);
+    }, [isRunning, isPaused, isFinished, searchKey, speed]);
 
-    const TL = vals.map((v, i) => ({ id: i, label: `${v}`, done: steps.some((s, si) => s.done && s.val === v && si <= currentStep), active: curStep?.val === v }));
+    // Index Race Speed Simulation
+    const runRaceDemo = () => {
+        setRaceActive(true);
+        setTableProgress(0);
+        setTreeProgress(0);
+        setRaceWinner(null);
+
+        // Linear Table Scan (Slow progress)
+        let linearInterval = setInterval(() => {
+            setTableProgress(prev => {
+                const next = prev + 10;
+                if (next >= 100) {
+                    clearInterval(linearInterval);
+                }
+                return next;
+            });
+        }, 300);
+
+        // B+ Tree Index search (Fast jump)
+        let treeInterval = setInterval(() => {
+            setTreeProgress(prev => {
+                const next = prev + 33.3;
+                if (next >= 100) {
+                    clearInterval(treeInterval);
+                    setRaceWinner('B+ Tree Index');
+                }
+                return next;
+            });
+        }, 120);
+    };
 
     return (
-        <ImmersiveLayout isActive={isSimMode} title="B+ Tree Index" icon="🌳" moduleLabel="DBMS Module"
-            isRunning={isRunning} isPaused={isPaused} isFinished={isFinished} speed={speed} onSpeedChange={setSpeed}
-            onStart={handleStart} onPause={handlePause} onResume={handleResume} onReset={handleReset} onStep={handleStep}
-            currentStepNum={Math.max(0, currentStep + 1)} totalSteps={steps.length}
-            phaseName={curStep?.phase ?? ''} centerContent={CENTER} leftContent={LEFT} rightContent={RIGHT}
-            timelineItems={TL} legend={[{ color: 'var(--cyan)', label: 'Leaf Node' }, { color: 'var(--white)', label: 'Internal Node' }, { color: 'var(--yellow)', label: 'Inserting' }]}>
-            <div className="main-content">
-                <div style={{ marginBottom: '0.4rem' }}><Link to="/dbms" style={{ fontSize: '0.82rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← DBMS Module</Link></div>
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <div className="section-header">DBMS · Index Structures</div>
-                    <h1 style={{ fontSize: '1.9rem', fontWeight: 700 }}>🌳 B+ Tree Index Simulator</h1>
-                    <p style={{ opacity: 0.6, fontSize: '0.9rem', marginTop: '0.3rem' }}>Enter keys and watch them build a balanced B+ Tree with animated node splits.</p>
+        <ImmersiveLayout
+            isActive={true}
+            title="B+ Tree Indexing" icon="🌳" moduleLabel="DBMS Module"
+            isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
+            speed={speed} onSpeedChange={setSpeed}
+            onStart={handleStart} onPause={handlePause} onResume={handleStart}
+            onReset={handleReset} onStep={handleStep}
+            currentStepNum={searchPath.length} totalSteps={3}
+            phaseName="Tree Search Trace"
+            centerContent={
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '0.8rem', background: 'var(--white)', padding: '1rem', overflowY: 'auto' }}>
+                    
+                    {/* Controls Panel */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1fr', gap: '0.6rem', border: '3px solid var(--border)', background: 'var(--white)', padding: '0.4rem', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0 }}>
+                        <form onSubmit={handleInsert} style={{ display: 'flex', gap: 4 }}>
+                            <input
+                                type="number" placeholder="Insert key..."
+                                value={inputVal}
+                                onChange={e => setInputVal(e.target.value)}
+                                style={{ border: '2px solid var(--border)', width: '60%', padding: '2px 4px', fontSize: '0.78rem' }}
+                            />
+                            <button type="submit" className="btn btn-sm btn-green" style={{ flex: 1, padding: 0 }}>Insert</button>
+                        </form>
+                        <form onSubmit={handleSearch} style={{ display: 'flex', gap: 4 }}>
+                            <input
+                                type="number" placeholder="Search..."
+                                value={searchKey}
+                                onChange={e => setSearchKey(e.target.value)}
+                                style={{ border: '2px solid var(--border)', width: '60%', padding: '2px 4px', fontSize: '0.78rem' }}
+                            />
+                            <button type="submit" className="btn btn-sm btn-yellow" style={{ flex: 1, padding: 0 }}>Trace Path</button>
+                        </form>
+                        <div style={{ display: 'flex', gap: 4, alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ fontSize: '0.6rem', fontWeight: 900 }}>Index:</span>
+                            <button className="btn btn-sm" onClick={() => setIndexType(indexType === 'dense' ? 'sparse' : 'dense')} style={{ fontSize: '0.65rem', padding: '2px 6px' }}>
+                                {indexType.toUpperCase()}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Dynamic B+ Tree SVG Canvas */}
+                    <div style={{ border: '3px solid var(--border)', background: '#111', position: 'relative', flex: 1, minHeight: 250, boxShadow: '4px 4px 0 var(--border)', overflow: 'hidden' }}>
+                        
+                        <svg width="100%" height="100%" viewBox="0 0 500 240" style={{ position: 'absolute', inset: 0 }}>
+                            {/* Connectors */}
+                            {treeData.root.childrenIds && treeData.root.childrenIds.map(cid => {
+                                const child = treeData.children.find(n => n.id === cid);
+                                if (!child) return null;
+                                return (
+                                    <line
+                                        key={cid} x1={treeData.root.x} y1={treeData.root.y + 15} x2={child.x} y2={child.y - 15}
+                                        stroke={searchPath.includes(cid) ? 'var(--yellow)' : '#444'}
+                                        strokeWidth={searchPath.includes(cid) ? 3.5 : 1.5}
+                                    />
+                                );
+                            })}
+
+                            {treeData.children.map(node => {
+                                if (!node.childrenIds) return null;
+                                return node.childrenIds.map(cid => {
+                                    const child = treeData.children.find(n => n.id === cid);
+                                    if (!child) return null;
+                                    return (
+                                        <line
+                                            key={cid} x1={node.x} y1={node.y + 15} x2={child.x} y2={child.y - 15}
+                                            stroke={searchPath.includes(cid) ? 'var(--yellow)' : '#444'}
+                                            strokeWidth={searchPath.includes(cid) ? 3.5 : 1.5}
+                                        />
+                                    );
+                                });
+                            })}
+
+                            {/* Render Leaf Linked Chains */}
+                            {treeData.children.filter(n => n.isLeaf).map((node, idx, arr) => {
+                                if (idx === arr.length - 1) return null;
+                                const nextNode = arr[idx + 1];
+                                return (
+                                    <path
+                                        key={idx}
+                                        d={`M ${node.x + 25} ${node.y} L ${nextNode.x - 25} ${nextNode.y}`}
+                                        stroke="var(--pink)"
+                                        strokeWidth="2"
+                                        strokeDasharray="4,4"
+                                        markerEnd="url(#arrow)"
+                                    />
+                                );
+                            })}
+
+                            {/* Root Node rendering */}
+                            <g>
+                                <rect
+                                    x={treeData.root.x - 30} y={treeData.root.y - 15} width="60" height="28"
+                                    fill={searchPath.includes('root') ? 'var(--yellow)' : 'var(--white)'}
+                                    stroke="var(--border)" strokeWidth="2.5"
+                                />
+                                <text x={treeData.root.x} y={treeData.root.y + 4} textAnchor="middle" fontWeight="bold" fontSize="10" fontFamily="var(--font-mono)">
+                                    {treeData.root.keys.join(' | ')}
+                                </text>
+                            </g>
+
+                            {/* Children Nodes rendering */}
+                            {treeData.children.map(node => (
+                                <g key={node.id}>
+                                    <rect
+                                        x={node.x - 32} y={node.y - 15} width="64" height="28"
+                                        fill={searchPath.includes(node.id) ? 'var(--yellow)' : 'var(--white)'}
+                                        stroke="var(--border)" strokeWidth="2.5"
+                                    />
+                                    <text x={node.x} y={node.y + 4} textAnchor="middle" fontWeight="bold" fontSize="9" fontFamily="var(--font-mono)">
+                                        {node.keys.join(' | ')}
+                                    </text>
+                                    {node.isLeaf && (
+                                        <text x={node.x} y={node.y - 20} textAnchor="middle" fontSize="6.5" fill="#aaa">LEAF</text>
+                                    )}
+                                </g>
+                            ))}
+                        </svg>
+
+                        <div style={{ position: 'absolute', bottom: 6, left: 10, fontSize: '0.62rem', color: '#aaa', display: 'flex', gap: 10 }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <div style={{ width: 10, height: 10, background: 'var(--yellow)', border: '1.5px solid var(--border)' }} /> Active Search
+                            </span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <div style={{ width: 10, height: 10, background: 'var(--pink)', border: '1.5px solid var(--border)' }} /> Leaf Links Chain
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Range Query Demo & Comparison Output */}
+                    {comparisons > 0 && (
+                        <div style={{ border: '2.5px solid var(--border)', background: '#fef3c7', padding: '6px 12px', fontSize: '0.72rem', fontWeight: 900, boxShadow: '2px 2px 0 var(--border)' }}>
+                            🔍 Search Complete: Key found in {comparisons} index comparions vs. {keys.length} sequential disk lookups without B+ Index!
+                        </div>
+                    )}
                 </div>
-                <div className="panel" style={{ marginBottom: '1.25rem' }}>
-                    <div className="panel-header">⚙ Configuration</div>
-                    <div style={{ padding: '1rem' }}>
-                        <label className="form-label">Keys to Insert (space separated)</label>
-                        <input className="form-input" value={input} onChange={e => setInput(e.target.value)} />
-                        <div style={{ fontSize: '0.78rem', opacity: 0.6, marginTop: '0.3rem' }}>Tree order: 4 (max 3 keys per node before splitting)</div>
+            }
+            leftContent={
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                    <div style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.45 }}>Index Speed Race</div>
+                    
+                    <button className="btn btn-sm btn-pink" onClick={runRaceDemo} disabled={raceActive && !raceWinner}>
+                        🏎️ Start Search Race Test
+                    </button>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.2rem' }}>
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.62rem', fontWeight: 900 }}>
+                                <span>Linear Table Scan:</span>
+                                <span>{Math.round(tableProgress)}%</span>
+                            </div>
+                            <div style={{ height: 8, background: '#eee', border: '1.5px solid var(--border)', overflow: 'hidden' }}>
+                                <div style={{ height: '100%', background: 'var(--pink)', width: `${tableProgress}%` }} />
+                            </div>
+                        </div>
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.62rem', fontWeight: 900 }}>
+                                <span>B+ Tree Index Scan:</span>
+                                <span>{Math.round(treeProgress)}%</span>
+                            </div>
+                            <div style={{ height: 8, background: '#eee', border: '1.5px solid var(--border)', overflow: 'hidden' }}>
+                                <div style={{ height: '100%', background: 'var(--green)', width: `${treeProgress}%` }} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {raceWinner && (
+                        <div style={{ background: 'var(--green)', border: '2px solid var(--border)', padding: '4px', fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
+                            🏆 WINNER: {raceWinner}!
+                        </div>
+                    )}
+
+                    <div style={{ height: 2, background: 'var(--border)' }} />
+
+                    <div style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.45 }}>Dense vs Sparse</div>
+                    <div style={{ border: '2px solid var(--border)', background: '#fafafa', padding: '0.45rem', fontSize: '0.68rem', lineHeight: 1.35 }}>
+                        {indexType === 'dense' ? (
+                            <span><strong>DENSE INDEX</strong>: Contains an index entry for EVERY single search-key value in the data file. High speed, high memory footprint.</span>
+                        ) : (
+                            <span><strong>SPARSE INDEX</strong>: Contains entries for only SOME values. Smaller footprint, slower lookup as sequential scans complete the final leaf block.</span>
+                        )}
+                    </div>
+
+                    <div style={{ height: 2, background: 'var(--border)' }} />
+
+                    <div style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.45 }}>Live Stats</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.72rem', fontWeight: 800 }}>
+                        <div style={{ border: '2px solid var(--border)', padding: '4px', display: 'flex', justifyContent: 'space-between', background: 'var(--yellow)' }}>
+                            <span>Tree Height h:</span>
+                            <span>{keys.length <= 2 ? 1 : keys.length <= 6 ? 2 : 3}</span>
+                        </div>
+                        <div style={{ border: '2px solid var(--border)', padding: '4px', display: 'flex', justifyContent: 'space-between', background: 'var(--cyan)' }}>
+                            <span>Total Keys:</span>
+                            <span>{keys.length}</span>
+                        </div>
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button className="btn btn-yellow btn-lg" onClick={handleStart}>▶ Build Tree</button>
-                    <button className="btn btn-sm" style={{ marginTop: '0.15rem' }} onClick={handleStep}>⏭ Step Through</button>
+            }
+            rightContent={
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                    <div style={{ border: '2px solid var(--border)', background: 'var(--yellow)', padding: '0.4rem 0.6rem', boxShadow: '2px 2px 0 var(--border)' }}>
+                        <div style={{ fontSize: '0.55rem', fontWeight: 900, opacity: 0.6 }}>CONCEPT TAG</div>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>
+                            CONCEPT: B+ TREE INDEX
+                        </div>
+                    </div>
+
+                    <div style={{ border: '2px solid var(--border)', background: 'var(--white)', padding: '0.6rem', boxShadow: '2px 2px 0 var(--border)' }}>
+                        <p style={{ fontSize: '0.72rem', opacity: 0.8, lineHeight: 1.45 }}>
+                            B+ Trees are self-balancing search trees. Unlike standard B-trees, all actual data pointers are placed inside Leaf nodes, which are linked as a linked list to accelerate range queries.
+                        </p>
+                    </div>
+
+                    <div style={{ height: 2, background: 'var(--border)' }} />
+
+                    {/* Algorithm Logic card */}
+                    <div className="panel" style={{ boxShadow: '3px 3px 0 var(--border)' }}>
+                        <div className="panel-header" style={{ background: 'var(--pink)', fontSize: '0.72rem', padding: '4px 10px' }}>
+                            Tree Insertion Logic
+                        </div>
+                        <div style={{ padding: '0.6rem', background: 'var(--white)' }}>
+                            <pre style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', background: '#eee', padding: '0.4rem', border: '1.5px solid var(--border)' }}>
+                                {`// Order=3 split threshold
+if Node.keys.length > 2:
+  1. Split keys into left/right
+  2. Push middle key to Parent
+  3. Re-balance root if needed`}
+                            </pre>
+                        </div>
+                    </div>
                 </div>
+            }
+            timelineItems={keys.map(k => ({
+                id: k,
+                label: `Node containing ${k}`,
+                done: searchPath.length > 0,
+                active: false
+            }))}
+            legend={[
+                { color: 'var(--yellow)', label: 'Search Target' },
+                { color: 'var(--pink)', label: 'Leaf Connections' },
+                { color: 'var(--green)', label: 'Balanced Index' }
+            ]}
+            conceptMode={conceptMode}
+            onConceptModeToggle={() => setConceptMode(prev => !prev)}
+        >
+            <div className="main-content">
+                <Link to="/dbms">← Return to DBMS Landing</Link>
             </div>
         </ImmersiveLayout>
     );

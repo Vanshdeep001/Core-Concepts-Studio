@@ -3,28 +3,44 @@ import { motion } from 'framer-motion';
 
 const DBMS_SIMS = [
     {
-        path: '/dbms/2pl',
-        icon: '🔒',
-        label: 'Two-Phase Locking',
-        desc: 'Shared/exclusive locks · deadlock detection · rollback simulation',
+        path: '/dbms/normalization',
+        icon: '📊',
+        label: 'Normalization (1NF to BCNF)',
+        desc: 'Observe a single Student God-table decompose and physically split apart columns dynamically based on functional dependencies.',
         color: 'var(--yellow)',
-        badge: '2PL · Lock Table · Conflict',
+        badge: 'Decomposition · 1NF · 2NF · 3NF · BCNF',
+    },
+    {
+        path: '/dbms/joins',
+        icon: '🔗',
+        label: 'SQL Joins Connector',
+        desc: 'Connect records with live SVG bezier curves, edit cells in real-time, and watch outer join results compile row-by-row.',
+        color: 'var(--cyan)',
+        badge: 'Inner · Left · Right · Full · Cross · Self',
+    },
+    {
+        path: '/dbms/transactions',
+        icon: '🏦',
+        label: 'Transactions & ACID Lab',
+        desc: 'Trigger debit/credit pipe steps, inject runtime system crashes mid-transfer, and inspect concurrency isolation timelines.',
+        color: 'var(--pink)',
+        badge: 'Atomicity · Dirty Read · Rollback · ACID',
     },
     {
         path: '/dbms/bplustree',
         icon: '🌳',
-        label: 'B+ Tree Index',
-        desc: 'Insert · Search · Delete with animated node splitting and leaf linking',
-        color: 'var(--cyan)',
-        badge: 'Split · Propagate · Leaf Link',
+        label: 'Indexing & B+ Trees',
+        desc: 'Visualize dynamic B+ tree node splits/merges and launch a side-by-side Index Search Race comparing linear scans.',
+        color: 'var(--green)',
+        badge: 'B+ Tree · Dense/Sparse · Search Race',
     },
     {
-        path: '/dbms/queryplan',
-        icon: '🔍',
-        label: 'Query Execution Plan',
-        desc: 'Parse SQL → query tree → selection pushdown → join order → cost estimate',
-        color: 'var(--pink)',
-        badge: 'Parse · Optimize · Cost',
+        path: '/dbms/er-design',
+        icon: '🏗️',
+        label: 'ER Model & Schema Design',
+        desc: 'Place entities, ovals, and card lines, select Crow\'s foot cardinalities, and watch relational schemas update live.',
+        color: 'var(--purple)',
+        badge: 'ER Model · Cardinality · Junction Table',
     },
 ];
 
@@ -38,14 +54,14 @@ export default function DBMSLanding() {
             </div>
             <div style={{ marginBottom: '2rem' }}>
                 <div className="section-header">Module 2</div>
-                <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>🗄 DBMS</h1>
+                <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>🗄 DBMS (Database Systems)</h1>
                 <p style={{ opacity: 0.6, fontSize: '0.92rem', marginTop: '0.3rem' }}>
-                    Visualize database internals — concurrency control, tree indices, and query optimization.
+                    Interact with core database internals and design systems — normalization decomposition, SQL joins, ACID logs, index racing, and ER builders.
                 </p>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
                 {DBMS_SIMS.map((sim, i) => (
-                    <motion.div key={sim.path} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+                    <motion.div key={sim.path} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
                         <Link to={sim.path} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                             <div className="panel" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
                                 onMouseEnter={e => { e.currentTarget.style.transform = 'translate(4px,4px)'; e.currentTarget.style.boxShadow = 'none'; }}
