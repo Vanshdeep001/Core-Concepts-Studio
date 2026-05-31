@@ -25,8 +25,8 @@ const MODULES = [
         label: 'Computer Networks',
         icon: '🌐',
         color: 'var(--pink)',
-        description: 'Distance Vector · Link State · Sliding Window Protocol',
-        sims: ['Bellman-Ford', 'Dijkstra', 'Go-Back-N', 'Selective Repeat'],
+        description: 'OSI Model · TCP/UDP · IP Subnetting · Routing Algorithms · HTTP/DNS',
+        sims: ['OSI', 'TCP', 'UDP', 'Subnetting', 'Dijkstra', 'DNS', 'TLS'],
         path: '/networks',
     },
     {

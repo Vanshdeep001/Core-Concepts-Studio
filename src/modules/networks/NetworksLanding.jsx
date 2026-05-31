@@ -3,28 +3,44 @@ import { motion } from 'framer-motion';
 
 const NET_SIMS = [
     {
-        path: '/networks/distancevector',
-        icon: '📡',
-        label: 'Distance Vector Routing',
-        desc: 'Bellman-Ford per-router iteration — watch routing tables converge step by step',
-        color: 'var(--yellow)',
-        badge: 'Bellman-Ford · Convergence',
+        path: '/networks/osi',
+        icon: '📦',
+        label: 'OSI & TCP/IP Model',
+        desc: 'Watch a packet descend the 7-layer OSI stack with encapsulation, travel the wire, and unwrap at the receiver — layer by layer.',
+        color: 'var(--purple)',
+        badge: 'Encapsulation · PDU · Protocol Stack · Data Link · Decapsulation',
     },
     {
-        path: '/networks/linkstate',
-        icon: '🗺',
-        label: 'Link State (Dijkstra)',
-        desc: "Dijkstra's shortest path — see the priority queue and SPT build in real time",
+        path: '/networks/tcp-udp',
+        icon: '🤝',
+        label: 'TCP vs UDP & 3-Way Handshake',
+        desc: 'Vertical sequence diagram — SYN/ACK arrows, packet drops, retransmissions, congestion control sawtooth, and side-by-side protocol comparison.',
         color: 'var(--cyan)',
-        badge: 'Dijkstra · SPT · Min Heap',
+        badge: 'SYN · ACK · Window · Congestion · Reliability · Stateless',
     },
     {
-        path: '/networks/slidingwindow',
-        icon: '🪟',
-        label: 'Sliding Window Protocol',
-        desc: 'Stop & Wait · Go-Back-N · Selective Repeat — packet flow, ACKs, and retransmissions',
+        path: '/networks/subnetting',
+        icon: '🔢',
+        label: 'IP Addressing & Subnetting',
+        desc: 'Interactive 32-bit grid with CIDR slider, VLSM address-space bar, subnetting quiz mode, and IPv4 ↔ IPv6 toggle.',
+        color: 'var(--orange)',
+        badge: 'Network bits · Host bits · CIDR · VLSM · Broadcast · Subnetting',
+    },
+    {
+        path: '/networks/routing',
+        icon: '🗺',
+        label: 'Routing Algorithms',
+        desc: 'Draggable router topology — run Dijkstra or Bellman-Ford step-by-step, cut links for live rerouting, compare OSPF vs RIP vs BGP.',
+        color: 'var(--green)',
+        badge: 'Dijkstra · Bellman-Ford · Link State · Distance Vector · OSPF · RIP',
+    },
+    {
+        path: '/networks/http-dns',
+        icon: '🌍',
+        label: 'HTTP/HTTPS & DNS',
+        desc: 'Type a URL and watch the full journey — DNS resolution chain, TLS handshake comic strip, HTTP request/response, waterfall timeline, and failure injection.',
         color: 'var(--pink)',
-        badge: 'GBN · SR · Timeout',
+        badge: 'DNS · TLS · Handshake · Status codes · TTFB · Waterfall · Cache',
     },
 ];
 
@@ -38,7 +54,7 @@ export default function NetworksLanding() {
                 <div className="section-header">Module 3</div>
                 <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>🌐 Computer Networks</h1>
                 <p style={{ opacity: 0.6, fontSize: '0.92rem', marginTop: '0.3rem' }}>
-                    Simulate routing protocol convergence and data-link layer protocols with live visuals.
+                    Visualize network protocols from the OSI stack to HTTP — packet encapsulation, TCP handshakes, IP subnetting, routing algorithms, and DNS resolution.
                 </p>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>

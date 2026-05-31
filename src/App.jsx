@@ -25,9 +25,11 @@ import ErDesignSim from './modules/dbms/ErDesignSim';
 
 // Networks Module
 import NetworksLanding from './modules/networks/NetworksLanding';
-import DistanceVectorSim from './modules/networks/DistanceVectorSim';
-import LinkStateSim from './modules/networks/LinkStateSim';
-import SlidingWindowSim from './modules/networks/SlidingWindowSim';
+import OsiModelSim from './modules/networks/OsiModelSim';
+import TcpUdpSim from './modules/networks/TcpUdpSim';
+import SubnettingSim from './modules/networks/SubnettingSim';
+import RoutingAlgoSim from './modules/networks/RoutingAlgoSim';
+import HttpDnsSim from './modules/networks/HttpDnsSim';
 
 // OOP Module
 import OOPSLanding from './modules/oops/OOPSLanding';
@@ -98,9 +100,11 @@ function AppContent() {
 
           {/* Networks Module */}
           <Route path="/networks" element={<NetworksLanding />} />
-          <Route path="/networks/distancevector" element={<DistanceVectorSim />} />
-          <Route path="/networks/linkstate" element={<LinkStateSim />} />
-          <Route path="/networks/slidingwindow" element={<SlidingWindowSim />} />
+          <Route path="/networks/osi" element={<OsiModelSim />} />
+          <Route path="/networks/tcp-udp" element={<TcpUdpSim />} />
+          <Route path="/networks/subnetting" element={<SubnettingSim />} />
+          <Route path="/networks/routing" element={<RoutingAlgoSim />} />
+          <Route path="/networks/http-dns" element={<HttpDnsSim />} />
 
           {/* OOP Module */}
           <Route path="/oops" element={<OOPSLanding />} />
