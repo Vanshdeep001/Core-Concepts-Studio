@@ -3,44 +3,52 @@ import { motion } from 'framer-motion';
 
 const OOP_SIMS = [
     {
-        path: '/oops/memory',
-        icon: '🧠',
-        label: 'Object Lifecycle & Memory',
-        desc: 'Stack frames · heap allocation · constructor/destructor · GC simulation',
-        color: 'var(--yellow)',
-        badge: 'Stack · Heap · GC · Refs',
+        path: '/oops/pillars',
+        icon: '🏛️',
+        label: 'Four Pillars of OOP',
+        desc: 'Central Car object transforms live — Encapsulation locks fields, Abstraction grays internals, Inheritance spawns children, Polymorphism fires different responses.',
+        color: '#ffd93d',
+        badge: 'Encapsulation · Abstraction · Inheritance · Polymorphism · Object · Class',
     },
     {
-        path: '/oops/polymorphism',
-        icon: '🔀',
-        label: 'Polymorphism & Dispatch',
-        desc: 'Dynamic binding — vtable lookup, which override executes, reference assignment',
-        color: 'var(--cyan)',
-        badge: 'vTable · Override · Binding',
+        path: '/oops/inheritance',
+        icon: '🌳',
+        label: 'Inheritance & Polymorphism Deep Dive',
+        desc: 'Build inheritance trees live. MRO pulses cascade through nodes. Diamond problem lights up red. Runtime dispatch shows reference vs actual type.',
+        color: '#66b3ff',
+        badge: 'MRO · Dynamic dispatch · Override · Overload · Diamond Problem · Virtual',
     },
     {
-        path: '/oops/observer',
-        icon: '👁',
-        label: 'Observer Pattern',
-        desc: 'Subject state change → notify → all observers update — event propagation visual',
+        path: '/oops/abstract-interface',
+        icon: '📐',
+        label: 'Abstract Class vs Interface',
+        desc: 'Blueprint boards side by side — filled vs dashed cells. Drop a concrete class and fulfill the contract method by method.',
         color: 'var(--pink)',
-        badge: 'Pub/Sub · Notify · Event',
+        badge: 'Abstract · Interface · Contract · Realization · Multiple inheritance',
     },
     {
-        path: '/oops/strings',
-        icon: '🧵',
-        label: 'String Internals & Mutability',
-        desc: 'String Pool · immutability · StringBuilder · StringBuffer · capacity expansion · intern()',
-        color: 'var(--green)',
-        badge: 'Pool · Immutable · Builder · Buffer',
+        path: '/oops/patterns',
+        icon: '🧩',
+        label: 'Design Patterns',
+        desc: 'Live interactive simulations — Singleton convergence, Factory conveyor belt, Observer pub/sub, Decorator nested rings, Strategy swap.',
+        color: '#4dd0c8',
+        badge: 'Singleton · Factory · Observer · Decorator · Strategy · GoF',
     },
     {
-        path: '/oops/threads',
-        icon: '🔂',
-        label: 'Threads: Living Entities',
-        desc: 'Creation (Thread vs Runnable) · Lifecycle States · Scheduler · start() vs run() visually explained',
+        path: '/oops/solid',
+        icon: '🏗️',
+        label: 'SOLID Principles',
+        desc: 'Watch BAD class diagrams restructure on screen — methods migrate, interfaces split, dependencies flip. Animated transformation.',
         color: 'var(--purple)',
-        badge: 'Concurrency · Lifecycle · Scheduler',
+        badge: 'SRP · OCP · LSP · ISP · DIP · Coupling · Cohesion',
+    },
+    {
+        path: '/oops/uml',
+        icon: '📊',
+        label: 'UML Diagrams',
+        desc: 'Drag-and-drop UML builder — Class, Sequence, Use Case, Activity diagrams. Code-to-UML parser. Pre-built scenarios.',
+        color: '#ff8a65',
+        badge: 'Class diagram · Sequence · Use case · Activity · Multiplicity · Lifeline',
     },
 ];
 
@@ -54,7 +62,7 @@ export default function OOPSLanding() {
                 <div className="section-header">Module 4</div>
                 <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>🧱 OOP Concepts</h1>
                 <p style={{ opacity: 0.6, fontSize: '0.92rem', marginTop: '0.3rem' }}>
-                    Visualize object-oriented principles — memory, polymorphism, and design patterns.
+                    Visualize object-oriented principles — four pillars, inheritance trees, design patterns, SOLID principles, and UML diagrams.
                 </p>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>

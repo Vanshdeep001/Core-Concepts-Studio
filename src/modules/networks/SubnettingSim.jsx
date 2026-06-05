@@ -17,9 +17,47 @@ function getAddressClass(firstOctet) { if (firstOctet < 128) return 'A'; if (fir
 function bitsToBinaryStr(n, bits) { return n.toString(2).padStart(bits, '0'); }
 
 const QUIZ_SCENARIOS = [
-    { prompt: 'Divide 192.168.1.0/24 into 4 equal subnets for ~62 hosts each.', baseIp: [192,168,1,0], basePrefix: 24, expectedPrefix: 26, expectedCount: 4 },
-    { prompt: 'Create 8 subnets from 10.0.0.0/8 (each with ~2M hosts).', baseIp: [10,0,0,0], basePrefix: 8, expectedPrefix: 11, expectedCount: 8 },
-    { prompt: 'Split 172.16.0.0/16 into 2 subnets for ~32766 hosts each.', baseIp: [172,16,0,0], basePrefix: 16, expectedPrefix: 17, expectedCount: 2 },
+    {
+        prompt: 'Divide 192.168.1.0/24 into 4 equal subnets for ~62 hosts each.',
+        baseIp: [192, 168, 1, 0],
+        basePrefix: 24,
+        expectedPrefix: 26,
+        expectedCount: 4,
+        departments: [
+            { name: 'Engineering', hosts: 62 },
+            { name: 'Sales', hosts: 62 },
+            { name: 'Support', hosts: 62 },
+            { name: 'Finance', hosts: 62 }
+        ]
+    },
+    {
+        prompt: 'Create 8 subnets from 10.0.0.0/8 (each with ~2M hosts).',
+        baseIp: [10, 0, 0, 0],
+        basePrefix: 8,
+        expectedPrefix: 11,
+        expectedCount: 8,
+        departments: [
+            { name: 'Region 1', hosts: 2000000 },
+            { name: 'Region 2', hosts: 2000000 },
+            { name: 'Region 3', hosts: 2000000 },
+            { name: 'Region 4', hosts: 2000000 },
+            { name: 'Region 5', hosts: 2000000 },
+            { name: 'Region 6', hosts: 2000000 },
+            { name: 'Region 7', hosts: 2000000 },
+            { name: 'Region 8', hosts: 2000000 }
+        ]
+    },
+    {
+        prompt: 'Split 172.16.0.0/16 into 2 subnets for ~32766 hosts each.',
+        baseIp: [172, 16, 0, 0],
+        basePrefix: 16,
+        expectedPrefix: 17,
+        expectedCount: 2,
+        departments: [
+            { name: 'HQ Network', hosts: 32766 },
+            { name: 'Branch Network', hosts: 32766 }
+        ]
+    },
 ];
 
 /* ════════════════════════════════════════
@@ -27,11 +65,11 @@ const QUIZ_SCENARIOS = [
    ════════════════════════════════════════ */
 function buildSteps(octets, prefix) {
     const steps = [];
-    const ipInt = ipToInt(...octets);
+    const ipIntVal = ipToInt(...octets);
     for (let p = 8; p <= prefix; p += 4) {
         const effectiveP = Math.min(p, prefix);
-        const net = getNetworkAddr(ipInt, effectiveP);
-        const bcast = getBroadcast(ipInt, effectiveP);
+        const net = getNetworkAddr(ipIntVal, effectiveP);
+        const bcast = getBroadcast(ipIntVal, effectiveP);
         steps.push({
             prefix: effectiveP,
             networkAddr: intToIpStr(net),
@@ -46,9 +84,8 @@ function buildSteps(octets, prefix) {
                      'Subnetting within a Class C: Borrowing host bits to create smaller subnets. Each additional bit halves the hosts.',
         });
     }
-    // Final step at exact prefix
-    const net = getNetworkAddr(ipInt, prefix);
-    const bcast = getBroadcast(ipInt, prefix);
+    const net = getNetworkAddr(ipIntVal, prefix);
+    const bcast = getBroadcast(ipIntVal, prefix);
     steps.push({
         prefix,
         networkAddr: intToIpStr(net),
@@ -73,6 +110,13 @@ export default function SubnettingSim() {
     const [quizIdx, setQuizIdx] = useState(null);
     const [quizResult, setQuizResult] = useState(null);
     const [speed, setSpeed] = useState(700);
+    const [activeTab, setActiveTab] = useState('grid'); // 'grid' | 'routing' | 'tree'
+
+    // Routing simulator states
+    const [routingIpStr, setRoutingIpStr] = useState('192.168.1.75');
+    const [routingLogs, setRoutingLogs] = useState([]);
+    const [isRoutingActive, setIsRoutingActive] = useState(false);
+    const [matchingSubnetIdx, setMatchingSubnetIdx] = useState(-1);
 
     const [steps, setSteps] = useState([]);
     const [currentStep, setCurrentStep] = useState(-1);
@@ -85,10 +129,10 @@ export default function SubnettingSim() {
     const stepRef = useRef(-1);
     const stepsRef = useRef([]);
 
-    const ipInt = ipToInt(...octets);
+    const ipIntVal = ipToInt(...octets);
     const mask = maskFromPrefix(prefix);
-    const networkAddr = getNetworkAddr(ipInt, prefix);
-    const broadcast = getBroadcast(ipInt, prefix);
+    const networkAddr = getNetworkAddr(ipIntVal, prefix);
+    const broadcast = getBroadcast(ipIntVal, prefix);
     const usableHosts = getUsableHosts(prefix);
     const addressClass = getAddressClass(octets[0]);
 
@@ -115,7 +159,22 @@ export default function SubnettingSim() {
     };
     const handlePause = () => { setIsRunning(false); setIsPaused(true); clearInterval(timerRef.current); };
     const handleResume = () => { setIsRunning(true); setIsPaused(false); timerRef.current = setInterval(advanceStep, speed); };
-    const handleReset = () => { clearInterval(timerRef.current); setSteps([]); stepsRef.current = []; setCurrentStep(-1); stepRef.current = -1; setIsRunning(false); setIsPaused(false); setIsFinished(false); setIsSimMode(false); setQuizIdx(null); setQuizResult(null); };
+    const handleReset = () => {
+        clearInterval(timerRef.current);
+        setSteps([]);
+        stepsRef.current = [];
+        setCurrentStep(-1);
+        stepRef.current = -1;
+        setIsRunning(false);
+        setIsPaused(false);
+        setIsFinished(false);
+        setIsSimMode(false);
+        setQuizIdx(null);
+        setQuizResult(null);
+        setMatchingSubnetIdx(-1);
+        setIsRoutingActive(false);
+        setRoutingLogs([]);
+    };
     const handleStep = () => {
         if (!isSimMode) {
             const s = buildSteps(octets, prefix);
@@ -136,16 +195,18 @@ export default function SubnettingSim() {
         setOctets(newOctets);
     };
 
-    // Add a subnet to the address space bar
+    // Add a subnet to the address space
     const addSubnet = (subPrefix) => {
         const netStart = subnets.length === 0 ? networkAddr : (subnets[subnets.length - 1].end + 1);
         const subMask = maskFromPrefix(subPrefix);
         const subNet = (netStart & subMask) >>> 0;
         const subBcast = (subNet | (~subMask & 0xffffffff)) >>> 0;
         if (subBcast > broadcast) return; // overflow
-        const colors = ['#b39ddb','#90caf9','#a5d6a7','#ffcc80','#ef9a9a','#80deea','#ffe082','#ffab91'];
+        const colors = ['#b39ddb', '#90caf9', '#a5d6a7', '#ffcc80', '#ef9a9a', '#80deea', '#ffe082', '#ffab91'];
         setSubnets([...subnets, { start: subNet, end: subBcast, prefix: subPrefix, color: colors[subnets.length % colors.length] }]);
     };
+
+    const clearSubnets = () => setSubnets([]);
 
     // Check quiz
     const checkQuiz = () => {
@@ -161,235 +222,535 @@ export default function SubnettingSim() {
         }
     };
 
+    // Trigger bitwise AND Routing simulation
+    const runRoutingSim = () => {
+        setIsRoutingActive(true);
+        setMatchingSubnetIdx(-1);
+        const logs = [];
+        logs.push(`[ROUTER] Packet received. Destination IP: ${routingIpStr}`);
+        
+        let routedIpInt = 0;
+        try {
+            const parts = routingIpStr.split('.').map(Number);
+            if (parts.length === 4 && parts.every(p => p >= 0 && p <= 255)) {
+                routedIpInt = ipToInt(...parts);
+            } else {
+                throw new Error();
+            }
+        } catch {
+            logs.push(`[ROUTER] ❌ Invalid Destination IP format.`);
+            setRoutingLogs(logs);
+            return;
+        }
+
+        logs.push(`[ROUTER] Destination IP in Binary: ${bitsToBinaryStr(routedIpInt, 32)}`);
+        logs.push(`[ROUTER] Checking routing table with ${subnets.length} subnets...`);
+
+        let matched = false;
+        for (let i = 0; i < subnets.length; i++) {
+            const s = subnets[i];
+            const subMask = maskFromPrefix(s.prefix);
+            const andResult = (routedIpInt & subMask) >>> 0;
+            
+            logs.push(`--------------------------------------`);
+            logs.push(`Testing Route #${i + 1}: ${intToIpStr(s.start)}/${s.prefix}`);
+            logs.push(`IP   : ${bitsToBinaryStr(routedIpInt, 32)}`);
+            logs.push(`MASK : ${bitsToBinaryStr(subMask, 32)}`);
+            logs.push(`AND  : ${bitsToBinaryStr(andResult, 32)} (${intToIpStr(andResult)})`);
+            
+            if (andResult === s.start) {
+                logs.push(`✅ MATCH! Forwarding packet to Port #${i + 1} (${intToIpStr(s.start)}/${s.prefix})`);
+                setMatchingSubnetIdx(i);
+                matched = true;
+                break;
+            } else {
+                logs.push(`❌ MISMATCH. Expected network ${intToIpStr(s.start)}, got ${intToIpStr(andResult)}`);
+            }
+        }
+
+        if (!matched) {
+            logs.push(`--------------------------------------`);
+            logs.push(`⚠️ No matching subnet found. Dropping packet at default gateway.`);
+            setMatchingSubnetIdx(-2);
+        }
+
+        setRoutingLogs(logs);
+    };
+
     /* ════════════════════════════════════════
-       32-BIT GRID RENDERER
+       32-BIT SYNTHESIZER PANEL
        ════════════════════════════════════════ */
     const renderBitGrid = () => {
-        const ipBits = bitsToBinaryStr(ipInt, 32);
+        const ipBits = bitsToBinaryStr(ipIntVal, 32);
         const maskBits = bitsToBinaryStr(mask, 32);
         const effectivePrefix = curStep ? curStep.prefix : prefix;
 
         return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', background: 'var(--white)', padding: '0.75rem', border: '3px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
                 {/* Dotted decimal */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                     {octets.map((o, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.15rem' }}>
-                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '1rem' }}>{o}</span>
-                            {i < 3 && <span style={{ fontWeight: 800, opacity: 0.3 }}>.</span>}
-                        </div>
+                        <motion.div
+                            key={i}
+                            animate={{ scale: [1, 1.05, 1] }}
+                            transition={{ duration: 0.2 }}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                background: 'var(--yellow)',
+                                border: '2.5px solid var(--border)',
+                                padding: '2px 8px',
+                                boxShadow: 'var(--shadow-sm)'
+                            }}
+                        >
+                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '1.2rem' }}>{o}</span>
+                            {i < 3 && <span style={{ fontWeight: 800, marginLeft: '0.3rem', opacity: 0.6 }}>.</span>}
+                        </motion.div>
                     ))}
-                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.9rem', color: 'var(--orange)' }}>/{effectivePrefix}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 900, fontSize: '1.2rem', color: 'var(--pink)', marginLeft: '0.5rem' }}>/{effectivePrefix}</span>
                 </div>
 
                 {/* IP bit row */}
-                <div style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.4, marginBottom: '0.1rem' }}>IP Address</div>
-                <div style={{ display: 'flex', gap: '0px', flexWrap: 'wrap' }}>
+                <div style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4 }}>Interactive Bit Panel (Click to flip)</div>
+                <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', justifyContent: 'center' }}>
                     {ipBits.split('').map((bit, i) => {
                         const isNetwork = i < effectivePrefix;
                         return (
-                            <motion.div
+                            <motion.button
                                 key={`ip-${i}`}
                                 onClick={() => flipBit(i)}
-                                animate={{ background: isNetwork ? '#ffb74d' : '#4dd0e1' }}
+                                whileHover={{ scale: 1.15 }}
                                 style={{
-                                    width: 22, height: 22,
-                                    border: '1.5px solid var(--border)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.7rem',
+                                    width: '24px',
+                                    height: '24px',
+                                    border: '2px solid var(--border)',
+                                    background: isNetwork ? 'var(--orange)' : 'var(--cyan)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontFamily: 'var(--font-mono)',
+                                    fontWeight: 800,
+                                    fontSize: '0.72rem',
                                     cursor: 'pointer',
-                                    borderRight: (i + 1) % 8 === 0 ? '3px solid var(--border)' : '1.5px solid var(--border)',
+                                    position: 'relative',
+                                    boxShadow: 'var(--shadow-sm)',
+                                    borderRight: (i + 1) % 8 === 0 && i < 31 ? '3.5px solid var(--border)' : '2px solid var(--border)'
                                 }}
-                            >{bit}</motion.div>
+                                title={`Bit ${i} (Weight: ${Math.pow(2, 7 - (i % 8))}) - ${isNetwork ? 'Network' : 'Host'}`}
+                            >
+                                {bit}
+                                {i === effectivePrefix - 1 && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        right: '-2px',
+                                        top: '-4px',
+                                        bottom: '-4px',
+                                        width: '4px',
+                                        background: 'red',
+                                        zIndex: 10
+                                    }} />
+                                )}
+                            </motion.button>
                         );
                     })}
                 </div>
 
                 {/* Subnet mask row */}
-                <div style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.4, marginTop: '0.3rem', marginBottom: '0.1rem' }}>Subnet Mask</div>
-                <div style={{ display: 'flex', gap: '0px', flexWrap: 'wrap' }}>
+                <div style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4, marginTop: '0.2rem' }}>Subnet Mask Bits</div>
+                <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', justifyContent: 'center' }}>
                     {maskBits.split('').map((bit, i) => (
                         <div key={`mask-${i}`} style={{
-                            width: 22, height: 22,
-                            border: '1.5px solid var(--border)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.7rem',
-                            background: bit === '1' ? '#ffb74d' : '#e0e0e0',
+                            width: '24px',
+                            height: '24px',
+                            border: '2.5px solid var(--border)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontFamily: 'var(--font-mono)',
+                            fontWeight: 800,
+                            fontSize: '0.72rem',
+                            background: bit === '1' ? 'var(--orange)' : '#e0e0e0',
                             opacity: 0.8,
-                            borderRight: (i + 1) % 8 === 0 ? '3px solid var(--border)' : '1.5px solid var(--border)',
+                            borderRight: (i + 1) % 8 === 0 && i < 31 ? '3.5px solid var(--border)' : '2.5px solid var(--border)'
                         }}>{bit}</div>
                     ))}
                 </div>
 
                 {/* CIDR slider */}
-                <div style={{ marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.5, flexShrink: 0 }}>CIDR /</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.3rem' }}>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 800, opacity: 0.6, flexShrink: 0 }}>CIDR Slider:</span>
                     <input type="range" min={1} max={30} value={prefix}
                         onChange={e => setPrefix(+e.target.value)}
-                        style={{ flex: 1 }}
+                        style={{ flex: 1, accentColor: 'var(--pink)' }}
                     />
-                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.85rem', flexShrink: 0, width: 30, textAlign: 'right' }}>/{prefix}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 900, fontSize: '0.9rem', flexShrink: 0 }}>/{prefix}</span>
                 </div>
 
-                {/* Mask dotted decimal */}
-                <div style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: 600, opacity: 0.6, textAlign: 'center' }}>
-                    Mask: {intToIpStr(mask)}
+                <div style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', fontWeight: 700, opacity: 0.7, textAlign: 'center' }}>
+                    Mask Value: {intToIpStr(mask)}
                 </div>
             </div>
         );
     };
 
     /* ════════════════════════════════════════
-       ADDRESS SPACE BAR
+       SUBNET GRID MAP (LAND PARSER)
        ════════════════════════════════════════ */
-    const renderAddressBar = () => {
+    const renderSubnetGrid = () => {
         const totalRange = broadcast - networkAddr + 1;
+        const sliceSize = Math.max(1, totalRange / 256);
+        
         return (
-            <div style={{ marginTop: '0.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                    <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.4 }}>Address Space Bar</span>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.5 }}>Subnet grid map (256 segments)</span>
+                    <div style={{ display: 'flex', gap: '3px' }}>
                         {[26, 27, 28].map(p => (
                             <button key={p} onClick={() => addSubnet(p)} style={{
-                                fontSize: '0.6rem', fontWeight: 700, padding: '0.15rem 0.4rem',
-                                border: '1.5px solid var(--border)', background: 'var(--white)',
+                                fontSize: '0.6rem', fontWeight: 800, padding: '0.2rem 0.5rem',
+                                border: '2px solid var(--border)', background: 'var(--white)',
                                 cursor: 'pointer', fontFamily: 'var(--font-mono)',
+                                boxShadow: 'var(--shadow-sm)'
                             }}>+/{p}</button>
                         ))}
-                        <button onClick={() => setSubbnetsCleared()} style={{
-                            fontSize: '0.6rem', fontWeight: 700, padding: '0.15rem 0.4rem',
-                            border: '1.5px solid var(--border)', background: 'var(--pink)',
+                        <button onClick={clearSubnets} style={{
+                            fontSize: '0.6rem', fontWeight: 800, padding: '0.2rem 0.5rem',
+                            border: '2px solid var(--border)', background: 'var(--pink)',
                             cursor: 'pointer',
+                            boxShadow: 'var(--shadow-sm)'
                         }}>Clear</button>
                     </div>
                 </div>
+
+                {/* The 16x16 interactive grid */}
                 <div style={{
-                    height: 28, border: '2px solid var(--border)', display: 'flex',
-                    background: '#e0e0e0', position: 'relative', overflow: 'hidden',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(16, 1fr)',
+                    gap: '2px',
+                    border: '3px solid var(--border)',
+                    background: 'var(--border)',
+                    padding: '2px',
+                    boxShadow: 'var(--shadow-sm)'
                 }}>
-                    {subnets.map((s, i) => {
-                        const left = ((s.start - networkAddr) / totalRange) * 100;
-                        const width = ((s.end - s.start + 1) / totalRange) * 100;
+                    {Array.from({ length: 256 }).map((_, cellIdx) => {
+                        const cellIpInt = (networkAddr + cellIdx * sliceSize) >>> 0;
+                        const cellEndIpInt = (cellIpInt + sliceSize - 1) >>> 0;
+
+                        // Find matching subnet
+                        let matchedSubnet = null;
+                        let matchedSubnetIdxVal = -1;
+                        for (let j = 0; j < subnets.length; j++) {
+                            const s = subnets[j];
+                            if (!(cellEndIpInt < s.start || cellIpInt > s.end)) {
+                                matchedSubnet = s;
+                                matchedSubnetIdxVal = j;
+                                break;
+                            }
+                        }
+
+                        const isFirstOfSubnet = matchedSubnet && cellIpInt === matchedSubnet.start;
+                        const isLastOfSubnet = matchedSubnet && cellEndIpInt === matchedSubnet.end;
+
                         return (
-                            <motion.div key={i} initial={{ width: 0 }} animate={{ width: `${width}%` }}
+                            <div
+                                key={cellIdx}
                                 style={{
-                                    position: 'absolute', left: `${left}%`, top: 0, bottom: 0,
-                                    background: s.color, borderRight: '2px solid var(--border)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '0.55rem', fontWeight: 800, fontFamily: 'var(--font-mono)',
-                                    overflow: 'hidden',
-                                }}>/{s.prefix}</motion.div>
+                                    aspectRatio: '1',
+                                    background: matchedSubnet ? matchedSubnet.color : '#eaeaea',
+                                    border: matchingSubnetIdx === matchedSubnetIdxVal && matchingSubnetIdx !== -1 ? '2px solid red' : 'none',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.45rem',
+                                    fontWeight: 900,
+                                    color: 'black',
+                                    position: 'relative',
+                                    cursor: 'pointer'
+                                }}
+                                title={`IP: ${intToIpStr(cellIpInt)}${sliceSize > 1 ? ' - ' + intToIpStr(cellEndIpInt) : ''} ${matchedSubnet ? `(Subnet /${matchedSubnet.prefix})` : ''}`}
+                            >
+                                {isFirstOfSubnet && 'N'}
+                                {isLastOfSubnet && 'B'}
+                            </div>
                         );
                     })}
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.55rem', fontFamily: 'var(--font-mono)', opacity: 0.5, marginTop: '0.1rem' }}>
-                    <span>{intToIpStr(networkAddr)}</span>
-                    <span>{intToIpStr(broadcast)}</span>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', fontFamily: 'var(--font-mono)', opacity: 0.5 }}>
+                    <span>Block Start: {intToIpStr(networkAddr)}</span>
+                    <span>N=Network, B=Broadcast</span>
+                    <span>Block End: {intToIpStr(broadcast)}</span>
                 </div>
             </div>
         );
     };
 
-    // Fix: setSubbnetsCleared should be setSubnets([])
-    const setSubbnetsCleared = () => setSubnets([]);
+    /* ════════════════════════════════════════
+       TAB 2: BITWISE AND ROUTING SIMULATOR
+       ════════════════════════════════════════ */
+    const renderRoutingSimulator = () => {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%' }}>
+                <div style={{ border: '3px solid var(--border)', background: 'var(--white)', padding: '0.75rem', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ fontWeight: 800, fontSize: '0.8rem', marginBottom: '0.4rem' }}>⚙ Test Packet Router</div>
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                        <input
+                            type="text"
+                            className="form-input"
+                            value={routingIpStr}
+                            onChange={e => setRoutingIpStr(e.target.value)}
+                            placeholder="Enter target IP (e.g. 192.168.1.75)"
+                            style={{ fontFamily: 'var(--font-mono)', flex: 1 }}
+                        />
+                        <button className="btn btn-yellow btn-sm" onClick={runRoutingSim}>Route Packet</button>
+                    </div>
+                </div>
+
+                <div style={{
+                    flex: 1,
+                    background: '#121212',
+                    color: '#a8e6cf',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.7rem',
+                    padding: '0.75rem',
+                    border: '3px solid var(--border)',
+                    boxShadow: 'var(--shadow-sm)',
+                    overflowY: 'auto',
+                    minHeight: '220px'
+                }}>
+                    {isRoutingActive ? (
+                        routingLogs.map((log, idx) => {
+                            let color = '#fff';
+                            if (log.includes('✅') || log.includes('MATCH!')) color = 'var(--green)';
+                            else if (log.includes('❌') || log.includes('⚠️')) color = 'var(--pink)';
+                            else if (log.includes('Testing Route')) color = 'var(--cyan)';
+                            
+                            return (
+                                <div key={idx} style={{ color, marginBottom: '0.2rem' }}>
+                                    {log}
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <div style={{ opacity: 0.4, fontStyle: 'italic', textAlign: 'center', padding: '2rem' }}>
+                            Carve some subnets on the address bar first, then input an IP address and click "Route Packet" to run the bitwise AND hardware routing simulator.
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    /* ════════════════════════════════════════
+       TAB 3: SUBNET BINARY TREE
+       ════════════════════════════════════════ */
+    const renderSubnetTree = () => {
+        // Recursive renderer for binary tree depth
+        const renderTreeNode = (start, end, depth, prefixLen) => {
+            const range = end - start + 1;
+            
+            // Check if matches exactly any created subnet
+            let matchedSubnet = null;
+            let partial = false;
+            for (let s of subnets) {
+                if (s.start === start && s.end === end) {
+                    matchedSubnet = s;
+                } else if (!(end < s.start || start > s.end)) {
+                    partial = true;
+                }
+            }
+
+            const label = `${intToIpStr(start)}/${prefixLen}`;
+
+            if (depth > 2) return null; // cap visual depth
+
+            return (
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    flex: 1,
+                    border: '2px solid var(--border)',
+                    margin: '3px',
+                    background: matchedSubnet ? matchedSubnet.color : partial ? '#ffe082' : '#f5f5f5',
+                    padding: '4px',
+                    textAlign: 'center',
+                    boxShadow: matchedSubnet ? 'var(--shadow-sm)' : 'none'
+                }}>
+                    <span style={{ fontSize: '0.62rem', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{label}</span>
+                    <span style={{ fontSize: '0.5rem', opacity: 0.6 }}>({range.toLocaleString()} IPs)</span>
+                    {matchedSubnet && <span style={{ fontSize: '0.5rem', fontWeight: 900, color: 'green' }}>ALLOCATED</span>}
+                    {partial && <span style={{ fontSize: '0.5rem', fontWeight: 900, color: '#f57c00' }}>PARTIAL</span>}
+                    
+                    {!matchedSubnet && range > 1 && (
+                        <div style={{ display: 'flex', width: '100%', marginTop: '4px', borderTop: '1px solid var(--border)' }}>
+                            {renderTreeNode(start, (start + range/2 - 1) >>> 0, depth + 1, prefixLen + 1)}
+                            {renderTreeNode(((start + range/2)) >>> 0, end, depth + 1, prefixLen + 1)}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowX: 'auto', padding: '0.4rem' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.5 }}>Subnet division tree (depth 3)</div>
+                <div style={{ display: 'flex', flexDirection: 'column', minWidth: '400px' }}>
+                    {renderTreeNode(networkAddr, broadcast, 0, prefix)}
+                </div>
+            </div>
+        );
+    };
 
     /* ════════════════════════════════════════
        IPv6 DISPLAY
        ════════════════════════════════════════ */
     const renderIPv6 = () => (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', padding: '0.5rem' }}>
-            <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>IPv6 — 128-bit Address</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', padding: '1rem', border: '3px solid var(--border)', background: 'var(--white)', boxShadow: 'var(--shadow)' }}>
+            <div style={{ fontWeight: 900, fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>IPv6 — 128-bit Address Space</div>
+            
+            {/* Hexadecimal display */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px', justifyContent: 'center' }}>
                 {Array.from({ length: 8 }, (_, g) => (
-                    <div key={g} style={{ display: 'flex', gap: '0px', marginRight: g < 7 ? '4px' : 0 }}>
+                    <div key={g} style={{ display: 'flex', gap: '0.5px', border: '2px solid var(--border)', background: 'var(--border)', padding: '1px', marginRight: g < 7 ? '6px' : 0 }}>
                         {Array.from({ length: 16 }, (_, b) => (
                             <div key={b} style={{
-                                width: 6, height: 14, background: (g * 16 + b) < 64 ? '#ffb74d' : '#4dd0e1',
-                                border: '0.5px solid rgba(0,0,0,0.15)',
+                                width: '7px', height: '18px', background: (g * 16 + b) < 64 ? 'var(--orange)' : 'var(--cyan)',
                             }} />
                         ))}
                     </div>
                 ))}
             </div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 600, textAlign: 'center' }}>
+            
+            <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 10, height: 10, background: 'var(--orange)' }} /> Network Routing bits (64)</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 10, height: 10, background: 'var(--cyan)' }} /> Interface Identifier bits (64)</div>
+            </div>
+
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, textAlign: 'center', background: '#f5f5f5', border: '2px solid var(--border)', padding: '6px 12px' }}>
                 <div>2001:0db8:85a3:0000:0000:8a2e:0370:7334</div>
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-                    style={{ color: 'var(--green)', fontWeight: 800, marginTop: '0.2rem' }}>
-                    → 2001:db8:85a3::8a2e:370:7334
+                    style={{ color: '#27c93f', fontWeight: 900, marginTop: '0.2rem', borderTop: '1px dashed var(--border)', paddingTop: '2px' }}>
+                    → 2001:db8:85a3::8a2e:370:7334 (Compressed)
                 </motion.div>
             </div>
             <div style={{
-                background: 'var(--yellow)', border: '2px solid var(--border)', padding: '0.3rem 0.6rem',
-                fontSize: '0.72rem', fontWeight: 700, textAlign: 'center', boxShadow: 'var(--shadow-sm)',
+                background: 'var(--yellow)', border: '3px solid var(--border)', padding: '0.5rem 1rem',
+                fontSize: '0.78rem', fontWeight: 800, textAlign: 'center', boxShadow: 'var(--shadow-sm)',
             }}>
-                IPv6 has 3.4 × 10³⁸ addresses<br />
-                <span style={{ opacity: 0.7 }}>— enough for every grain of sand × 100</span>
+                IPv6 contains 340 undecillion addresses!<br />
+                <span style={{ opacity: 0.7, fontSize: '0.65rem' }}>Enough to assign an IP address to every atom on Earth.</span>
             </div>
         </div>
     );
 
     /* ════════════════════════════════════════
-       CENTER
+       CENTER CONTENT
        ════════════════════════════════════════ */
     const CENTER = (
-        <div style={{ padding: '0.5rem', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+        <div style={{ padding: '0.75rem', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* IPv4/IPv6 toggle */}
-            <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.4rem', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '0.4rem', flexShrink: 0 }}>
                 {['ipv4', 'ipv6'].map(m => (
                     <button key={m} onClick={() => setMode(m)} style={{
-                        padding: '0.25rem 0.7rem', fontSize: '0.72rem', fontWeight: 700,
-                        border: '2px solid var(--border)',
+                        padding: '0.3rem 0.8rem', fontSize: '0.75rem', fontWeight: 800,
+                        border: '3px solid var(--border)',
                         background: mode === m ? 'var(--orange)' : 'var(--white)',
                         cursor: 'pointer', fontFamily: 'var(--font-main)',
+                        boxShadow: 'var(--shadow-sm)'
                     }}>{m === 'ipv4' ? 'IPv4 (32-bit)' : 'IPv6 (128-bit)'}</button>
                 ))}
             </div>
 
             {mode === 'ipv4' ? (
-                <>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto' }}>
                     {renderBitGrid()}
 
-                    {/* Computed values */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.3rem', marginTop: '0.5rem' }}>
+                    {/* Subnet Workspace Tab bar */}
+                    <div style={{ display: 'flex', gap: '3px', background: 'var(--border)', padding: '3px', border: '3px solid var(--border)', flexShrink: 0 }}>
                         {[
-                            { label: 'Network', val: intToIpStr(networkAddr), color: '#ffb74d' },
-                            { label: 'Broadcast', val: intToIpStr(broadcast), color: '#ef9a9a' },
-                            { label: 'Usable Hosts', val: usableHosts.toLocaleString(), color: '#4dd0e1' },
-                            { label: 'First Usable', val: intToIpStr(networkAddr + 1), color: '#a5d6a7' },
-                            { label: 'Last Usable', val: intToIpStr(broadcast - 1), color: '#a5d6a7' },
-                            { label: 'Class', val: addressClass, color: '#ce93d8' },
-                        ].map(s => (
-                            <div key={s.label} style={{ border: '2px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
-                                <div style={{ background: s.color, padding: '0.15rem 0.3rem', borderBottom: '1.5px solid var(--border)', fontSize: '0.55rem', fontWeight: 800, textTransform: 'uppercase' }}>{s.label}</div>
-                                <div style={{ padding: '0.2rem 0.3rem', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.72rem' }}>{s.val}</div>
-                            </div>
+                            { id: 'grid', label: '🎛️ Address Grid Map' },
+                            { id: 'routing', label: '🔌 AND Routing Simulator' },
+                            { id: 'tree', label: '🌳 Binary Tree Explorer' }
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                style={{
+                                    flex: 1,
+                                    padding: '0.35rem 0.6rem',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 700,
+                                    border: 'none',
+                                    background: activeTab === tab.id ? 'var(--cyan)' : 'var(--white)',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {tab.label}
+                            </button>
                         ))}
                     </div>
 
-                    {renderAddressBar()}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        {activeTab === 'grid' && renderSubnetGrid()}
+                        {activeTab === 'routing' && renderRoutingSimulator()}
+                        {activeTab === 'tree' && renderSubnetTree()}
+                    </div>
 
-                    {/* Quiz */}
+                    {/* Quiz Challenge Card */}
                     {quizIdx !== null && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                            style={{ marginTop: '0.5rem', border: '2px solid var(--border)', background: 'var(--yellow)', padding: '0.5rem', boxShadow: 'var(--shadow-sm)' }}>
-                            <div style={{ fontWeight: 800, fontSize: '0.75rem', marginBottom: '0.3rem' }}>🧩 Quiz Challenge</div>
-                            <div style={{ fontSize: '0.78rem', marginBottom: '0.3rem' }}>{QUIZ_SCENARIOS[quizIdx].prompt}</div>
-                            <div style={{ display: 'flex', gap: '0.3rem' }}>
-                                <button onClick={checkQuiz} style={{
-                                    padding: '0.2rem 0.5rem', fontSize: '0.7rem', fontWeight: 700,
-                                    border: '2px solid var(--border)', background: 'var(--green)', cursor: 'pointer',
-                                }}>Check Answer</button>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                            style={{ border: '3px solid var(--border)', background: 'var(--yellow)', padding: '0.6rem', boxShadow: 'var(--shadow-sm)', flexShrink: 0 }}>
+                            <div style={{ fontWeight: 900, fontSize: '0.8rem', marginBottom: '0.2rem' }}>🧩 Network Architect Challenge</div>
+                            <div style={{ fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>{QUIZ_SCENARIOS[quizIdx].prompt}</div>
+                            
+                            {/* Department cards inside Quiz */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.4rem', marginBottom: '0.5rem' }}>
+                                {QUIZ_SCENARIOS[quizIdx].departments.map((dept, dIdx) => {
+                                    const matchingSubnet = subnets[dIdx];
+                                    const isCorrectSize = matchingSubnet && (matchingSubnet.end - matchingSubnet.start + 1 === Math.pow(2, 32 - QUIZ_SCENARIOS[quizIdx].expectedPrefix));
+
+                                    return (
+                                        <div
+                                            key={dIdx}
+                                            style={{
+                                                background: matchingSubnet ? matchingSubnet.color : 'white',
+                                                border: '2px solid var(--border)',
+                                                padding: '4px 8px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                fontSize: '0.62rem',
+                                                fontWeight: 800
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '0.7rem' }}>🏢 {dept.name}</span>
+                                            <span style={{ opacity: 0.6 }}>Needs: {dept.hosts.toLocaleString()} hosts</span>
+                                            {matchingSubnet ? (
+                                                <span style={{ color: isCorrectSize ? 'green' : 'red', fontSize: '0.52rem', marginTop: '2px' }}>
+                                                    {isCorrectSize ? `✓ allocated /${matchingSubnet.prefix}` : `⚠️ wrong size`}
+                                                </span>
+                                            ) : (
+                                                <span style={{ color: '#888', fontStyle: 'italic', fontSize: '0.52rem', marginTop: '2px' }}>Awaiting allocation</span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                                <button className="btn btn-green btn-sm" onClick={checkQuiz}>Submit Layout</button>
                                 {quizResult && (
                                     <span style={{
-                                        padding: '0.2rem 0.5rem', fontWeight: 800, fontSize: '0.72rem',
+                                        padding: '0.2rem 0.5rem', fontWeight: 900, fontSize: '0.75rem',
                                         background: quizResult === 'correct' ? 'var(--green)' : 'var(--pink)',
                                         border: '2px solid var(--border)',
-                                    }}>{quizResult === 'correct' ? '✓ Correct!' : '✗ Try again — check subnet count and sizes'}</span>
+                                        boxShadow: 'var(--shadow-sm)'
+                                    }}>{quizResult === 'correct' ? '🎉 Success! Subnets allocated correctly!' : '❌ Try again — check subnet count and allocations'}</span>
                                 )}
                             </div>
                         </motion.div>
                     )}
-                </>
+                </div>
             ) : renderIPv6()}
         </div>
     );
@@ -414,15 +775,17 @@ export default function SubnettingSim() {
             ))}
 
             {/* Quiz selector */}
-            <div style={{ marginTop: '0.3rem', fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4 }}>Quiz Mode</div>
+            <div style={{ marginTop: '0.3rem', fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4 }}>Select Quiz Scenario</div>
             {QUIZ_SCENARIOS.map((q, i) => (
                 <button key={i} onClick={() => { setQuizIdx(i); setOctets(q.baseIp); setPrefix(q.basePrefix); setSubnets([]); setQuizResult(null); }}
                     style={{
-                        padding: '0.25rem 0.4rem', fontSize: '0.65rem', fontWeight: 700,
+                        padding: '0.25rem 0.4rem', fontSize: '0.65rem', fontWeight: 800,
                         border: '2px solid var(--border)', textAlign: 'left',
                         background: quizIdx === i ? 'var(--yellow)' : 'var(--white)',
                         cursor: 'pointer',
-                    }}>Quiz {i + 1}</button>
+                        boxShadow: 'var(--shadow-sm)',
+                        marginBottom: '2px'
+                    }}>Quiz {i + 1}: Split {q.basePrefix} into {q.expectedCount}</button>
             ))}
         </div>
     );
@@ -486,10 +849,10 @@ export default function SubnettingSim() {
             phaseName={curStep ? `/${curStep.prefix}` : ''} centerContent={CENTER} leftContent={LEFT} rightContent={RIGHT}
             timelineItems={TL}
             legend={[
-                { color: '#ffb74d', label: 'Network bits' },
-                { color: '#4dd0e1', label: 'Host bits' },
-                { color: '#ef9a9a', label: 'Broadcast' },
-                { color: '#a5d6a7', label: 'Usable' },
+                { color: 'var(--orange)', label: 'Network bits' },
+                { color: 'var(--cyan)', label: 'Host bits' },
+                { color: 'var(--pink)', label: 'Broadcast' },
+                { color: 'var(--green)', label: 'Usable' },
             ]}
         >
             {/* Config mode */}

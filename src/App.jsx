@@ -33,11 +33,12 @@ import HttpDnsSim from './modules/networks/HttpDnsSim';
 
 // OOP Module
 import OOPSLanding from './modules/oops/OOPSLanding';
-import MemoryLifecycleSim from './modules/oops/MemoryLifecycleSim';
-import PolymorphismSim from './modules/oops/PolymorphismSim';
-import ObserverPatternSim from './modules/oops/ObserverPatternSim';
-import StringMutabilitySim from './modules/oops/StringMutabilitySim';
-import ThreadVisualizer from './modules/oops/ThreadVisualizer';
+import FourPillarsSim from './modules/oops/FourPillarsSim';
+import InheritanceDeepDiveSim from './modules/oops/InheritanceDeepDiveSim';
+import AbstractInterfaceSim from './modules/oops/AbstractInterfaceSim';
+import DesignPatternsSim from './modules/oops/DesignPatternsSim';
+import SolidPrinciplesSim from './modules/oops/SolidPrinciplesSim';
+import UmlDiagramsSim from './modules/oops/UmlDiagramsSim';
 
 // Git Module
 import GitLanding from './modules/git/GitLanding';
@@ -108,11 +109,12 @@ function AppContent() {
 
           {/* OOP Module */}
           <Route path="/oops" element={<OOPSLanding />} />
-          <Route path="/oops/memory" element={<MemoryLifecycleSim />} />
-          <Route path="/oops/polymorphism" element={<PolymorphismSim />} />
-          <Route path="/oops/observer" element={<ObserverPatternSim />} />
-          <Route path="/oops/strings" element={<StringMutabilitySim />} />
-          <Route path="/oops/threads" element={<ThreadVisualizer />} />
+          <Route path="/oops/pillars" element={<FourPillarsSim />} />
+          <Route path="/oops/inheritance" element={<InheritanceDeepDiveSim />} />
+          <Route path="/oops/abstract-interface" element={<AbstractInterfaceSim />} />
+          <Route path="/oops/patterns" element={<DesignPatternsSim />} />
+          <Route path="/oops/solid" element={<SolidPrinciplesSim />} />
+          <Route path="/oops/uml" element={<UmlDiagramsSim />} />
 
           {/* Git Module */}
           <Route path="/git" element={<GitLanding />} />

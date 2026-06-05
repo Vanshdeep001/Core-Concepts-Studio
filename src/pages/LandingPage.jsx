@@ -34,8 +34,8 @@ const MODULES = [
         label: 'OOP Concepts',
         icon: '🧱',
         color: 'var(--green)',
-        description: 'Memory Lifecycle · Polymorphism · Observer Pattern',
-        sims: ['Stack/Heap', 'Dynamic Dispatch', 'Observer', 'Destructor'],
+        description: 'Four Pillars · Inheritance · Abstract vs Interface · Design Patterns · SOLID · UML',
+        sims: ['4 Pillars', 'MRO', 'Patterns', 'SOLID', 'UML', 'Contracts'],
         path: '/oops',
     },
     {

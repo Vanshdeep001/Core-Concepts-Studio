@@ -46,6 +46,7 @@ export default function ImmersiveLayout({
     legend = [],
     conceptMode = false,
     onConceptModeToggle = () => {},
+    hideFooter = false,
 }) {
     const [leftOpen, setLeftOpen] = useState(false);
     const [rightOpen, setRightOpen] = useState(false);
@@ -328,70 +329,72 @@ export default function ImmersiveLayout({
                 </main>
 
                 {/* ─── BOTTOM BAR (Fixed height: 80px) ─── */}
-                <footer style={{
-                    height: 80,
-                    flexShrink: 0,
-                    background: 'var(--white)',
-                    borderTop: '3px solid var(--border)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '0 1rem',
-                    overflow: 'hidden',
-                    zIndex: 10,
-                }}>
-                    <div style={{
-                        width: 100, flexShrink: 0, fontSize: '0.65rem', fontWeight: 800, opacity: 0.5,
-                        textTransform: 'uppercase', letterSpacing: '0.05em', borderRight: '2px solid var(--border)',
-                        height: '100%', display: 'flex', alignItems: 'center'
+                {!hideFooter && (
+                    <footer style={{
+                        height: 80,
+                        flexShrink: 0,
+                        background: 'var(--white)',
+                        borderTop: '3px solid var(--border)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '0 1rem',
+                        overflow: 'hidden',
+                        zIndex: 10,
                     }}>
-                        Execution<br />Timeline
-                    </div>
-
-                    <div style={{
-                        flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem',
-                        padding: '0 1.5rem', overflowX: 'auto', height: '100%', scrollbarWidth: 'none'
-                    }}>
-                        {timelineItems.length > 0 ? (
-                            timelineItems.map((item, i) => (
-                                <div key={i} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                                    <motion.div
-                                        animate={{ scale: item.active ? 1.05 : 1 }}
-                                        style={{
-                                            padding: '0.4rem 0.8rem', borderRadius: '6px', border: '2px solid var(--border)',
-                                            background: item.active ? 'var(--yellow)' : item.done ? 'var(--green)' : 'var(--white)',
-                                            boxShadow: item.active ? '2px 2px 0 var(--border)' : 'none',
-                                            fontSize: '0.75rem', fontWeight: 700, fontFamily: 'var(--font-mono)',
-                                            color: 'var(--text)', transition: 'background 0.3s'
-                                        }}
-                                    >
-                                        <span style={{ opacity: 0.5, marginRight: '0.4rem' }}>#{i + 1}</span>
-                                        {item.label}
-                                    </motion.div>
-                                    {i < timelineItems.length - 1 && (
-                                        <div style={{ width: 24, height: 2, background: 'var(--border)', opacity: 0.3 }} />
-                                    )}
-                                </div>
-                            ))
-                        ) : (
-                            <div style={{ opacity: 0.3, fontStyle: 'italic', fontSize: '0.85rem' }}>Timeline ready for simulation...</div>
-                        )}
-                    </div>
-
-                    {/* Legend — moved from absolute overlay to footer right */}
-                    {legend.length > 0 && (
                         <div style={{
-                            flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.75rem',
-                            borderLeft: '2px solid var(--border)', paddingLeft: '1rem', height: '100%'
+                            width: 100, flexShrink: 0, fontSize: '0.65rem', fontWeight: 800, opacity: 0.5,
+                            textTransform: 'uppercase', letterSpacing: '0.05em', borderRight: '2px solid var(--border)',
+                            height: '100%', display: 'flex', alignItems: 'center'
                         }}>
-                            {legend.map((l, i) => (
-                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>
-                                    <div style={{ width: 12, height: 12, background: l.color, border: '1.5px solid var(--border)', borderRadius: '2px', flexShrink: 0 }} />
-                                    {l.label}
-                                </div>
-                            ))}
+                            Execution<br />Timeline
                         </div>
-                    )}
-                </footer>
+
+                        <div style={{
+                            flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem',
+                            padding: '0 1.5rem', overflowX: 'auto', height: '100%', scrollbarWidth: 'none'
+                        }}>
+                            {timelineItems.length > 0 ? (
+                                timelineItems.map((item, i) => (
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                                        <motion.div
+                                            animate={{ scale: item.active ? 1.05 : 1 }}
+                                            style={{
+                                                padding: '0.4rem 0.8rem', borderRadius: '6px', border: '2px solid var(--border)',
+                                                background: item.active ? 'var(--yellow)' : item.done ? 'var(--green)' : 'var(--white)',
+                                                boxShadow: item.active ? '2px 2px 0 var(--border)' : 'none',
+                                                fontSize: '0.75rem', fontWeight: 700, fontFamily: 'var(--font-mono)',
+                                                color: 'var(--text)', transition: 'background 0.3s'
+                                            }}
+                                        >
+                                            <span style={{ opacity: 0.5, marginRight: '0.4rem' }}>#i + 1</span>
+                                            {item.label}
+                                        </motion.div>
+                                        {i < timelineItems.length - 1 && (
+                                            <div style={{ width: 24, height: 2, background: 'var(--border)', opacity: 0.3 }} />
+                                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <div style={{ opacity: 0.3, fontStyle: 'italic', fontSize: '0.85rem' }}>Timeline ready for simulation...</div>
+                            )}
+                        </div>
+
+                        {/* Legend — moved from absolute overlay to footer right */}
+                        {legend.length > 0 && (
+                            <div style={{
+                                flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.75rem',
+                                borderLeft: '2px solid var(--border)', paddingLeft: '1rem', height: '100%'
+                            }}>
+                                {legend.map((l, i) => (
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>
+                                        <div style={{ width: 12, height: 12, background: l.color, border: '1.5px solid var(--border)', borderRadius: '2px', flexShrink: 0 }} />
+                                        {l.label}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </footer>
+                )}
             </motion.div>
         </AnimatePresence>
     );
