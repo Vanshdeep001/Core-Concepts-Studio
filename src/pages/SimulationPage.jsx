@@ -68,7 +68,7 @@ export default function SimulationPage() {
             </div>
 
             <div className="panel">
-                <div className="panel-header" style={{ fontSize: '0.7rem' }}>📥 Ready Queue</div>
+                <div className="panel-header" style={{ fontSize: '0.7rem' }}>Ready Queue</div>
                 <div style={{ padding: '0.75rem' }}>
                     <ReadyQueueDisplay
                         readyQueue={simState.readyQueue}
@@ -147,7 +147,7 @@ export default function SimulationPage() {
             {conceptMode && (
                 <div style={{ marginTop: '1rem' }}>
                     <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--green)', marginBottom: '0.5rem' }}>
-                        💡 Concept: Context Switch
+                        Concept: Context Switch
                     </div>
                     <div style={{ fontSize: '0.78rem', background: 'rgba(46, 204, 113, 0.1)', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--green)' }}>
                         When CPU moves from one process to another, it must save the state of the old one and load the state of the new one.
@@ -174,7 +174,7 @@ export default function SimulationPage() {
         <ImmersiveLayout
             isActive={isActive}
             title={`${algorithm} Scheduler`}
-            icon="🖥️"
+            icon={null}
             moduleLabel="OS Module"
             isRunning={isRunning}
             isPaused={isPaused}
@@ -215,7 +215,7 @@ export default function SimulationPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '1.25rem', alignItems: 'start', marginBottom: '1.25rem' }}>
                     {/* Process Table */}
                     <div className="panel">
-                        <div className="panel-header">📋 Process Table</div>
+                        <div className="panel-header">Process Table</div>
                         <div style={{ padding: '1rem' }}>
                             <ProcessInputForm
                                 processes={processes}
@@ -227,7 +227,7 @@ export default function SimulationPage() {
                     {/* Config + Controls */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <div className="panel">
-                            <div className="panel-header">⚙ Algorithm</div>
+                            <div className="panel-header">Algorithm</div>
                             <div style={{ padding: '1rem' }}>
                                 <AlgorithmSelector
                                     algorithm={algorithm}
@@ -238,13 +238,13 @@ export default function SimulationPage() {
                             </div>
                         </div>
                         <div className="panel">
-                            <div className="panel-header">🖥 Cores</div>
+                            <div className="panel-header">Cores</div>
                             <div style={{ padding: '1rem' }}>
                                 <CoreSelector cores={cores} onChange={c => { setCores(c); if (isActive) resetSimulation(); }} />
                             </div>
                         </div>
                         <div className="panel">
-                            <div className="panel-header">🎮 Controls</div>
+                            <div className="panel-header">Controls</div>
                             <div style={{ padding: '1rem' }}>
                                 <SimulationControls
                                     isRunning={isRunning}
@@ -268,12 +268,12 @@ export default function SimulationPage() {
                 {/* Errors */}
                 {errors.length > 0 && (
                     <div className="alert alert-error" style={{ marginBottom: '1rem' }}>
-                        {errors.map((e, i) => <div key={i}>⚠ {e}</div>)}
+                        {errors.map((e, i) => <div key={i}>{e}</div>)}
                     </div>
                 )}
 
                 <div className="alert alert-info">
-                    💡 Click <strong>▶ Run Simulation</strong> to enter <strong>Immersive Mode</strong> (100vh full-screen visualization).
+                    Click <strong>Run Simulation</strong> to enter <strong>Immersive Mode</strong> (100vh full-screen visualization).
                 </div>
             </div>
         </ImmersiveLayout>

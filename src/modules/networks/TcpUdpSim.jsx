@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import { HandshakeIcon } from '../../components/Icons';
 
 /* ════════════════════════════════════════
    DATA — TCP states, scenarios
@@ -259,7 +260,7 @@ export default function TcpUdpSim() {
                                 >
                                     {goRight ? '→' : '←'} {step.arrow}
                                     {isDrop && ' ✗'}
-                                    {isUdpLoss && ' 💀 UDP LOST'}
+                                    {isUdpLoss && ' UDP LOST'}
                                 </motion.div>
                                 {goRight && <div style={{ flex: 1 }} />}
                             </motion.div>
@@ -362,7 +363,7 @@ export default function TcpUdpSim() {
             {curStep && (
                 <div style={{ border: '2px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
                     <div style={{ background: 'var(--yellow)', padding: '0.4rem 0.6rem', borderBottom: '2px solid var(--border)', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>
-                        💡 Educational Insight
+                        Educational Insight
                     </div>
                     <div style={{ padding: '0.5rem 0.6rem', fontSize: '0.8rem', lineHeight: 1.5, opacity: 0.85 }}>{curStep.insight}</div>
                 </div>
@@ -398,7 +399,7 @@ export default function TcpUdpSim() {
         <ImmersiveLayout
             isActive={isSimMode}
             title="TCP vs UDP & 3-Way Handshake"
-            icon="🤝"
+            icon={<HandshakeIcon size={20} />}
             moduleLabel="CN MODULE"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}
@@ -420,7 +421,7 @@ export default function TcpUdpSim() {
                 <div style={{ marginBottom: '0.4rem' }}><Link to="/networks" style={{ fontSize: '0.82rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← Networks Module</Link></div>
                 <div style={{ marginBottom: '1.5rem' }}>
                     <div className="section-header">Networks · Transport Layer</div>
-                    <h1 style={{ fontSize: '1.9rem', fontWeight: 700 }}>🤝 TCP vs UDP & 3-Way Handshake</h1>
+                    <h1 style={{ fontSize: '1.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}><HandshakeIcon size={28} /> TCP vs UDP & 3-Way Handshake</h1>
                     <p style={{ opacity: 0.6, fontSize: '0.9rem', marginTop: '0.3rem' }}>Vertical sequence diagram with handshake, data transfer, packet drops, retransmissions, congestion control, and protocol comparison.</p>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>

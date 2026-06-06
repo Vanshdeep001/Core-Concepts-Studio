@@ -1,6 +1,6 @@
 // GitSim.jsx — Git Internals Simulator (Direct Mode)
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import CommitGraph from './CommitGraph';
@@ -8,99 +8,9 @@ import GitStatePanel from './GitStatePanel';
 import GitExplainPanel from './GitExplainPanel';
 import GitTerminal from './GitTerminal';
 import { createInitialState, dispatch, addFile, editFile } from './engine/gitEngine';
+import { GitBranchIcon } from '../../components/Icons';
 
-// ─── Guided Scenarios ────────────────────────────────────────────────────────
-const GUIDED_SCENARIOS = {
-    basic: {
-        label: '📄 Basic Workflow',
-        description: 'init → create files → add → commit → log',
-        color: '#a8e6cf',
-        steps: [
-            { command: 'git init', args: {}, narration: ' git init — Creates a new repository. Git creates a hidden .git folder with an object store, HEAD pointer, and an unborn "main" branch.' },
-            { type: 'file', filename: 'index.js', content: 'console.log("Hello World");', narration: '📄 A new file appears in the Working Directory with status "untracked" — Git knows nothing about it yet.' },
-            { command: 'git status', args: {}, narration: ' git status compares Working Dir vs Staging Area vs last commit. index.js shows as Untracked.' },
-            { command: 'git add', args: { file: '.' }, narration: 'git add moves index.js into the Staging Area (Index). Git creates a blob object with the file\'s SHA-1 hash.' },
-            { command: 'git commit', args: { message: 'Initial commit' }, narration: '📸 git commit creates 3 objects: blob (file), tree (directory), commit (points to tree + parent). First node in the DAG!' },
-            { type: 'file', filename: 'README.md', content: '# My Project\nThis is amazing.', narration: '📄 Create README.md — another untracked file in the working directory.' },
-            { command: 'git add', args: { file: '.' }, narration: 'Stage README.md. Staging area now has the new file ready to snapshot.' },
-            { command: 'git commit', args: { message: 'Add README' }, narration: '📸 Second commit! The DAG grows. Branch pointer "main" advances automatically.' },
-            { command: 'git log', args: {}, narration: 'git log traverses the DAG backward via parentHashes — like following a chain back in time.' },
-            { type: 'file', filename: 'app.js', content: 'const app = require("express")();', narration: '📄 Add app.js — Working Dir has a change again.' },
-            { command: 'git add', args: { file: '.' }, narration: ' Stage app.js.' },
-            { command: 'git commit', args: { message: 'Add Express app' }, narration: '📸 Third commit! You can see the linear history forming in the DAG.' },
-            { command: 'git diff', args: {}, narration: ' git diff with a clean state shows nothing — confirms our working directory matches the committed snapshot.' },
-        ],
-    },
-    branching: {
-        label: '🌿 Branching & Merging',
-        description: 'Feature branch → commits → 3-way merge',
-        color: '#ffd93d',
-        steps: [
-            { command: 'git init', args: {}, narration: '🎉 Initialize the repository.' },
-            { type: 'file', filename: 'app.js', content: 'const version = 1;', narration: '📄 Create app.js on main.' },
-            { command: 'git add', args: { file: '.' }, narration: '📦 Stage app.js.' },
-            { command: 'git commit', args: { message: 'Initial commit' }, narration: '📸 First commit on main. HEAD → main → this commit.' },
-            { command: 'git branch', args: { name: 'feature' }, narration: '🏷️ Create "feature" branch — it\'s just a 41-byte file containing the current commit hash. Adding a branch is INSTANT and FREE.' },
-            { command: 'git checkout', args: { branch: 'feature' }, narration: '🚪 HEAD moves to "feature". Watch the HEAD label in the DAG shift.' },
-            { type: 'file', filename: 'feature.js', content: 'const newFeature = true;', narration: '📄 Create feature.js — only visible on this branch.' },
-            { command: 'git add', args: { file: '.' }, narration: '📦 Stage feature.js.' },
-            { command: 'git commit', args: { message: 'Add feature' }, narration: '📸 Commit on feature branch. The DAG now diverges from main!' },
-            { type: 'file', filename: 'utils.js', content: 'const helper = () => {};', narration: '📄 Another feature branch file.' },
-            { command: 'git add', args: { file: '.' }, narration: '📦 Stage utils.js.' },
-            { command: 'git commit', args: { message: 'Add utils' }, narration: '📸 Second commit on feature. Feature is 2 commits ahead of main.' },
-            { command: 'git checkout', args: { branch: 'main' }, narration: '🚪 Switch back to main. HEAD moves back.' },
-            { type: 'file', filename: 'hotfix.js', content: 'const patch = "v1.0.1";', narration: '📄 A hotfix file on main — branches have now truly diverged!' },
-            { command: 'git add', args: { file: '.' }, narration: '📦 Stage hotfix.' },
-            { command: 'git commit', args: { message: 'Hotfix v1.0.1' }, narration: '📸 Commit on main. Now we need a 3-way merge (common ancestor exists).' },
-            { command: 'git merge', args: { branch: 'feature', message: "Merge branch 'feature'" }, narration: '🔀 3-WAY MERGE! Git finds the common ancestor, combines changes from both branches, and creates a merge commit with TWO parent arrows in the DAG!' },
-        ],
-    },
-    rebase: {
-        label: '♻️ Rebase Deep Dive',
-        description: 'See commits get replayed with new hashes',
-        color: '#66d9ef',
-        steps: [
-            { command: 'git init', args: {}, narration: '🎉 Initialize repo.' },
-            { type: 'file', filename: 'a.js', content: 'const A = 1;', narration: '📄 Create A.js on main.' },
-            { command: 'git add', args: { file: '.' }, narration: '📦 Stage.' },
-            { command: 'git commit', args: { message: 'Commit A' }, narration: '📸 Commit A on main.' },
-            { type: 'file', filename: 'b.js', content: 'const B = 2;', narration: '📄 Create B.js.' },
-            { command: 'git add', args: { file: '.' }, narration: '📦 Stage.' },
-            { command: 'git commit', args: { message: 'Commit B' }, narration: '📸 Commit B. main: A → B' },
-            { command: 'git branch', args: { name: 'feature' }, narration: '🏷️ Create feature branch at B.' },
-            { command: 'git checkout', args: { branch: 'feature' }, narration: '🚪 Switch to feature.' },
-            { type: 'file', filename: 'd.js', content: 'const D = 4;', narration: '📄 Create D.js on feature.' },
-            { command: 'git add', args: { file: '.' }, narration: '📦 Stage D.' },
-            { command: 'git commit', args: { message: 'Commit D' }, narration: '📸 Commit D on feature.' },
-            { type: 'file', filename: 'e.js', content: 'const E = 5;', narration: '📄 Create E.js on feature.' },
-            { command: 'git add', args: { file: '.' }, narration: '📦 Stage E.' },
-            { command: 'git commit', args: { message: 'Commit E' }, narration: '📸 Commit E. feature: B → D → E' },
-            { command: 'git checkout', args: { branch: 'main' }, narration: '🚪 Back to main.' },
-            { type: 'file', filename: 'c.js', content: 'const C = 3;', narration: '📄 Create C.js on main — branches have diverged!' },
-            { command: 'git add', args: { file: '.' }, narration: '📦 Stage C.' },
-            { command: 'git commit', args: { message: 'Commit C' }, narration: '📸 Commit C on main. main: A → B → C. feature: A → B → D → E' },
-            { command: 'git checkout', args: { branch: 'feature' }, narration: '🚪 Switch to feature to rebase it.' },
-            { command: 'git rebase', args: { branch: 'main' }, narration: '♻️ REBASE! Git REPLAYS D and E on top of C. D and E get NEW commit hashes (D\' and E\'). The old D and E become orphaned. History becomes linear!' },
-        ],
-    },
-    remote: {
-        label: '🌐 Remote & GitHub Flow',
-        description: 'clone → edit → push → fetch → pull',
-        color: '#c3aed6',
-        steps: [
-            { command: 'git clone', args: { url: 'https://github.com/demo/project.git' }, narration: '📋 git clone copies ALL objects (commits, trees, blobs) from the remote. Sets up "origin" as the remote name. Both local and origin point to same commits.' },
-            { type: 'file', filename: 'feature.js', content: 'const newFeature = true;', narration: '📄 Make a local change — this only exists in your working directory.' },
-            { command: 'git add', args: { file: '.' }, narration: '📦 Stage the change.' },
-            { command: 'git commit', args: { message: 'Add local feature' }, narration: '📸 Commit locally. Your main is now 1 commit AHEAD of origin/main.' },
-            { type: 'file', filename: 'fix.js', content: 'const bugfix = true;', narration: '📄 Another local change.' },
-            { command: 'git add', args: { file: '.' }, narration: '📦 Stage.' },
-            { command: 'git commit', args: { message: 'Fix bug locally' }, narration: '📸 Second local commit. 2 commits ahead of remote now.' },
-            { command: 'git push', args: { branch: 'main' }, narration: '🚀 PUSH! Git transfers ONLY the new objects (the 2 commits + their trees + blobs). Remote branch pointer advances to match local main.' },
-            { command: 'git fetch', args: {}, narration: '⬇️ FETCH — downloads new remote commits without merging. Your local branches stay unchanged. Only origin/* refs update.' },
-            { command: 'git pull', args: {}, narration: '⬇️🔀 PULL = fetch + merge in one step. Remote changes integrate into your local branch.' },
-        ],
-    },
-};
+
 
 // ─── Floating Quest Log & Narration HUD ───────────────────────────────────────
 function GitQuestLog({ state }) {
@@ -131,7 +41,7 @@ function GitQuestLog({ state }) {
         }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem', cursor: 'pointer' }} onClick={() => setCollapsed(!collapsed)}>
                 <span style={{ fontWeight: 800, color: '#111' }}>
-                    {collapsed ? '🎯 Quest' : '🎯 Git Quest'}
+                    {collapsed ? 'Quest' : 'Git Quest'}
                 </span>
                 <span style={{ fontSize: '0.62rem', background: completedCount === 4 ? '#e8f5e9' : '#e0f7ff', padding: '0.05rem 0.35rem', borderRadius: 4, fontWeight: 700, color: completedCount === 4 ? '#2e7d32' : '#0288d1' }}>
                     {completedCount}/4
@@ -161,7 +71,7 @@ function GitQuestLog({ state }) {
     );
 }
 
-function FloatingNarration({ text, stepNum, totalSteps, color, isManual }) {
+function FloatingNarration({ text, color }) {
     const [collapsed, setCollapsed] = useState(false);
     if (!text) return null;
 
@@ -171,7 +81,7 @@ function FloatingNarration({ text, stepNum, totalSteps, color, isManual }) {
             right: 12,
             top: '2.3rem',
             maxWidth: collapsed ? '110px' : '250px',
-            background: color || '#fffbea',
+            background: color || '#e8f5e9',
             border: '2px solid var(--border)',
             borderRadius: '6px',
             boxShadow: '3px 3px 0 var(--border)',
@@ -190,7 +100,7 @@ function FloatingNarration({ text, stepNum, totalSteps, color, isManual }) {
                     fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.58rem',
                     background: 'rgba(0,0,0,0.08)', padding: '0.05rem 0.3rem', borderRadius: 3,
                 }}>
-                    {isManual ? '⌨️ MANUAL' : `📖 STEP ${stepNum}/${totalSteps}`}
+                    INFO
                 </span>
                 <span style={{ fontSize: '0.55rem', opacity: 0.5 }}>{collapsed ? '▼' : '▲'}</span>
             </div>
@@ -291,7 +201,7 @@ function FileEditorBar({
                         >
                             <option value="__new__">+ New File...</option>
                             {fileList.map(f => (
-                                <option key={f} value={f}>✏️ {f}</option>
+                                <option key={f} value={f}>{f}</option>
                             ))}
                         </select>
                     )}
@@ -314,7 +224,6 @@ function FileEditorBar({
 
 // ─── Main GitSim Component ────────────────────────────────────────────────────
 export default function GitSim() {
-    const navigate = useNavigate();
 
     // Auto-init: start with git init already run
     const [initState] = useState(() => {
@@ -334,14 +243,11 @@ export default function GitSim() {
     const [isManualNarration, setIsManualNarration] = useState(false);
     const highlightTimerRef = useRef(null);
 
-    // Scenario player state
-    const [scenarioKey, setScenarioKey] = useState('basic');
-    const [scenarioStep, setScenarioStep] = useState(0);
-    const [isRunning, setIsRunning] = useState(false);
-    const [isPaused, setIsPaused] = useState(false);
-    const [isFinished, setIsFinished] = useState(false);
-    const [speed, setSpeed] = useState(2000);
-    const [currentNarration, setCurrentNarration] = useState('Repository initialized. Use the command panel below to run git commands, or press ▶ START to auto-play a guided scenario.');
+    // Narration state
+    const [currentNarration, setCurrentNarration] = useState('Repository initialized. Use the command panel below to run git commands.');
+
+    const stateRef = useRef(state);
+    stateRef.current = state;
 
     // Layout: resizable DAG / Terminal split
     const containerRef = useRef(null);
@@ -357,107 +263,6 @@ export default function GitSim() {
         setEditorContent(content || '');
         setEditorOpen(true);
     }, []);
-
-    const timerRef = useRef(null);
-    const stateRef = useRef(state);
-    stateRef.current = state;
-    const scenarioStepRef = useRef(scenarioStep);
-    scenarioStepRef.current = scenarioStep;
-    const isRunningRef = useRef(isRunning);
-    isRunningRef.current = isRunning;
-    const isPausedRef = useRef(isPaused);
-    isPausedRef.current = isPaused;
-
-    const scenario = GUIDED_SCENARIOS[scenarioKey];
-    const totalSteps = scenario?.steps.length || 1;
-
-    function executeStep(stepIndex) {
-        if (!scenario || stepIndex >= scenario.steps.length) {
-            setIsRunning(false);
-            setIsFinished(true);
-            setCurrentNarration('✅ Scenario complete! Run commands manually or reset.');
-            return;
-        }
-        const step = scenario.steps[stepIndex];
-        setCurrentNarration(step.narration || '');
-        setIsManualNarration(false);
-
-        if (step.type === 'file') {
-            setState(prev => addFile(prev, step.filename, step.content));
-            setScenarioStep(stepIndex + 1);
-        } else {
-            const currentState = stateRef.current;
-            const { state: newState, output, explanation } = dispatch(currentState, step.command, step.args || {});
-            const argsStr = Object.entries(step.args || {}).filter(([, v]) => v !== '' && v !== false && v !== null).map(([k, v]) => v === true ? `-${k}` : v).join(' ');
-            const entry = { command: step.command, args: step.args, argsStr, output };
-            setCommandLog(log => [...log, entry]);
-            setLastCommand(entry);
-            setLastExplanation(explanation);
-            setState(newState);
-
-            const rebaseDone = newState.events?.find(e => e.type === 'REBASE_DONE');
-            if (rebaseDone) {
-                setOrphanedHashes(rebaseDone.oldHashes || []);
-                setTimeout(() => setOrphanedHashes([]), 2500);
-            }
-
-            const commitEvt = newState.events?.find(e => e.type === 'COMMIT' || e.type === 'MERGE_3WAY');
-            const commitHash = commitEvt?.hash || commitEvt?.mergeHash;
-            if (commitHash) {
-                setHighlightHash(commitHash);
-                clearTimeout(highlightTimerRef.current);
-                highlightTimerRef.current = setTimeout(() => setHighlightHash(null), 2500);
-            }
-
-            setScenarioStep(stepIndex + 1);
-        }
-    }
-
-    // Auto-play loop
-    useEffect(() => {
-        if (!isRunning || isPaused || isFinished) return;
-        if (scenarioStep >= totalSteps) {
-            setIsRunning(false);
-            setIsFinished(true);
-            setCurrentNarration('✅ Scenario complete! You can continue running commands manually.');
-            return;
-        }
-        timerRef.current = setTimeout(() => {
-            if (isRunningRef.current && !isPausedRef.current) {
-                executeStep(scenarioStepRef.current);
-            }
-        }, scenarioStep === 0 ? 300 : speed);
-        return () => clearTimeout(timerRef.current);
-    }, [isRunning, isPaused, isFinished, scenarioStep, speed]);
-
-    function handleStart() {
-        // Reset state and start the selected scenario
-        const s = createInitialState();
-        setState(s);
-        stateRef.current = s;
-        setScenarioStep(0);
-        setCommandLog([]);
-        setLastCommand(null);
-        setOrphanedHashes([]);
-        setHighlightHash(null);
-        setIsManualNarration(false);
-        setIsRunning(true);
-        setIsPaused(false);
-        setIsFinished(false);
-    }
-
-    function handlePause() { setIsPaused(true); clearTimeout(timerRef.current); }
-    function handleResume() { setIsPaused(false); }
-    function handleStep() {
-        if (isFinished) return;
-        clearTimeout(timerRef.current);
-        setIsPaused(true);
-        executeStep(scenarioStepRef.current);
-    }
-    function handleReset() {
-        clearTimeout(timerRef.current);
-        navigate('/git');
-    }
 
     // Manual command runner (from terminal)
     const handleCommand = useCallback((cmd, args) => {
@@ -558,7 +363,7 @@ export default function GitSim() {
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     fontSize: '0.7rem', fontWeight: 800, flexShrink: 0,
                 }}>
-                    <span>🌳 Commit DAG — {repoName}</span>
+                    <span><GitBranchIcon size={14} /> Commit DAG — {repoName}</span>
                     <span style={{ opacity: 0.5 }}>{Object.keys(state.commits).length} commit{Object.keys(state.commits).length !== 1 ? 's' : ''} · {Object.keys(state.branches).length} branch{Object.keys(state.branches).length !== 1 ? 'es' : ''}</span>
                 </div>
 
@@ -566,10 +371,7 @@ export default function GitSim() {
                 <GitQuestLog state={state} />
                 <FloatingNarration
                     text={currentNarration}
-                    stepNum={scenarioStep}
-                    totalSteps={totalSteps}
-                    color={isManualNarration ? '#e8f5e9' : scenarioColor}
-                    isManual={isManualNarration}
+                    color="#e8f5e9"
                 />
 
                 <div style={{ flex: 1, overflow: 'auto' }}>
@@ -614,66 +416,21 @@ export default function GitSim() {
         </div>
     );
 
-    // ── Scenario Picker (inline in top bar area) ────────────────────────────
-    const scenarioPicker = (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginRight: '0.5rem' }}>
-            <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.5, textTransform: 'uppercase' }}>Guided:</span>
-            <select
-                value={scenarioKey}
-                onChange={e => {
-                    setScenarioKey(e.target.value);
-                    setScenarioStep(0);
-                    setIsRunning(false);
-                    setIsPaused(false);
-                    setIsFinished(false);
-                }}
-                style={{
-                    fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.4rem',
-                    border: '2px solid var(--border)', borderRadius: 4,
-                    background: GUIDED_SCENARIOS[scenarioKey]?.color || '#fff',
-                    cursor: 'pointer',
-                }}
-            >
-                {Object.entries(GUIDED_SCENARIOS).map(([key, sc]) => (
-                    <option key={key} value={key}>{sc.label}</option>
-                ))}
-            </select>
-        </div>
-    );
+
 
     return (
         <ImmersiveLayout
             isActive={true}
             title="Git Internals Simulator"
-            icon="🌿"
+            icon={<GitBranchIcon size={20} />}
             moduleLabel={`Module 5 · Git & GitHub`}
-            isRunning={isRunning}
-            isPaused={isPaused}
-            isFinished={isFinished}
-            speed={speed}
-            onSpeedChange={setSpeed}
-            onStart={handleStart}
-            onPause={handlePause}
-            onResume={handleResume}
-            onReset={handleReset}
-            onStep={handleStep}
-            currentStepNum={scenarioStep}
-            totalSteps={totalSteps}
-            phaseName={
-                isFinished ? '✅ Scenario complete' :
-                    isRunning && !isPaused ? `Running step ${scenarioStep + 1}/${totalSteps}…` :
-                        isPaused ? `Paused at step ${scenarioStep}/${totalSteps}` :
-                            'Run commands below or ▶ START a guided scenario'
-            }
             centerContent={centerContent}
             leftContent={<GitStatePanel state={state} conceptMode={conceptMode} onFileClick={triggerEditFile} />}
             rightContent={<GitExplainPanel lastCommand={lastCommand} explanation={lastExplanation} conceptMode={conceptMode} state={state} />}
             hideFooter={true}
-            timelineItems={[]}
-            legend={[]}
             conceptMode={conceptMode}
             onConceptModeToggle={() => setConceptMode(m => !m)}
-            scenarioPicker={scenarioPicker}
+            hideControls={true}
         />
     );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import { TreeIcon, SearchIcon, ZapIcon, CrownIcon } from '../../components/Icons';
 
 export default function BPlusTreeSim() {
     const [speed, setSpeed] = useState(700);
@@ -296,7 +297,7 @@ export default function BPlusTreeSim() {
     return (
         <ImmersiveLayout
             isActive={true}
-            title="B+ Tree Indexing" icon="🌳" moduleLabel="DBMS Module"
+            title="B+ Tree Indexing" icon={<TreeIcon size={22} />} moduleLabel="DBMS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}
             onStart={handleStart} onPause={handlePause} onResume={handleStart}
@@ -424,8 +425,8 @@ export default function BPlusTreeSim() {
 
                     {/* Range Query Demo & Comparison Output */}
                     {comparisons > 0 && (
-                        <div style={{ border: '2.5px solid var(--border)', background: '#fef3c7', padding: '6px 12px', fontSize: '0.72rem', fontWeight: 900, boxShadow: '2px 2px 0 var(--border)' }}>
-                            🔍 Search Complete: Key found in {comparisons} index comparions vs. {keys.length} sequential disk lookups without B+ Index!
+                        <div style={{ border: '2.5px solid var(--border)', background: '#fef3c7', padding: '6px 12px', fontSize: '0.72rem', fontWeight: 900, boxShadow: '2px 2px 0 var(--border)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <SearchIcon size={16} /> Search Complete: Key found in {comparisons} index comparions vs. {keys.length} sequential disk lookups without B+ Index!
                         </div>
                     )}
                 </div>
@@ -434,8 +435,8 @@ export default function BPlusTreeSim() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                     <div style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.45 }}>Index Speed Race</div>
                     
-                    <button className="btn btn-sm btn-pink" onClick={runRaceDemo} disabled={raceActive && !raceWinner}>
-                        🏎️ Start Search Race Test
+                    <button className="btn btn-sm btn-pink" onClick={runRaceDemo} disabled={raceActive && !raceWinner} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
+                        <ZapIcon size={12} /> Start Search Race Test
                     </button>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.2rem' }}>
@@ -460,8 +461,8 @@ export default function BPlusTreeSim() {
                     </div>
 
                     {raceWinner && (
-                        <div style={{ background: 'var(--green)', border: '2px solid var(--border)', padding: '4px', fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center' }}>
-                            🏆 WINNER: {raceWinner}!
+                        <div style={{ background: 'var(--green)', border: '2px solid var(--border)', padding: '4px', fontSize: '0.62rem', fontWeight: 900, textTransform: 'uppercase', textAlign: 'center', display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center' }}>
+                            <CrownIcon size={14} color="#000" /> WINNER: {raceWinner}!
                         </div>
                     )}
 

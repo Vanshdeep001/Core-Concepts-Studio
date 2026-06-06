@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
  * Universal step-by-step execution log panel.
  * Used by all simulators to show explanation text per step.
  */
-export default function LogPanel({ logs = [], title = '📋 Execution Log', maxHeight = 260 }) {
+export default function LogPanel({ logs = [], title = 'Execution Log', maxHeight = 260 }) {
     const bottomRef = useRef(null);
 
     useEffect(() => {

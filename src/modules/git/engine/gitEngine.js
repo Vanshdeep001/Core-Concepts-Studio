@@ -120,27 +120,27 @@ function getCommitTree(state, hash) {
 
 const EXPLANATIONS = {
     'git init': {
-        beginner: '🎉 You just created a new Git repository! Think of it as an empty scrapbook ready for your project\'s history. Git created a hidden .git folder that stores everything.',
+        beginner: 'You just created a new Git repository! Think of it as an empty scrapbook ready for your project\'s history. Git created a hidden .git folder that stores everything.',
         advanced: 'Initializes the object store (.git/objects), refs directory (.git/refs), and sets HEAD to point to the unborn "main" branch. No commits exist yet.',
     },
     'git clone': {
-        beginner: '📋 You copied the entire remote repository — all commits, branches, and files — to your machine. Git also set up "origin" as a name for the remote.',
+        beginner: 'You copied the entire remote repository — all commits, branches, and files — to your machine. Git also set up "origin" as a name for the remote.',
         advanced: 'Copies all objects (commits, trees, blobs) from remote into local object store. Creates remote-tracking refs (origin/main). Sets up tracking configuration.',
     },
     'git add': {
-        beginner: '📦 You moved files into the "staging area" (also called the index). Think of it as packing items into a box before shipping — you\'re preparing what goes into the next commit.',
+        beginner: 'You moved files into the "staging area" (also called the index). Think of it as packing items into a box before shipping — you\'re preparing what goes into the next commit.',
         advanced: 'Updates the index with the current content of the file. Creates a blob object (compressed file content) in .git/objects. Each staged file maps to a SHA-1 blob hash.',
     },
     'git status': {
-        beginner: '🔍 Git compared your files against the staging area and last commit to show you what\'s changed, what\'s staged, and what\'s untracked.',
+        beginner: 'Git compared your files against the staging area and last commit to show you what\'s changed, what\'s staged, and what\'s untracked.',
         advanced: 'Compares working tree against index (staging area) and index against HEAD commit\'s tree object. Reports three classes: untracked, unstaged changes, staged changes.',
     },
     'git commit': {
-        beginner: '📸 You just took a snapshot of ALL your staged files! This snapshot is stored as a commit node in the history graph, with a unique ID (hash) and a pointer to its parent.',
+        beginner: 'You just took a snapshot of ALL your staged files! This snapshot is stored as a commit node in the history graph, with a unique ID (hash) and a pointer to its parent.',
         advanced: 'Creates three objects: (1) blob objects for changed files, (2) a tree object mapping filenames to blob hashes, (3) a commit object with tree hash, parent hash(es), author, message. Branch pointer advances.',
     },
     'git log': {
-        beginner: '📖 Git is showing you the history of commits by walking backward through the parent pointers — like following a chain of snapshots back in time.',
+        beginner: 'Git is showing you the history of commits by walking backward through the parent pointers — like following a chain of snapshots back in time.',
         advanced: 'Traverses the commit DAG from HEAD backward via parentHashes. Each commit object contains its parent commit\'s hash, forming the directed acyclic graph.',
     },
     'git branch': {
@@ -148,15 +148,15 @@ const EXPLANATIONS = {
         advanced: 'Creates a new ref file in .git/refs/heads/<name> containing the SHA-1 of the current HEAD commit. Branches are 41-byte files (40-char hash + newline).',
     },
     'git checkout': {
-        beginner: '🚪 You switched to a different branch or commit. HEAD (which points to "where you are") moved. Your working files updated to match that commit\'s snapshot.',
+        beginner: 'You switched to a different branch or commit. HEAD (which points to "where you are") moved. Your working files updated to match that commit\'s snapshot.',
         advanced: 'Updates HEAD to point to the specified ref. Checks out the tree of the target commit into the working directory and index. If detached, HEAD points directly to a commit hash.',
     },
     'git switch': {
-        beginner: '🚪 Same as checkout — you switched branches. HEAD moved to the new branch, and your working files match the latest commit there.',
+        beginner: 'Same as checkout — you switched branches. HEAD moved to the new branch, and your working files match the latest commit there.',
         advanced: 'Modern equivalent of git checkout for switching branches. Updates HEAD ref and checks out the corresponding commit tree into the index and working directory.',
     },
     'git merge': {
-        beginner: '🔀 You combined two branches! If one branch was simply "ahead" of the other, Git did a fast-forward (just moved the pointer). Otherwise, Git created a new "merge commit" with two parents.',
+        beginner: 'You combined two branches! If one branch was simply "ahead" of the other, Git did a fast-forward (just moved the pointer). Otherwise, Git created a new "merge commit" with two parents.',
         advanced: 'Finds LCA (lowest common ancestor) of two branches via DAG traversal. Fast-forward if one is ancestor of other. Otherwise creates merge commit with two parentHashes, combining both line trees.',
     },
     'git rebase': {
@@ -172,15 +172,15 @@ const EXPLANATIONS = {
         advanced: 'Saves the current working directory and index state to a stack (stash@{0}). Creates stash commit objects pointing to the dirty state. git stash pop applies then removes the top entry.',
     },
     'git stash pop': {
-        beginner: '📤 You restored your previously stashed (saved) changes back into your working directory.',
+        beginner: 'You restored your previously stashed (saved) changes back into your working directory.',
         advanced: 'Retrieves the top entry from the stash ref-log stack, applies the diff to working directory and index, then removes the entry from the stash.',
     },
     'git remote add': {
-        beginner: '🌐 You told Git about a remote repository and named it "origin". This is just a saved address — nothing is transferred yet.',
+        beginner: 'You told Git about a remote repository and named it "origin". This is just a saved address — nothing is transferred yet.',
         advanced: 'Adds a remote config entry in .git/config: [remote "origin"] with url and fetch refspec. Creates remote-tracking ref namespace origin/*.',
     },
     'git push': {
-        beginner: '🚀 You uploaded your local commits to the remote! The remote branch pointer moved forward to match your local branch.',
+        beginner: 'You uploaded your local commits to the remote! The remote branch pointer moved forward to match your local branch.',
         advanced: 'Sends local objects (commits, trees, blobs) that remote doesn\'t have. Updates the remote branch ref. Creates/updates remote-tracking ref origin/<branch> locally.',
     },
     'git fetch': {
@@ -188,7 +188,7 @@ const EXPLANATIONS = {
         advanced: 'Fetches all missing objects from remote and updates remote-tracking refs (origin/<branch>) without modifying local branches or working directory.',
     },
     'git pull': {
-        beginner: '⬇️🔀 Pull = fetch + merge. You downloaded new commits from the remote AND merged them into your current branch in one step.',
+        beginner: 'Pull = fetch + merge. You downloaded new commits from the remote AND merged them into your current branch in one step.',
         advanced: 'Runs git fetch, then git merge FETCH_HEAD (or git rebase if configured with --rebase). Updates both the remote-tracking refs and local branch.',
     },
     'git restore': {
@@ -200,7 +200,7 @@ const EXPLANATIONS = {
         advanced: 'Removes the file from the working tree AND the index. The deletion is staged, so the next commit object\'s tree will not include the blob mapping for this file.',
     },
     'git diff': {
-        beginner: '🔎 Git is showing you exactly what changed — comparing your current files against the staged version or the last commit, line by line.',
+        beginner: 'Git is showing you exactly what changed — comparing your current files against the staged version or the last commit, line by line.',
         advanced: 'Computes diff between working tree and index (git diff), or between index and HEAD commit tree (git diff --staged / --cached). Shows unified diff format.',
     },
 };

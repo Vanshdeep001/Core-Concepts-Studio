@@ -1,5 +1,6 @@
 import { ALGORITHM_LABELS } from '../engine/schedulerEngine';
 import GanttChart from './GanttChart';
+import { ChartIcon, CrownIcon } from './Icons';
 
 const METRICS = [
     { key: 'avgWaitingTime', label: 'Avg WT' },
@@ -19,7 +20,9 @@ export default function ComparisonPanel({ results }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             {/* Comparison Table */}
             <div>
-                <div className="panel-header">📊 Algorithm Comparison</div>
+                <div className="panel-header" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <ChartIcon size={18} /> Algorithm Comparison
+                </div>
                 <div className="comparison-table-wrapper">
                     <table className="neo-table">
                         <thead>
@@ -35,8 +38,8 @@ export default function ComparisonPanel({ results }) {
                                     const isBest = r.metrics.overall.avgWaitingTime === bestWT;
                                     return (
                                         <tr key={r.algorithmName} className={isBest ? 'comparison-best' : ''}>
-                                            <td style={{ fontWeight: 700 }}>
-                                                {isBest ? '🏆 ' : `#${i + 1} `}
+                                            <td style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                {isBest ? <CrownIcon size={14} color="var(--yellow)" /> : `#${i + 1} `}
                                                 {ALGORITHM_LABELS[r.algorithmName]}
                                             </td>
                                             {METRICS.map(m => (

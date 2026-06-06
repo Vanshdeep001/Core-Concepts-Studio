@@ -24,18 +24,18 @@ export default function ImmersiveLayout({
     isActive,
     children,
     title,
-    icon = '⚙',
+    icon = null,
     moduleLabel,
     isRunning,
     isPaused,
     isFinished,
     speed,
-    onSpeedChange = () => {},
-    onStart = () => {},
-    onPause = () => {},
-    onResume = () => {},
-    onReset = () => {},
-    onStep = () => {},
+    onSpeedChange = () => { },
+    onStart = () => { },
+    onPause = () => { },
+    onResume = () => { },
+    onReset = () => { },
+    onStep = () => { },
     currentStepNum = 0,
     totalSteps = 1,
     phaseName = '',
@@ -45,9 +45,10 @@ export default function ImmersiveLayout({
     timelineItems = [],
     legend = [],
     conceptMode = false,
-    onConceptModeToggle = () => {},
+    onConceptModeToggle = () => { },
     hideFooter = false,
     scenarioPicker = null,
+    hideControls = false,
 }) {
     const [leftOpen, setLeftOpen] = useState(false);
     const [rightOpen, setRightOpen] = useState(false);
@@ -124,65 +125,71 @@ export default function ImmersiveLayout({
                     <div style={{ width: 2, height: 32, background: 'rgba(0,0,0,0.1)', flexShrink: 0 }} />
 
                     {/* Progress Detail */}
-                    <div style={{ display: 'flex', flex: 1, alignItems: 'center', gap: '1.5rem', minWidth: 0 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                            <span style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4 }}>Step Progress</span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.9rem' }}>{currentStepNum}/{totalSteps}</span>
-                                <div style={{ width: 120, height: 10, background: 'rgba(0,0,0,0.1)', border: '2px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
-                                    <motion.div
-                                        animate={{ width: `${progress}%` }}
-                                        style={{ height: '100%', background: 'var(--text)' }}
-                                    />
+                    {!hideControls ? (
+                        <div style={{ display: 'flex', flex: 1, alignItems: 'center', gap: '1.5rem', minWidth: 0 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                                <span style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4 }}>Step Progress</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.9rem' }}>{currentStepNum}/{totalSteps}</span>
+                                    <div style={{ width: 120, height: 10, background: 'rgba(0,0,0,0.1)', border: '2px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
+                                        <motion.div
+                                            animate={{ width: `${progress}%` }}
+                                            style={{ height: '100%', background: 'var(--text)' }}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div style={{ flex: 1 }} />
+                    )}
 
                     {/* Scenario Picker (optional) */}
-                    {scenarioPicker}
+                    {!hideControls && scenarioPicker}
 
                     {/* Controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-                        <div style={{ display: 'flex', background: 'rgba(0,0,0,0.05)', padding: '0.25rem', borderRadius: '8px', border: '2px solid var(--border)', marginRight: '0.5rem' }}>
-                            {notStarted ? (
-                                <button className="btn btn-sm" style={{ background: 'var(--green)', color: 'white' }} onClick={onStart}>▶ START</button>
-                            ) : (
-                                <>
-                                    <button className="btn btn-sm" style={{ background: isPaused ? 'var(--green)' : 'var(--white)', minWidth: 40 }} onClick={isPaused ? onResume : onPause}>
-                                        {isPaused ? '▶' : '⏸'}
+                    {!hideControls && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.05)', padding: '0.25rem', borderRadius: '8px', border: '2px solid var(--border)', marginRight: '0.5rem' }}>
+                                {notStarted ? (
+                                    <button className="btn btn-sm" style={{ background: 'var(--green)', color: 'white' }} onClick={onStart}>▶ START</button>
+                                ) : (
+                                    <>
+                                        <button className="btn btn-sm" style={{ background: isPaused ? 'var(--green)' : 'var(--white)', minWidth: 40 }} onClick={isPaused ? onResume : onPause}>
+                                            {isPaused ? '▶' : '⏸'}
+                                        </button>
+                                        <button className="btn btn-sm" style={{ background: 'var(--white)', minWidth: 40 }} onClick={onStep} disabled={isFinished}>⏭</button>
+                                    </>
+                                )}
+                                <button className="btn btn-sm" style={{ background: 'var(--white)', marginLeft: '0.25rem' }} onClick={onReset}>↺</button>
+                            </div>
+
+                            {/* Speed Selection */}
+                            <div style={{ display: 'flex', border: '2px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
+                                {SPEED_OPTIONS.map(opt => (
+                                    <button key={opt.ms}
+                                        onClick={() => onSpeedChange(opt.ms)}
+                                        style={{
+                                            padding: '0.35rem 0.6rem', fontSize: '0.7rem', fontWeight: 700,
+                                            background: speed === opt.ms ? 'var(--cyan)' : 'var(--white)',
+                                            border: 'none', borderRight: '1px solid var(--border)',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {opt.label}
                                     </button>
-                                    <button className="btn btn-sm" style={{ background: 'var(--white)', minWidth: 40 }} onClick={onStep} disabled={isFinished}>⏭</button>
-                                </>
-                            )}
-                            <button className="btn btn-sm" style={{ background: 'var(--white)', marginLeft: '0.25rem' }} onClick={onReset}>↺</button>
+                                ))}
+                            </div>
                         </div>
+                    )}
 
-                        {/* Speed Selection */}
-                        <div style={{ display: 'flex', border: '2px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
-                            {SPEED_OPTIONS.map(opt => (
-                                <button key={opt.ms}
-                                    onClick={() => onSpeedChange(opt.ms)}
-                                    style={{
-                                        padding: '0.35rem 0.6rem', fontSize: '0.7rem', fontWeight: 700,
-                                        background: speed === opt.ms ? 'var(--cyan)' : 'var(--white)',
-                                        border: 'none', borderRight: '1px solid var(--border)',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    {opt.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        <button
-                            onClick={onReset}
-                            style={{
-                                marginLeft: '0.5rem', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                borderRadius: '50%', background: 'rgba(0,0,0,0.1)', border: 'none', cursor: 'pointer', fontWeight: 900
-                            }}
-                        >✕</button>
-                    </div>
+                    <button
+                        onClick={onReset}
+                        style={{
+                            marginLeft: '0.5rem', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            borderRadius: '50%', background: 'rgba(0,0,0,0.1)', border: 'none', cursor: 'pointer', fontWeight: 900
+                        }}
+                    >✕</button>
                 </header>
 
                 {/* ─── MAIN CONTENT AREA ─── */}

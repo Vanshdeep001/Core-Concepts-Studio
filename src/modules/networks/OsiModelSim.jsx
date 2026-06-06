@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import { BoxIcon } from '../../components/Icons';
 
 /* ════════════════════════════════════════
    DATA — OSI layers, protocols, PDU fields
@@ -259,7 +260,7 @@ export default function OsiModelSim() {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '100%' }}>
                 <div style={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.35rem', textAlign: 'center', opacity: 0.5 }}>
-                    {side === 'sender' ? '📤 Sender' : '📥 Receiver'}
+                    {side === 'sender' ? 'Sender' : 'Receiver'}
                 </div>
                 {layers.map((layer, idx) => {
                     const isThisActive = isActive && activeLayerId === (viewMode === 'osi' ? layer.id : layer.id);
@@ -414,10 +415,10 @@ export default function OsiModelSim() {
                     {curStep.phase === 'encapsulate' ? `⬇ Encapsulating at ${curStep.layerName}` :
                      curStep.phase === 'decapsulate' ? `⬆ Decapsulating at ${curStep.layerName}` :
                      curStep.phase === 'transit' ? '→ Transmitting on wire...' :
-                     curStep.phase === 'router' ? '🔀 Router — peeking at Layer 3' :
-                     curStep.phase === 'switch' ? '🔀 Switch — peeking at Layer 2' :
-                     curStep.phase === 'arrive' ? '📥 Arrived at receiver' :
-                     '✅ Delivery Complete!'}
+                     curStep.phase === 'router' ? 'Router — peeking at Layer 3' :
+                     curStep.phase === 'switch' ? 'Switch — peeking at Layer 2' :
+                     curStep.phase === 'arrive' ? 'Arrived at receiver' :
+                     'Delivery Complete!'}
                 </motion.div>
 
                 {/* Nested boxes */}
@@ -611,7 +612,7 @@ export default function OsiModelSim() {
             {curStep && (
                 <div style={{ border: '2px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
                     <div style={{ background: 'var(--yellow)', padding: '0.4rem 0.6rem', borderBottom: '2px solid var(--border)', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>
-                        💡 Educational Insight
+                        Educational Insight
                     </div>
                     <div style={{ padding: '0.5rem 0.6rem', fontSize: '0.8rem', lineHeight: 1.5, opacity: 0.85 }}>{curStep.insight}</div>
                 </div>
@@ -643,7 +644,7 @@ export default function OsiModelSim() {
         <ImmersiveLayout
             isActive={isSimMode}
             title="OSI & TCP/IP Model"
-            icon="📦"
+            icon={<BoxIcon size={20} />}
             moduleLabel="CN MODULE"
             isRunning={isRunning}
             isPaused={isPaused}
@@ -677,12 +678,12 @@ export default function OsiModelSim() {
                 <div style={{ marginBottom: '0.4rem' }}><Link to="/networks" style={{ fontSize: '0.82rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← Networks Module</Link></div>
                 <div style={{ marginBottom: '1.5rem' }}>
                     <div className="section-header">Networks · Protocol Layers</div>
-                    <h1 style={{ fontSize: '1.9rem', fontWeight: 700 }}>📦 OSI & TCP/IP Model</h1>
+                    <h1 style={{ fontSize: '1.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}><BoxIcon size={28} /> OSI & TCP/IP Model</h1>
                     <p style={{ opacity: 0.6, fontSize: '0.9rem', marginTop: '0.3rem' }}>Watch a packet travel through all 7 OSI layers with encapsulation, cross the network, and decapsulate at the receiver.</p>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
                     <div className="panel">
-                        <div className="panel-header" style={{ background: 'var(--purple)' }}>📦 What You'll See</div>
+                        <div className="panel-header" style={{ background: 'var(--purple)' }}>What You'll See</div>
                         <div style={{ padding: '1rem', fontSize: '0.85rem', lineHeight: 1.6 }}>
                             <ul style={{ paddingLeft: '1.2rem', margin: 0 }}>
                                 <li>Payload "<strong>Hello</strong>" starts at Layer 7 on the sender</li>

@@ -1,18 +1,60 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { WrenchIcon, BlueprintIcon, ChartIcon, BuildIcon } from '../../components/Icons';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import {
+    LockIcon, EyeIcon, PillarIcon, ShuffleIcon,
+    ZapIcon, KeyIcon, CheckIcon, XIcon, UnlockIcon,
+    ShieldIcon, DogIcon, BirdIcon, CircleShape, SquareShape,
+    TriangleShape, PentagonShape, HexagonShape, CrownIcon,
+    TargetIcon, DiamondIcon, ExplosionIcon, PlayIcon, InfoIcon,
+    GearIcon, SyncIcon, TerminalIcon, LightbulbIcon, RulerIcon, SaveIcon
+} from '../../components/Icons';
 
 /* ══════════════════════════════════════════════════════════════════
    CONSTANTS & DEFAULTS
    ══════════════════════════════════════════════════════════════════ */
 const PILLARS = ['Encapsulation', 'Abstraction', 'Inheritance', 'Polymorphism'];
 const PILLAR_COLORS = { Encapsulation: '#ffd93d', Abstraction: '#66d9ef', Inheritance: '#a8e6cf', Polymorphism: '#ff6b9d' };
-const PILLAR_ICONS = { Encapsulation: '🔒', Abstraction: '🎭', Inheritance: '🌿', Polymorphism: '🔀' };
+
+const getPillarIcon = (pillar, size = 16) => {
+    switch (pillar) {
+        case 'Encapsulation': return <LockIcon size={size} />;
+        case 'Abstraction': return <EyeIcon size={size} />;
+        case 'Inheritance': return <PillarIcon size={size} />;
+        case 'Polymorphism': return <ShuffleIcon size={size} />;
+        default: return null;
+    }
+};
 
 const TYPES = ['String', 'int', 'double', 'boolean', 'float', 'char'];
 const VIS_OPTS = [{ val: '-', label: '- priv' }, { val: '+', label: '+ pub' }, { val: '#', label: '# prot' }];
-const CHILD_ICONS = ['🐕', '🐦', '🐟', '🐱', '🐎', '🦁', '🐸', '🦊', '🐍', '🦅', '🐘', '🦈'];
+
+const CHILD_ICONS = [
+    { name: 'Dog', icon: DogIcon },
+    { name: 'Bird', icon: BirdIcon },
+    { name: 'Circle', icon: CircleShape },
+    { name: 'Square', icon: SquareShape },
+    { name: 'Triangle', icon: TriangleShape },
+    { name: 'Pentagon', icon: PentagonShape },
+    { name: 'Hexagon', icon: HexagonShape },
+    { name: 'Shield', icon: ShieldIcon },
+    { name: 'Crown', icon: CrownIcon },
+    { name: 'Target', icon: TargetIcon },
+    { name: 'Diamond', icon: DiamondIcon },
+    { name: 'Explosion', icon: ExplosionIcon }
+];
+
+const getChildIcon = (iconName, size = 16, color = 'currentColor') => {
+    const found = CHILD_ICONS.find(item => item.name === iconName);
+    if (found) {
+        const IconComp = found.icon;
+        return <IconComp size={size} color={color} />;
+    }
+    return null;
+};
+
 const CHILD_COLORS = ['#ffd93d', '#ff6b9d', '#66d9ef', '#b39ddb', '#ffb347', '#4dd0c8'];
 
 const NODE_W = 240, NODE_H_BASE = 42; // card width, header height
@@ -33,19 +75,19 @@ const DEFAULT_PARENT = {
 
 const DEFAULT_CHILDREN = [
     {
-        id: 'c1', name: 'Dog', icon: '🐕', color: '#ffd93d',
+        id: 'c1', name: 'Dog', icon: 'Dog', color: '#ffd93d',
         fields: [{ id: 'cf1', name: 'breed', type: 'String', value: '"Labrador"', visibility: '-' }],
         methods: [
-            { id: 'cm1', name: 'makeSound', returnType: 'void', visibility: '+', overridden: true, response: 'Woof! Woof! 🐕' },
-            { id: 'cm2', name: 'fetch', returnType: 'void', visibility: '+', overridden: false, response: 'Fetching ball! 🎾' },
+            { id: 'cm1', name: 'makeSound', returnType: 'void', visibility: '+', overridden: true, response: 'Woof! Woof!' },
+            { id: 'cm2', name: 'fetch', returnType: 'void', visibility: '+', overridden: false, response: 'Fetching ball!' },
         ],
     },
     {
-        id: 'c2', name: 'Bird', icon: '🐦', color: '#66d9ef',
+        id: 'c2', name: 'Bird', icon: 'Bird', color: '#66d9ef',
         fields: [{ id: 'cf2', name: 'wingspan', type: 'double', value: '1.2', visibility: '-' }],
         methods: [
-            { id: 'cm3', name: 'makeSound', returnType: 'void', visibility: '+', overridden: true, response: 'Tweet! Tweet! 🐦' },
-            { id: 'cm4', name: 'fly', returnType: 'void', visibility: '+', overridden: false, response: 'Soaring high! 🌤️' },
+            { id: 'cm3', name: 'makeSound', returnType: 'void', visibility: '+', overridden: true, response: 'Tweet! Tweet!' },
+            { id: 'cm4', name: 'fly', returnType: 'void', visibility: '+', overridden: false, response: 'Soaring high!' },
         ],
     },
 ];
@@ -205,7 +247,7 @@ const DarkFieldRow = ({ f, blurred, locked }) => (
         filter: blurred ? 'blur(2.5px)' : 'none', transition: 'all 0.4s',
         fontFamily: 'var(--font-mono)', fontSize: '0.68rem', position: 'relative', color: 'var(--text)',
     }}>
-        {locked && <span style={{ position: 'absolute', right: 4, fontSize: '0.6rem' }}>🔒</span>}
+        {locked && <span style={{ position: 'absolute', right: 4, display: 'inline-flex', alignItems: 'center' }}><LockIcon size={12} /></span>}
         <span style={{ color: visColor(f.visibility), fontWeight: 800 }}>{f.visibility}</span>
         <span style={{ fontWeight: 700 }}>{f.name}</span>
         <span style={{ color: 'var(--text)', opacity: 0.6 }}>: {f.type}</span>
@@ -239,7 +281,7 @@ const ClassBuilder = ({ parentClass, onUpdateParent, nextId }) => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ fontSize: '0.58rem', fontWeight: 900, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.6 }}>🔧 Parent Class Builder</div>
+            <div style={{ fontSize: '0.58rem', fontWeight: 900, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.6 }}>Parent Class Builder</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 <span style={{ fontSize: '0.62rem', fontWeight: 800, color: TEXT_DIM }}>Class:</span>
                 <MiniInput value={parentClass.name} onChange={v => up('name', v)} placeholder="Name" style={{ flex: 1 }} mono />
@@ -309,7 +351,7 @@ const EncapsulationView = ({ parentClass, showGetters, onToggleGetters }) => {
                     boxShadow: 'var(--shadow)', background: CARD_BG,
                 }}>
                     <div style={{ background: PILLAR_COLORS.Encapsulation, padding: '0.5rem 0.9rem', borderBottom: 'var(--border-width) solid var(--border)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#000000' }}>
-                        🔒 {parentClass.name} <span style={{ fontSize: '0.55rem', opacity: 0.6, marginLeft: 'auto', color: '#000000' }}>ENCAPSULATED</span>
+                        <LockIcon size={16} color="#000000" /> {parentClass.name} <span style={{ fontSize: '0.55rem', opacity: 0.6, marginLeft: 'auto', color: '#000000' }}>ENCAPSULATED</span>
                     </div>
                     <div style={{ padding: '0.6rem' }}>
                         <div style={{ fontSize: '0.55rem', fontWeight: 800, color: '#cf222e', marginBottom: '0.2rem', textTransform: 'uppercase' }}>Private Fields (Hidden)</div>
@@ -328,21 +370,23 @@ const EncapsulationView = ({ parentClass, showGetters, onToggleGetters }) => {
                 </motion.div>
                 <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 4, repeat: Infinity }} style={{
                     position: 'absolute', top: -10, right: -10, width: 32, height: 32, background: 'var(--yellow)', border: '2px solid var(--border)',
-                    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', boxShadow: 'var(--shadow-sm)',
-                }}>🛡️</motion.div>
+                    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-sm)', color: '#000000'
+                }}>
+                    <ShieldIcon size={18} />
+                </motion.div>
             </div>
 
             {/* Access Simulator */}
             <div className="panel" style={{ width: 350 }}>
-                <div className="panel-header" style={{ background: PILLAR_COLORS.Encapsulation, color: '#000000', padding: '0.35rem 0.65rem', fontSize: '0.65rem' }}>
-                    ⚡ ACCESS SIMULATOR
+                <div className="panel-header" style={{ background: PILLAR_COLORS.Encapsulation, color: '#000000', padding: '0.35rem 0.65rem', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <ZapIcon size={14} color="#000000" /> ACCESS SIMULATOR
                 </div>
                 <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                     {privFields.map(f => (
                         <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.2rem 0', borderBottom: `1px solid ${CARD_BORDER}20` }}>
                             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, flex: 1, color: TEXT_LIGHT }}>{f.name}</span>
-                            <NeonBtn onClick={() => tryDirect(f)} color="#f97583" small>Direct ⚡</NeonBtn>
-                            <NeonBtn onClick={() => tryGetter(f)} color="#7ee787" small>Getter 🔑</NeonBtn>
+                            <NeonBtn onClick={() => tryDirect(f)} color="#f97583" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }} small>Direct <ZapIcon size={10} /></NeonBtn>
+                            <NeonBtn onClick={() => tryGetter(f)} color="#7ee787" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }} small>Getter <KeyIcon size={10} /></NeonBtn>
                         </div>
                     ))}
                 </div>
@@ -358,8 +402,8 @@ const EncapsulationView = ({ parentClass, showGetters, onToggleGetters }) => {
                         </div>
                         <div style={{ padding: '0.3rem 0.6rem', display: 'flex', flexDirection: 'column', gap: '0.15rem', maxHeight: 130, overflowY: 'auto' }}>
                             {accessLog.map(l => (
-                                <motion.div key={l.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', color: l.ok ? '#7ee787' : '#f97583', display: 'flex', gap: '0.3rem' }}>
-                                    <span>{l.ok ? '✅' : '❌'}</span>
+                                <motion.div key={l.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', color: l.ok ? '#7ee787' : '#f97583', display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+                                    <span>{l.ok ? <CheckIcon size={12} color="#7ee787" /> : <XIcon size={12} color="#f97583" />}</span>
                                     <span style={{ opacity: 0.8 }}>obj.{l.type === 'direct' ? l.field : `get${capFirst(l.field)}()`}</span>
                                     <span style={{ marginLeft: 'auto', fontSize: '0.55rem', opacity: 0.5 }}>{l.ok ? 'GRANTED' : 'DENIED'}</span>
                                 </motion.div>
@@ -369,14 +413,16 @@ const EncapsulationView = ({ parentClass, showGetters, onToggleGetters }) => {
                 )}
             </AnimatePresence>
 
-            <NeonBtn onClick={onToggleGetters} color={showGetters ? '#7ee787' : '#58a6ff'}>{showGetters ? '🔓 Hide Getters/Setters' : '🔑 Show Controlled Access'}</NeonBtn>
+            <NeonBtn onClick={onToggleGetters} color={showGetters ? '#7ee787' : '#58a6ff'} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                {showGetters ? (<><UnlockIcon size={14} /> Hide Getters/Setters</>) : (<><KeyIcon size={14} /> Show Controlled Access</>)}
+            </NeonBtn>
 
             <AnimatePresence>
                 {showGetters && (
                     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 16 }}
                         className="panel" style={{ width: 350 }}>
-                        <div className="panel-header" style={{ background: 'var(--orange)', color: '#000000', fontSize: '0.6rem', padding: '0.35rem 0.65rem' }}>
-                            🔑 CONTROLLED ACCESS CHANNEL
+                        <div className="panel-header" style={{ background: 'var(--orange)', color: '#000000', fontSize: '0.6rem', padding: '0.35rem 0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <KeyIcon size={14} color="#000000" /> CONTROLLED ACCESS CHANNEL
                         </div>
                         <div style={{ padding: '0.6rem', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.2rem', color: 'var(--text)' }}>
                             {privFields.map(f => (
@@ -408,8 +454,8 @@ const AbstractionView = ({ parentClass }) => {
             <div style={{ position: 'relative', width: 380 }}>
                 {/* Clean API */}
                 <motion.div animate={{ y: showAll ? -8 : 0 }} style={{ border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', boxShadow: 'var(--shadow)', background: CARD_BG, position: 'relative', zIndex: 2 }}>
-                    <div style={{ background: 'var(--cyan)', padding: '0.5rem 0.9rem', borderBottom: 'var(--border-width) solid var(--border)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#000000' }}>
-                        🎭 {parentClass.name} — Public API <span style={{ fontSize: '0.55rem', opacity: 0.6, marginLeft: 'auto', color: '#000000' }}>WHAT YOU SEE</span>
+                    <div style={{ background: 'var(--cyan)', padding: '0.5rem 0.9rem', borderBottom: 'var(--border-width) solid var(--border)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#000000' }}>
+                        <EyeIcon size={16} color="#000000" /> {parentClass.name} — Public API <span style={{ fontSize: '0.55rem', opacity: 0.6, marginLeft: 'auto', color: '#000000' }}>WHAT YOU SEE</span>
                     </div>
                     <div style={{ padding: '0.6rem' }}>
                         {pubMethods.map(m => (
@@ -417,7 +463,7 @@ const AbstractionView = ({ parentClass }) => {
                                 padding: '0.35rem 0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', borderRadius: '4px',
                                 background: revealed === m.id ? 'rgba(102, 217, 239, 0.2)' : 'transparent', color: TEXT_LIGHT,
                             }}>
-                                <span style={{ color: 'var(--cyan)' }}>▶</span> {m.name}()
+                                <span style={{ color: 'var(--cyan)', display: 'inline-flex', alignItems: 'center' }}><PlayIcon size={10} color="var(--cyan)" fill="var(--cyan)" /></span> {m.name}()
                                 <span style={{ marginLeft: 'auto', fontSize: '0.55rem', color: 'var(--text)', opacity: 0.6 }}>click ↓</span>
                             </motion.div>
                         ))}
@@ -426,23 +472,23 @@ const AbstractionView = ({ parentClass }) => {
 
                 {/* Water Line */}
                 <div style={{ position: 'relative', height: 24, overflow: 'hidden', zIndex: 3 }}>
-                    <motion.div animate={{ x: [0, -20, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', fontSize: '0.85rem', whiteSpace: 'nowrap', opacity: 0.15 }}>
-                        {'〰️'.repeat(30)}
+                    <motion.div animate={{ opacity: [0.1, 0.25, 0.1] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }} style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ borderTop: '2.5px dashed var(--cyan)', width: '100%', opacity: 0.3 }} />
                     </motion.div>
                     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ background: 'var(--cyan)', padding: '0.2rem 0.6rem', fontSize: '0.55rem', fontWeight: 900, color: '#000000', border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', zIndex: 1, boxShadow: 'var(--shadow-sm)' }}>🌊 ABSTRACTION BARRIER</span>
+                        <span style={{ background: 'var(--cyan)', padding: '0.2rem 0.6rem', fontSize: '0.55rem', fontWeight: 900, color: '#000000', border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', zIndex: 1, boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><ShieldIcon size={12} color="#000000" /> ABSTRACTION BARRIER</span>
                     </div>
                 </div>
 
                 {/* Hidden Implementation */}
                 <motion.div animate={{ opacity: showAll || revealed ? 1 : 0.35 }} style={{ border: 'var(--border-width) dashed var(--border)', borderRadius: 'var(--radius)', padding: '0.7rem', background: 'var(--bg)', boxShadow: 'var(--shadow)' }}>
-                    <div style={{ fontSize: '0.55rem', fontWeight: 800, color: TEXT_DIM, marginBottom: '0.3rem' }}>🔧 HIDDEN IMPLEMENTATION</div>
+                    <div style={{ fontSize: '0.55rem', fontWeight: 800, color: TEXT_DIM, marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}><GearIcon size={12} /> HIDDEN IMPLEMENTATION</div>
                     {pubMethods.map(m => {
                         const steps = genImplSteps(m.name);
                         const show = showAll || revealed === m.id;
                         return (
                             <motion.div key={m.id} animate={{ opacity: show ? 1 : 0.2, height: show ? 'auto' : 20 }} style={{ overflow: 'hidden', borderRadius: '6px', border: show ? `1px solid ${CARD_BORDER}` : 'none', marginBottom: '0.25rem' }}>
-                                <div style={{ padding: '0.25rem 0.4rem', background: show ? '#66d9ef08' : 'transparent', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: TEXT_LIGHT }}>⚙ {m.name}()</div>
+                                <div style={{ padding: '0.25rem 0.4rem', background: show ? '#66d9ef08' : 'transparent', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, color: TEXT_LIGHT }}>.{m.name}()</div>
                                 {show && (
                                     <div style={{ padding: '0.2rem 0.4rem 0.2rem 1.2rem', display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
                                         {steps.map((s, si) => (
@@ -459,9 +505,11 @@ const AbstractionView = ({ parentClass }) => {
                 </motion.div>
             </div>
 
-            <NeonBtn onClick={() => setShowAll(p => !p)} color={showAll ? '#66d9ef' : '#58a6ff'}>{showAll ? '🎭 Hide Implementations' : '⚙ Reveal All'}</NeonBtn>
-            <div style={{ fontSize: '0.65rem', color: TEXT_DIM, fontWeight: 600, textAlign: 'center', maxWidth: 340 }}>
-                💡 Users interact with the <span style={{ color: '#66d9ef' }}>clean API</span> above. They don't need to know HOW — only THAT it works.
+            <NeonBtn onClick={() => setShowAll(p => !p)} color={showAll ? '#66d9ef' : '#58a6ff'} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                {showAll ? (<><EyeIcon size={14} /> Hide Implementations</>) : (<><GearIcon size={14} /> Reveal All</>)}
+            </NeonBtn>
+            <div style={{ fontSize: '0.65rem', color: TEXT_DIM, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center', maxWidth: 340 }}>
+                <LightbulbIcon size={14} /> <span>Users interact with the <span style={{ color: '#66d9ef' }}>clean API</span> above. They don't need to know HOW — only THAT it works.</span>
             </div>
         </div>
     );
@@ -476,7 +524,7 @@ const InheritanceView = ({ parentClass, childClasses, onAddChild, onRemoveChild 
     const [dragging, setDragging] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [newName, setNewName] = useState('');
-    const [newIcon, setNewIcon] = useState('🐱');
+    const [newIcon, setNewIcon] = useState('Dog');
     const [newFields, setNewFields] = useState([]);
     const [overrides, setOverrides] = useState({});
     const [overrideResps, setOverrideResps] = useState({});
@@ -522,7 +570,7 @@ const InheritanceView = ({ parentClass, childClasses, onAddChild, onRemoveChild 
         return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
     }, [dragging]);
 
-    const resetForm = () => { setNewName(''); setNewIcon('🐱'); setNewFields([]); setOverrides({}); setOverrideResps({}); setShowForm(false); };
+    const resetForm = () => { setNewName(''); setNewIcon('Dog'); setNewFields([]); setOverrides({}); setOverrideResps({}); setShowForm(false); };
     const handleCreate = () => {
         if (!newName.trim()) return;
         const methods = [];
@@ -568,8 +616,8 @@ const InheritanceView = ({ parentClass, childClasses, onAddChild, onRemoveChild 
                     transition: dragging?.id === 'parent' ? 'none' : 'box-shadow 0.3s',
                     transform: dragging?.id === 'parent' ? 'scale(1.03)' : 'scale(1)',
                 }}>
-                    <div style={{ padding: '0.4rem 0.7rem', borderBottom: 'var(--border-width) solid var(--border)', fontWeight: 800, fontSize: '0.78rem', color: '#000000', background: 'var(--green)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        🏛️ {parentClass.name} <span style={{ fontSize: '0.5rem', color: '#000000', opacity: 0.6, marginLeft: 'auto' }}>PARENT</span>
+                    <div style={{ padding: '0.4rem 0.7rem', borderBottom: 'var(--border-width) solid var(--border)', fontWeight: 800, fontSize: '0.78rem', color: '#000000', background: 'var(--green)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <PillarIcon size={16} color="#000000" /> {parentClass.name} <span style={{ fontSize: '0.5rem', color: '#000000', opacity: 0.6, marginLeft: 'auto' }}>PARENT</span>
                     </div>
                     <div style={{ padding: '0.35rem' }}>
                         {parentClass.fields.map(f => <DarkFieldRow key={f.id} f={f} />)}
@@ -589,8 +637,8 @@ const InheritanceView = ({ parentClass, childClasses, onAddChild, onRemoveChild 
                     transition: dragging?.id === c.id ? 'none' : 'box-shadow 0.3s',
                     transform: dragging?.id === c.id ? 'scale(1.03)' : 'scale(1)',
                 }}>
-                    <div style={{ padding: '0.35rem 0.65rem', borderBottom: 'var(--border-width) solid var(--border)', fontWeight: 800, fontSize: '0.75rem', color: '#000000', background: c.color, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        {c.icon} {c.name}
+                    <div style={{ padding: '0.35rem 0.65rem', borderBottom: 'var(--border-width) solid var(--border)', fontWeight: 800, fontSize: '0.75rem', color: '#000000', background: c.color, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        {getChildIcon(c.icon, 16, '#000000')} {c.name}
                         <span style={{ fontSize: '0.45rem', color: '#000000', opacity: 0.6, marginLeft: '0.15rem' }}>extends {parentClass.name}</span>
                         <button onClick={e => { e.stopPropagation(); onRemoveChild(c.id); }} style={{ marginLeft: 'auto', border: 'none', background: 'rgba(0,0,0,0.15)', borderRadius: '50%', width: 16, height: 16, cursor: 'pointer', fontSize: '0.55rem', fontWeight: 900, color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                     </div>
@@ -621,8 +669,8 @@ const InheritanceView = ({ parentClass, childClasses, onAddChild, onRemoveChild 
             )}
 
             {/* Hint */}
-            <div style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 20, fontSize: '0.55rem', color: TEXT_DIM, fontWeight: 700, opacity: 0.6 }}>
-                ✋ Drag cards anywhere
+            <div style={{ position: 'absolute', bottom: 12, right: 12, zIndex: 20, fontSize: '0.55rem', color: TEXT_DIM, fontWeight: 700, opacity: 0.6, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <InfoIcon size={12} /> Drag cards anywhere
             </div>
 
             {/* Add Child Form — Modal Overlay */}
@@ -633,15 +681,20 @@ const InheritanceView = ({ parentClass, childClasses, onAddChild, onRemoveChild 
                         onClick={e => { if (e.target === e.currentTarget) resetForm(); }}>
                         <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
                             style={{ width: 360, border: `2px solid #ffd93d50`, borderRadius: '12px', overflow: 'hidden', background: CARD_BG, boxShadow: glow('#ffd93d') }}>
-                            <div style={{ background: '#ffd93d15', padding: '0.45rem 0.8rem', borderBottom: `1px solid #ffd93d30`, fontWeight: 800, fontSize: '0.75rem', color: '#ffd93d' }}>
-                                ✨ New Child Class <span style={{ fontSize: '0.55rem', color: TEXT_DIM }}>(extends {parentClass.name})</span>
+                            <div style={{ background: '#ffd93d15', padding: '0.45rem 0.8rem', borderBottom: `1px solid #ffd93d30`, fontWeight: 800, fontSize: '0.75rem', color: '#ffd93d', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <PillarIcon size={16} color="#ffd93d" /> New Child Class <span style={{ fontSize: '0.55rem', color: TEXT_DIM }}>(extends {parentClass.name})</span>
                             </div>
                             <div style={{ padding: '0.7rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                                 <MiniInput value={newName} onChange={setNewName} placeholder="ClassName" style={{ width: '100%' }} mono />
-                                <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap' }}>
-                                    {CHILD_ICONS.map(ic => (
-                                        <button key={ic} onClick={() => setNewIcon(ic)} style={{ width: 26, height: 26, border: newIcon === ic ? '2px solid #ffd93d' : `1px solid ${CARD_BORDER}`, borderRadius: '4px', background: newIcon === ic ? '#ffd93d15' : 'transparent', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{ic}</button>
-                                    ))}
+                                <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                                    {CHILD_ICONS.map(item => {
+                                        const IconComp = item.icon;
+                                        return (
+                                            <button key={item.name} type="button" onClick={() => { setNewIcon(item.name); if (!newName) setNewName(item.name); }} style={{ width: 28, height: 28, border: newIcon === item.name ? '2px solid #ffd93d' : `1.5px solid ${CARD_BORDER}`, borderRadius: '4px', background: newIcon === item.name ? '#ffd93d15' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text)' }}>
+                                                <IconComp size={16} />
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                                 <div style={{ fontSize: '0.55rem', fontWeight: 800, color: TEXT_DIM, marginTop: '0.1rem' }}>OVERRIDE METHODS</div>
                                 {parentClass.methods.filter(m => m.visibility === '+').map(m => (
@@ -665,7 +718,7 @@ const InheritanceView = ({ parentClass, childClasses, onAddChild, onRemoveChild 
                                     </div>
                                 ))}
                                 <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.2rem' }}>
-                                    <NeonBtn onClick={handleCreate} color="#7ee787" disabled={!newName.trim()}>✓ Create</NeonBtn>
+                                    <NeonBtn onClick={handleCreate} color="#7ee787" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }} disabled={!newName.trim()}><CheckIcon size={12} /> Create</NeonBtn>
                                     <NeonBtn onClick={resetForm} color={TEXT_DIM}>Cancel</NeonBtn>
                                 </div>
                             </div>
@@ -685,8 +738,13 @@ const PolymorphismView = ({ parentClass, childClasses }) => {
     const [selMethod, setSelMethod] = useState(null);
     const pubMethods = parentClass.methods.filter(m => m.visibility === '+');
 
+    const getObjIcon = (iconName, color = 'currentColor', size = 16) => {
+        if (iconName === 'Parent' || iconName === '🏛️') return <PillarIcon size={size} color={color} />;
+        return getChildIcon(iconName, size, color);
+    };
+
     const objects = useMemo(() => {
-        const list = [{ name: parentClass.name, icon: '🏛️', color: '#a8e6cf', methods: parentClass.methods, isParent: true }];
+        const list = [{ name: parentClass.name, icon: 'Parent', color: '#a8e6cf', methods: parentClass.methods, isParent: true }];
         childClasses.forEach(c => list.push({ name: c.name, icon: c.icon, color: c.color, methods: c.methods, isParent: false }));
         return list;
     }, [parentClass, childClasses]);
@@ -720,9 +778,12 @@ const PolymorphismView = ({ parentClass, childClasses }) => {
                                 transform: active ? 'translate(3px, 3px)' : 'none',
                                 boxShadow: active ? 'none' : 'var(--shadow-sm)',
                                 opacity: firing && selMethod?.id !== m.id ? 0.4 : 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
                             }}
                         >
-                            🚀 .{m.name}()
+                            <PlayIcon size={12} color="#000000" fill="#000000" /> .{m.name}()
                         </motion.button>
                     );
                 })}
@@ -768,11 +829,11 @@ const PolymorphismView = ({ parentClass, childClasses }) => {
                     return (
                         <motion.div key={obj.name} animate={firing ? { scale: [1, 1.06, 1], rotate: over ? [0, 3, -3, 0] : [0, -1, 1, 0] } : {}} transition={{ duration: 0.5, delay: i * 0.12, repeat: firing ? 2 : 0 }}
                             style={{
-                                width: 150, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden',
+                                width: 155, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden',
                                 boxShadow: firing ? 'var(--shadow-lg)' : 'var(--shadow)', background: CARD_BG, textAlign: 'center', transition: 'box-shadow 0.3s',
                             }}>
                             <div style={{ background: obj.color, padding: '0.4rem', borderBottom: 'var(--border-width) solid var(--border)', fontWeight: 800, fontSize: '0.75rem', color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
-                                {obj.icon} {obj.name}
+                                {getObjIcon(obj.icon, '#000000')} {obj.name}
                             </div>
                             <div style={{ padding: '0.55rem', minHeight: 65 }}>
                                 {selMethod && <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--text)', opacity: 0.6 }}>.{selMethod.name}()</div>}
@@ -792,7 +853,7 @@ const PolymorphismView = ({ parentClass, childClasses }) => {
 
             {childClasses.length === 0 && (
                 <div style={{ fontSize: '0.68rem', color: 'var(--text)', opacity: 0.6, fontWeight: 600, textAlign: 'center', padding: '0.5rem 1rem', background: '#ff6b9d10', borderRadius: '8px', border: '1.5px dashed #ff6b9d40' }}>
-                    💡 Go to <span style={{ color: '#a8e6cf' }}>Inheritance</span> tab first and create child classes!
+                    <LightbulbIcon size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Go to <span style={{ color: '#a8e6cf' }}>Inheritance</span> tab first and create child classes!
                 </div>
             )}
 
@@ -800,14 +861,14 @@ const PolymorphismView = ({ parentClass, childClasses }) => {
             {firing && selMethod && childClasses.length > 0 && (
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
                     className="panel" style={{ width: '100%', maxWidth: 500 }}>
-                    <div className="panel-header" style={{ padding: '0.35rem 0.65rem', fontSize: '0.55rem', fontWeight: 800, color: '#000000', background: 'var(--yellow)' }}>🔀 RUNTIME METHOD DISPATCH (VTABLE)</div>
+                    <div className="panel-header" style={{ padding: '0.35rem 0.65rem', fontSize: '0.55rem', fontWeight: 800, color: '#000000', background: 'var(--yellow)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><ShuffleIcon size={12} color="#000000" /> RUNTIME METHOD DISPATCH (VTABLE)</div>
                     <div style={{ padding: '0.4rem 0.65rem', fontFamily: 'var(--font-mono)', fontSize: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
                         <div style={{ color: 'var(--text)', opacity: 0.6 }}>// JVM looks up actual object type</div>
                         {objects.map((o, i) => {
                             const ov = isOver(o, selMethod.name);
                             return (
-                                <motion.div key={o.name} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 * i }} style={{ color: ov ? '#ff6b9d' : '#22863a', fontWeight: 700 }}>
-                                    {o.icon} {o.name} → {ov ? `${o.name}::${selMethod.name}()` : `${parentClass.name}::${selMethod.name}()`} {ov ? '⟲ overridden' : '← inherited'}
+                                <motion.div key={o.name} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 * i }} style={{ color: ov ? '#ff6b9d' : '#22863a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    {getObjIcon(o.icon, ov ? '#ff6b9d' : '#22863a', 12)} {o.name} → {ov ? `${o.name}::${selMethod.name}()` : `${parentClass.name}::${selMethod.name}()`} {ov ? '⟲ overridden' : '← inherited'}
                                 </motion.div>
                             );
                         })}
@@ -824,29 +885,35 @@ const PolymorphismView = ({ parentClass, childClasses }) => {
 const CodePanel = ({ parentClass, childClasses, activePillar, codeLang, onLangChange }) => {
     const code = codeLang === 'java' ? genJava(parentClass, childClasses, activePillar) : genPython(parentClass, childClasses, activePillar);
     const ins = {
-        Encapsulation: { t: 'Data Protection', txt: 'Bundles data & methods into a class and restricts direct access. Only public methods provide controlled access.', ana: '🚗 A car dashboard shows speed — you never touch the engine internals. The pedal is your public interface.' },
-        Abstraction: { t: 'Interface Simplicity', txt: 'Hides complex implementation and shows only essential features. Users interact with a clean API.', ana: '📺 TV remote: press "Volume Up" without knowing circuits. The button IS the abstraction.' },
-        Inheritance: { t: 'Code Reuse', txt: 'A new class inherits properties & methods from an existing class, creating parent-child hierarchies.', ana: '🧬 Like genetics — children inherit traits from parents but can develop their own unique features.' },
-        Polymorphism: { t: 'Dynamic Behavior', txt: 'Objects of different classes respond to the same method call differently, resolved at runtime.', ana: '🎵 Musicians: when conductor says "play", each instrument sounds different. Same cue, different execution.' },
+        Encapsulation: { t: 'Data Protection', txt: 'Bundles data & methods into a class and restricts direct access. Only public methods provide controlled access.', ana: 'Car dashboard shows speed — you never touch the engine internals. The pedal is your public interface.' },
+        Abstraction: { t: 'Interface Simplicity', txt: 'Hides complex implementation and shows only essential features. Users interact with a clean API.', ana: 'TV remote: press "Volume Up" without knowing circuits. The button IS the abstraction.' },
+        Inheritance: { t: 'Code Reuse', txt: 'A new class inherits properties & methods from an existing class, creating parent-child hierarchies.', ana: 'Like genetics — children inherit traits from parents but can develop their own unique features.' },
+        Polymorphism: { t: 'Dynamic Behavior', txt: 'Objects of different classes respond to the same method call differently, resolved at runtime.', ana: 'Musicians: when conductor says "play", each instrument sounds different. Same cue, different execution.' },
     }[activePillar];
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             <div className="panel">
-                <div className="panel-header" style={{ background: PILLAR_COLORS[activePillar], color: '#000000' }}>💻 Live Code</div>
+                <div className="panel-header" style={{ background: PILLAR_COLORS[activePillar], color: '#000000', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <TerminalIcon size={14} color="#000000" /> Live Code
+                </div>
                 <div style={{ padding: '0.4rem' }}>
                     <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '0.3rem' }}>
-                        {['java', 'python'].map(l => <NeonBtn key={l} onClick={() => onLangChange(l)} color={codeLang === l ? '#58a6ff' : TEXT_DIM} small>{l === 'java' ? '☕ Java' : '🐍 Python'}</NeonBtn>)}
+                        {['java', 'python'].map(l => <NeonBtn key={l} onClick={() => onLangChange(l)} color={codeLang === l ? '#58a6ff' : TEXT_DIM} small>{l === 'java' ? 'Java' : 'Python'}</NeonBtn>)}
                     </div>
                     <pre style={{ background: '#0d1117', color: '#c9d1d9', padding: '0.5rem', borderRadius: '6px', fontSize: '0.58rem', fontFamily: 'var(--font-mono)', lineHeight: 1.6, overflowX: 'auto', overflowY: 'auto', maxHeight: 240, border: 'var(--border-width) solid var(--border)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{code}</pre>
                 </div>
             </div>
             <div className="panel">
-                <div className="panel-header" style={{ background: PILLAR_COLORS[activePillar], color: '#000000' }}>{PILLAR_ICONS[activePillar]} {ins.t}</div>
+                <div className="panel-header" style={{ background: PILLAR_COLORS[activePillar], color: '#000000', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    {getPillarIcon(activePillar)} {ins.t}
+                </div>
                 <div style={{ padding: '0.5rem', fontSize: '0.7rem', lineHeight: 1.6, color: TEXT_LIGHT }}>{ins.txt}</div>
             </div>
             <div className="panel">
-                <div className="panel-header" style={{ background: 'var(--white)', color: 'var(--text)' }}>💡 Real-World Analogy</div>
+                <div className="panel-header" style={{ background: 'var(--white)', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <LightbulbIcon size={14} /> Real-World Analogy
+                </div>
                 <div style={{ padding: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', lineHeight: 1.5 }}>{ins.ana}</div>
             </div>
         </div>
@@ -858,7 +925,7 @@ const CodePanel = ({ parentClass, childClasses, activePillar, codeLang, onLangCh
    ══════════════════════════════════════════════════════════════════ */
 const UMLPanel = ({ parentClass, childClasses, activePillar }) => (
     <div className="panel" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.58rem' }}>
-        <div className="panel-header" style={{ background: 'var(--bg-outer)', color: 'var(--text)', padding: '0.3rem 0.55rem', fontSize: '0.55rem' }}>📐 UML CLASS DIAGRAM</div>
+        <div className="panel-header" style={{ background: 'var(--bg-outer)', color: 'var(--text)', padding: '0.3rem 0.55rem', fontSize: '0.55rem' }}>UML CLASS DIAGRAM</div>
         <div style={{ padding: '0.4rem' }}>
             <div style={{ border: `2px solid ${CARD_BORDER}`, marginBottom: '0.3rem' }}>
                 <div style={{ borderBottom: `2px solid ${CARD_BORDER}`, padding: '0.15rem 0.35rem', fontWeight: 800, textAlign: 'center', background: 'var(--green)', color: '#000000', fontSize: '0.6rem' }}>{parentClass.name}</div>
@@ -921,7 +988,7 @@ export default function FourPillarsSim() {
         <div style={{ margin: '-1rem', padding: '0.75rem', background: CANVAS_BG, color: TEXT_LIGHT, minHeight: '100%' }}>
             <ClassBuilder parentClass={parentClass} onUpdateParent={setParentClass} nextId={nextId} />
             <div style={{ borderTop: `2px solid ${CARD_BORDER}`, paddingTop: '0.5rem', marginTop: '0.5rem' }}>
-                <div style={{ fontSize: '0.55rem', fontWeight: 900, color: 'var(--text)', textTransform: 'uppercase', marginBottom: '0.3rem', letterSpacing: '0.1em', opacity: 0.6 }}>📊 Stats</div>
+                <div style={{ fontSize: '0.55rem', fontWeight: 900, color: 'var(--text)', textTransform: 'uppercase', marginBottom: '0.3rem', letterSpacing: '0.1em', opacity: 0.6 }}>Stats</div>
                 {[
                     { l: 'Pillars', v: pillarsExplored.size, m: 4, c: '#b58900' },
                     { l: 'Classes', v: stats.classes, c: '#008ba3' },
@@ -935,7 +1002,7 @@ export default function FourPillarsSim() {
                     </div>
                 ))}
             </div>
-            <NeonBtn onClick={loadExample} color="#ffd93d" style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem' }} small>📦 Load Example</NeonBtn>
+            <NeonBtn onClick={loadExample} color="#ffd93d" style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem' }} small>Load Example</NeonBtn>
             <div style={{ borderTop: `1px solid ${CARD_BORDER}`, paddingTop: '0.5rem', marginTop: '0.5rem' }}>
                 <UMLPanel parentClass={parentClass} childClasses={childClasses} activePillar={activePillar} />
             </div>
@@ -966,7 +1033,7 @@ export default function FourPillarsSim() {
                         transition: 'all 0.2s',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', position: 'relative',
                     }}>
-                        {PILLAR_ICONS[p]} {p}
+                        {getPillarIcon(p)} {p}
                         {pillarsExplored.has(p) && activePillar !== p && <span style={{ position: 'absolute', top: 4, right: 6, width: 6, height: 6, borderRadius: '50%', background: '#22863a', border: '1px solid var(--border)' }} />}
                     </button>
                 ))}
@@ -986,7 +1053,7 @@ export default function FourPillarsSim() {
     );
 
     return (
-        <ImmersiveLayout isActive={true} title="Four Pillars of OOP" icon="🏛️" moduleLabel="OOP MODULE"
+        <ImmersiveLayout isActive={true} title="Four Pillars of OOP" icon={<PillarIcon size={22} />} moduleLabel="OOP MODULE"
             isRunning={false} isPaused={false} isFinished={false} speed={speed} onSpeedChange={setSpeed}
             onStart={() => {}} onPause={() => {}} onResume={() => {}} onReset={reset}
             onStep={() => { const i = PILLARS.indexOf(activePillar); if (i < 3) changePillar(PILLARS[i + 1]); }}
@@ -1000,7 +1067,7 @@ export default function FourPillarsSim() {
             ]}>
             <div className="main-content">
                 <div style={{ marginBottom: '0.5rem' }}><Link to="/oops" style={{ fontSize: '0.85rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← OOP Module</Link></div>
-                <h1 style={{ fontSize: '2.2rem', fontWeight: 800 }}>🏛️ Four Pillars of OOP</h1>
+                <h1 style={{ fontSize: '2.2rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><PillarIcon size={32} /> Four Pillars of OOP</h1>
                 <p style={{ opacity: 0.6, fontSize: '1rem', marginBottom: '2rem' }}>Build your own classes and see each OOP pillar in action.</p>
                 <button className="btn btn-yellow btn-lg" onClick={() => {}}>LAUNCH EXPLORER</button>
             </div>

@@ -55,7 +55,7 @@ export default function ComparisonPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', alignItems: 'start', marginBottom: '1.5rem' }}>
                 {/* Processes */}
                 <div className="panel">
-                    <div className="panel-header">📋 Process Table</div>
+                    <div className="panel-header">Process Table</div>
                     <div style={{ padding: '1rem' }}>
                         <ProcessInputForm processes={processes} onChange={setProcesses} />
                     </div>
@@ -64,7 +64,7 @@ export default function ComparisonPage() {
                 {/* Algorithm Multi-select */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div className="panel">
-                        <div className="panel-header">⚖ Select Algorithms</div>
+                        <div className="panel-header">Select Algorithms</div>
                         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                             {ALGORITHM_OPTIONS.map(alg => (
                                 <label key={alg} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, padding: '0.3rem 0' }}>
@@ -83,7 +83,7 @@ export default function ComparisonPage() {
                     {/* Quantum for RR */}
                     {selectedAlgos.some(a => ['RR', 'MLFQ'].includes(a)) && (
                         <div className="panel">
-                            <div className="panel-header">⏱ Time Quantum</div>
+                            <div className="panel-header">Time Quantum</div>
                             <div style={{ padding: '1rem' }}>
                                 <input
                                     type="number"
@@ -103,14 +103,14 @@ export default function ComparisonPage() {
                         disabled={running}
                         style={{ width: '100%', justifyContent: 'center' }}
                     >
-                        {running ? '⏳ Comparing...' : '⚖ Compare Now'}
+                        {running ? 'Comparing...' : 'Compare Now'}
                     </button>
                 </div>
             </div>
 
             {errors.length > 0 && (
                 <div className="alert alert-error" style={{ marginBottom: '1rem' }}>
-                    {errors.map((e, i) => <div key={i}>⚠ {e}</div>)}
+                    {errors.map((e, i) => <div key={i}>{e}</div>)}
                 </div>
             )}
 

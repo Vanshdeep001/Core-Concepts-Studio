@@ -2,6 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import { 
+    AlertIcon, GearIcon, OutboxIcon, InboxIcon, SatelliteIcon, RocketIcon, 
+    UFOIcon, SwirlIcon, ExplosionIcon, LockIcon, UnlockIcon, StopIcon, 
+    CircleFilled, GamepadIcon, CrownIcon, KeyIcon, CoffeeIcon, BoxIcon, 
+    FoodIcon, ClipboardIcon, EyeIcon, WrenchIcon, ZapIcon, ActivityIcon,
+    ClockIcon, BlockIcon, SyncIcon
+} from '../../components/Icons';
 
 /* ══════════════════════════════════════════
    DYNAMIC TIMELINE BUILDERS (USER DEFINED DETAILS)
@@ -227,7 +234,7 @@ function buildStage2Steps(p1Dur, p2Dur, protocol) {
                 state: { lock: null, p1Sec: 'critical', p2Sec: 'critical', p1Blocked: false, p2Blocked: false, collision: true }
             },
             {
-                phase: '🚨 CRITICAL COLLISION DETECTED! (t=3)',
+                phase: 'CRITICAL COLLISION DETECTED! (t=3)',
                 explanation: 'COLLISION! Both processes are executing in their Critical Sections simultaneously! Data is corrupt!',
                 insight: 'Both spaceships collide inside the single-lane Wormhole. Shared resources are locked/corrupted.',
                 insightTitle: 'Data Corruption Risk',
@@ -427,11 +434,11 @@ export default function ProcessSyncSim() {
                 const basePC = buildPCSteps();
                 return basePC.map(step => {
                     const nextBuffer = Array(s4PCBufferSize).fill(null);
-                    if (step.state.buffer.includes('🎁')) {
+                    if (step.state.buffer.includes('ITEM')) {
                         // populate item count based on full semaphore
                         const itemCount = Math.max(0, step.state.full);
                         for (let k = 0; k < itemCount; k++) {
-                            nextBuffer[k] = '🎁';
+                            nextBuffer[k] = 'ITEM';
                         }
                     }
                     return {
@@ -754,21 +761,21 @@ export default function ProcessSyncSim() {
                         borderColor: activeProc === 'P1' ? 'var(--pink)' : 'var(--border)',
                         display: 'flex', flexDirection: 'column', overflow: 'hidden'
                     }}>
-                        <div style={{ background: activeProc === 'P1' ? 'var(--pink)' : '#eee', borderBottom: '3px solid var(--border)', padding: '0.4rem 0.8rem', fontWeight: 900, display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                            <span>🏭 P1 Instruction Factory</span>
+                        <div style={{ background: activeProc === 'P1' ? 'var(--pink)' : '#eee', borderBottom: '3px solid var(--border)', padding: '0.4rem 0.8rem', fontWeight: 900, display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', alignItems: 'center' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><FactoryIcon size={16} /> P1 Instruction Factory</span>
                             <span style={{ fontSize: '0.6rem', textTransform: 'uppercase' }}>{p1Status}</span>
                         </div>
                         <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, justifyContent: 'center' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, background: '#fafafa', border: '2px solid var(--border)', padding: '4px' }}>
                                 <div style={{ fontSize: '0.5rem', opacity: 0.5, fontWeight: 900, marginBottom: 2 }}>CONVEYOR TRACK: P1</div>
-                                <motion.div animate={p1Status === 'reading' ? { x: [0, 10, 0] } : {}} style={{ border: '2px solid var(--border)', padding: '2px 6px', background: p1Status === 'reading' ? 'var(--pink)' : 'var(--white)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: p1Status === 'reading' ? 900 : 400 }}>
-                                    📥 1. LOAD counter -&gt; R1
+                                <motion.div animate={p1Status === 'reading' ? { x: [0, 10, 0] } : {}} style={{ border: '2px solid var(--border)', padding: '2px 6px', background: p1Status === 'reading' ? 'var(--pink)' : 'var(--white)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: p1Status === 'reading' ? 900 : 400, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <InboxIcon size={12} /> 1. LOAD counter -&gt; R1
                                 </motion.div>
-                                <motion.div animate={p1Status === 'modifying' ? { scale: [1, 1.03, 1] } : {}} style={{ border: '2px solid var(--border)', padding: '2px 6px', background: p1Status === 'modifying' ? 'var(--pink)' : 'var(--white)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: p1Status === 'modifying' ? 900 : 400 }}>
-                                    ⚙️ 2. ADD R1, {s1StepVal}
+                                <motion.div animate={p1Status === 'modifying' ? { scale: [1, 1.03, 1] } : {}} style={{ border: '2px solid var(--border)', padding: '2px 6px', background: p1Status === 'modifying' ? 'var(--pink)' : 'var(--white)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: p1Status === 'modifying' ? 900 : 400, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <GearIcon size={12} /> 2. ADD R1, {s1StepVal}
                                 </motion.div>
-                                <motion.div style={{ border: '2px solid var(--border)', padding: '2px 6px', background: line.includes('WRITE R1') ? 'var(--pink)' : 'var(--white)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: line.includes('WRITE R1') ? 900 : 400 }}>
-                                    📤 3. STORE R1 -&gt; counter
+                                <motion.div style={{ border: '2px solid var(--border)', padding: '2px 6px', background: line.includes('WRITE R1') ? 'var(--pink)' : 'var(--white)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: line.includes('WRITE R1') ? 900 : 400, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <OutboxIcon size={12} /> 3. STORE R1 -&gt; counter
                                 </motion.div>
                             </div>
                             <div style={{ border: '2px dashed var(--border)', padding: '0.4rem', textAlign: 'center', background: '#fafafa' }}>
@@ -785,21 +792,21 @@ export default function ProcessSyncSim() {
                         borderColor: activeProc === 'P2' ? 'var(--cyan)' : 'var(--border)',
                         display: 'flex', flexDirection: 'column', overflow: 'hidden'
                     }}>
-                        <div style={{ background: activeProc === 'P2' ? 'var(--cyan)' : '#eee', borderBottom: '3px solid var(--border)', padding: '0.4rem 0.8rem', fontWeight: 900, display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                            <span>🏭 P2 Instruction Factory</span>
+                        <div style={{ background: activeProc === 'P2' ? 'var(--cyan)' : '#eee', borderBottom: '3px solid var(--border)', padding: '0.4rem 0.8rem', fontWeight: 900, display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', alignItems: 'center' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><FactoryIcon size={16} /> P2 Instruction Factory</span>
                             <span style={{ fontSize: '0.6rem', textTransform: 'uppercase' }}>{p2Status}</span>
                         </div>
                         <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, justifyContent: 'center' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, background: '#fafafa', border: '2px solid var(--border)', padding: '4px' }}>
                                 <div style={{ fontSize: '0.5rem', opacity: 0.5, fontWeight: 900, marginBottom: 2 }}>CONVEYOR TRACK: P2</div>
-                                <motion.div animate={p2Status === 'reading' ? { x: [0, 10, 0] } : {}} style={{ border: '2px solid var(--border)', padding: '2px 6px', background: p2Status === 'reading' ? 'var(--cyan)' : 'var(--white)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: p2Status === 'reading' ? 900 : 400 }}>
-                                    📥 1. LOAD counter -&gt; R2
+                                <motion.div animate={p2Status === 'reading' ? { x: [0, 10, 0] } : {}} style={{ border: '2px solid var(--border)', padding: '2px 6px', background: p2Status === 'reading' ? 'var(--cyan)' : 'var(--white)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: p2Status === 'reading' ? 900 : 400, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <InboxIcon size={12} /> 1. LOAD counter -&gt; R2
                                 </motion.div>
-                                <motion.div animate={p2Status === 'modifying' ? { scale: [1, 1.03, 1] } : {}} style={{ border: '2px solid var(--border)', padding: '2px 6px', background: p2Status === 'modifying' ? 'var(--cyan)' : 'var(--white)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: p2Status === 'modifying' ? 900 : 400 }}>
-                                    ⚙️ 2. ADD R2, {s1StepVal}
+                                <motion.div animate={p2Status === 'modifying' ? { scale: [1, 1.03, 1] } : {}} style={{ border: '2px solid var(--border)', padding: '2px 6px', background: p2Status === 'modifying' ? 'var(--cyan)' : 'var(--white)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: p2Status === 'modifying' ? 900 : 400, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <GearIcon size={12} /> 2. ADD R2, {s1StepVal}
                                 </motion.div>
-                                <motion.div style={{ border: '2px solid var(--border)', padding: '2px 6px', background: line.includes('WRITE R2') ? 'var(--cyan)' : 'var(--white)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: line.includes('WRITE R2') ? 900 : 400 }}>
-                                    📤 3. STORE R2 -&gt; counter
+                                <motion.div style={{ border: '2px solid var(--border)', padding: '2px 6px', background: line.includes('WRITE R2') ? 'var(--cyan)' : 'var(--white)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: line.includes('WRITE R2') ? 900 : 400, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <OutboxIcon size={12} /> 3. STORE R2 -&gt; counter
                                 </motion.div>
                             </div>
                             <div style={{ border: '2px dashed var(--border)', padding: '0.4rem', textAlign: 'center', background: '#fafafa' }}>
@@ -881,8 +888,8 @@ export default function ProcessSyncSim() {
 
                     {/* Orbit space labels */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', zIndex: 2, pointerEvents: 'none' }}>
-                        <span style={{ color: '#aaa', fontSize: '0.55rem', fontWeight: 900, border: '1.5px solid #444', padding: '2px 6px', background: 'rgba(0,0,0,0.6)' }}>🛰 REMAINDER ORBIT (P1)</span>
-                        <span style={{ color: '#aaa', fontSize: '0.55rem', fontWeight: 900, border: '1.5px solid #444', padding: '2px 6px', background: 'rgba(0,0,0,0.6)' }}>🛰 REMAINDER ORBIT (P2)</span>
+                        <span style={{ color: '#aaa', fontSize: '0.55rem', fontWeight: 900, border: '1.5px solid #444', padding: '2px 6px', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', gap: '4px' }}><SatelliteIcon size={12} /> REMAINDER ORBIT (P1)</span>
+                        <span style={{ color: '#aaa', fontSize: '0.55rem', fontWeight: 900, border: '1.5px solid #444', padding: '2px 6px', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', gap: '4px' }}><SatelliteIcon size={12} /> REMAINDER ORBIT (P2)</span>
                     </div>
 
                     {/* Spaceship Avatars */}
@@ -901,7 +908,7 @@ export default function ProcessSyncSim() {
                             boxShadow: '3px 3px 0 var(--border)', zIndex: 10
                         }}
                     >
-                        <span style={{ fontSize: '1.1rem' }}>🚀</span>
+                        <RocketIcon size={20} />
                         <span style={{ fontSize: '0.5rem', fontWeight: 900, color: '#000' }}>P1</span>
                     </motion.div>
 
@@ -920,7 +927,7 @@ export default function ProcessSyncSim() {
                             boxShadow: '3px 3px 0 var(--border)', zIndex: 10
                         }}
                     >
-                        <span style={{ fontSize: '1.1rem' }}>🛸</span>
+                        <UFOIcon size={20} />
                         <span style={{ fontSize: '0.5rem', fontWeight: 900, color: '#000' }}>P2</span>
                     </motion.div>
 
@@ -933,30 +940,30 @@ export default function ProcessSyncSim() {
                         boxShadow: collision ? '0 0 15px red' : curState.lock ? '0 0 15px var(--pink)' : 'none',
                         display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', transition: 'all 0.3s'
                     }}>
-                        <div style={{ fontSize: '0.58rem', fontWeight: 900, textTransform: 'uppercase', color: '#fff', letterSpacing: '0.1em', opacity: 0.8 }}>
-                            🌀 NEON CRITICAL WORMHOLE
+                        <div style={{ fontSize: '0.58rem', fontWeight: 900, textTransform: 'uppercase', color: '#fff', letterSpacing: '0.1em', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <SwirlIcon size={14} color="#fff" /> NEON CRITICAL WORMHOLE
                         </div>
                         {collision ? (
-                            <motion.span animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity }} style={{ color: 'red', fontWeight: 900, fontSize: '0.78rem', marginTop: 4 }}>
-                                💥 EXPLOSION: BOTH INSIDE!
+                            <motion.span animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity }} style={{ color: 'red', fontWeight: 900, fontSize: '0.78rem', marginTop: 4, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <ExplosionIcon size={14} color="red" /> EXPLOSION: BOTH INSIDE!
                             </motion.span>
                         ) : curState.lock ? (
-                            <span style={{ color: 'var(--pink)', fontWeight: 900, fontSize: '0.72rem', marginTop: 4 }}>
-                                🔒 LOCKED BY: {curState.lock}
+                            <span style={{ color: 'var(--pink)', fontWeight: 900, fontSize: '0.72rem', marginTop: 4, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <LockIcon size={14} color="var(--pink)" /> LOCKED BY: {curState.lock}
                             </span>
                         ) : (
-                            <span style={{ color: 'var(--green)', fontWeight: 800, fontSize: '0.7rem', marginTop: 4 }}>
-                                🔓 WORMHOLE FREE
+                            <span style={{ color: 'var(--green)', fontWeight: 800, fontSize: '0.7rem', marginTop: 4, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <UnlockIcon size={14} color="var(--green)" /> WORMHOLE FREE
                             </span>
                         )}
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', zIndex: 2, pointerEvents: 'none', width: '100%', marginTop: 'auto' }}>
-                        <span style={{ color: curState.p1Blocked ? 'red' : '#00ff00', fontSize: '0.65rem', fontWeight: 900 }}>
-                            {curState.p1Blocked ? '🛑 P1 BLOCKED' : '🟢 P1 CLEAR'}
+                        <span style={{ color: curState.p1Blocked ? 'red' : '#00ff00', fontSize: '0.65rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {curState.p1Blocked ? <><StopIcon size={12} color="red" /> P1 BLOCKED</> : <><CircleFilled size={8} color="var(--green)" /> P1 CLEAR</>}
                         </span>
-                        <span style={{ color: curState.p2Blocked ? 'red' : '#00ff00', fontSize: '0.65rem', fontWeight: 900 }}>
-                            {curState.p2Blocked ? '🛑 P2 BLOCKED' : '🟢 P2 CLEAR'}
+                        <span style={{ color: curState.p2Blocked ? 'red' : '#00ff00', fontSize: '0.65rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {curState.p2Blocked ? <><StopIcon size={12} color="red" /> P2 BLOCKED</> : <><CircleFilled size={8} color="var(--green)" /> P2 CLEAR</>}
                         </span>
                     </div>
                 </div>
@@ -1033,27 +1040,34 @@ export default function ProcessSyncSim() {
                 {!isTimelineActive && (
                     <div style={{
                         background: 'var(--cyan)', border: '2px solid var(--border)',
-                        boxShadow: '2px 2px 0 var(--border)', padding: '4px 10px', fontSize: '0.68rem', fontWeight: 800, textAlign: 'center'
+                        boxShadow: '2px 2px 0 var(--border)', padding: '4px 10px', fontSize: '0.68rem', fontWeight: 800, textAlign: 'center',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'
                     }}>
-                        🎮 MANUAL SANDBOX: Lock/Unlock chest or wait/signal semaphores below!
+                        <GamepadIcon size={16} /> MANUAL SANDBOX: Lock/Unlock chest or wait/signal semaphores below!
                     </div>
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', flex: 1, minHeight: 0 }}>
                     {/* Left: Royal Chest Mutex */}
                     <div style={{ border: '3px solid var(--border)', background: 'var(--white)', boxShadow: '3px 3px 0 var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <div style={{ background: 'var(--yellow)', borderBottom: '3px solid var(--border)', padding: '0.4rem 0.8rem', fontWeight: 900, fontSize: '0.85rem' }}>
-                            👑 Royal Chest Mutex (Capacity = 1)
+                        <div style={{ background: 'var(--yellow)', borderBottom: '3px solid var(--border)', padding: '0.4rem 0.8rem', fontWeight: 900, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <CrownIcon size={16} /> Royal Chest Mutex (Capacity = 1)
                         </div>
                         <div style={{ padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', flex: 1, overflowY: 'auto' }}>
                             
                             {/* Graphic Chest */}
                             <div style={{ border: '2px solid var(--border)', padding: '0.4rem', background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', height: 64 }}>
-                                <span style={{ fontSize: '2rem' }}>{activeMutex.owner ? '🔒' : '🔓'}</span>
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    {activeMutex.owner ? <LockIcon size={28} /> : <UnlockIcon size={28} />}
+                                </div>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span style={{ fontSize: '0.55rem', fontWeight: 900, opacity: 0.5 }}>CHEST LOCK:</span>
                                     <strong style={{ fontFamily: 'var(--font-mono)', fontSize: '0.88rem' }}>
-                                        {activeMutex.owner ? `🔑 Held by ${activeMutex.owner}` : 'FREE (Key in Chest)'}
+                                        {activeMutex.owner ? (
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <KeyIcon size={14} /> Held by {activeMutex.owner}
+                                            </span>
+                                        ) : 'FREE (Key in Chest)'}
                                     </strong>
                                 </div>
                             </div>
@@ -1115,8 +1129,8 @@ export default function ProcessSyncSim() {
 
                     {/* Right: VIP Lounge Semaphore */}
                     <div style={{ border: '3px solid var(--border)', background: 'var(--white)', boxShadow: '3px 3px 0 var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <div style={{ background: 'var(--cyan)', borderBottom: '3px solid var(--border)', padding: '0.4rem 0.8rem', fontWeight: 900, fontSize: '0.85rem' }}>
-                            🚪 VIP Club Counting Semaphore
+                        <div style={{ background: 'var(--cyan)', borderBottom: '3px solid var(--border)', padding: '0.4rem 0.8rem', fontWeight: 900, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <UnlockIcon size={16} /> VIP Club Counting Semaphore
                         </div>
                         <div style={{ padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', flex: 1, overflowY: 'auto' }}>
                             
@@ -1140,7 +1154,7 @@ export default function ProcessSyncSim() {
                                             <span style={{ fontSize: '0.65rem', opacity: 0.4 }}>Lounge Empty</span>
                                         ) : (
                                             activeSem.cs.map((p, idx) => (
-                                                <div key={idx} style={{ background: 'var(--green)', border: '1.5px solid var(--border)', padding: '1px 5px', fontSize: '0.65rem', fontWeight: 900 }}>🥂 {p}</div>
+                                                <div key={idx} style={{ background: 'var(--green)', border: '1.5px solid var(--border)', padding: '1px 5px', fontSize: '0.65rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '2px' }}><CoffeeIcon size={12} /> {p}</div>
                                             ))
                                         )}
                                     </div>
@@ -1211,7 +1225,7 @@ export default function ProcessSyncSim() {
                 <div style={{ border: '3px solid var(--border)', background: 'var(--white)', padding: '0.5rem', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0 }}>
                     {stage4Tab === 'pc' && (
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase' }}>⚙️ Buffer Capacity:</span>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}><GearIcon size={14} /> Buffer Capacity:</span>
                             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                                 <input
                                     type="range" min={3} max={8}
@@ -1226,7 +1240,7 @@ export default function ProcessSyncSim() {
                     {stage4Tab === 'dp' && (
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                                <span style={{ fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase' }}>⚙️ Philosopher Seats:</span>
+                                <span style={{ fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}><GearIcon size={14} /> Philosopher Seats:</span>
                                 <input
                                     type="number" min={3} max={6}
                                     value={s4DPPhilCount}
@@ -1298,28 +1312,31 @@ export default function ProcessSyncSim() {
                         onClick={() => setStage4Tab('pc')}
                         style={{
                             flex: 1, border: 'none', borderRight: '3px solid var(--border)', padding: '0.4rem', fontWeight: 900,
-                            background: stage4Tab === 'pc' ? 'var(--yellow)' : 'var(--white)', cursor: 'pointer', fontSize: '0.8rem'
+                            background: stage4Tab === 'pc' ? 'var(--yellow)' : 'var(--white)', cursor: 'pointer', fontSize: '0.8rem',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
                         }}
                     >
-                        📦 Producer-Consumer
+                        <BoxIcon size={16} /> Producer-Consumer
                     </button>
                     <button
                         onClick={() => setStage4Tab('dp')}
                         style={{
                             flex: 1, border: 'none', borderRight: '3px solid var(--border)', padding: '0.4rem', fontWeight: 900,
-                            background: stage4Tab === 'dp' ? 'var(--pink)' : 'var(--white)', cursor: 'pointer', fontSize: '0.8rem'
+                            background: stage4Tab === 'dp' ? 'var(--pink)' : 'var(--white)', cursor: 'pointer', fontSize: '0.8rem',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
                         }}
                     >
-                        🍝 Dining Philosophers
+                        <FoodIcon size={16} /> Dining Philosophers
                     </button>
                     <button
                         onClick={() => setStage4Tab('rw')}
                         style={{
                             flex: 1, border: 'none', padding: '0.4rem', fontWeight: 900,
-                            background: stage4Tab === 'rw' ? 'var(--cyan)' : 'var(--white)', cursor: 'pointer', fontSize: '0.8rem'
+                            background: stage4Tab === 'rw' ? 'var(--cyan)' : 'var(--white)', cursor: 'pointer', fontSize: '0.8rem',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
                         }}
                     >
-                        📖 Reader-Writer
+                        <ClipboardIcon size={16} /> Reader-Writer
                     </button>
                 </div>
 
@@ -1347,11 +1364,11 @@ export default function ProcessSyncSim() {
             return 'var(--pink)'; // Starving / deadlocked
         };
 
-        const getPhilEmoji = (state) => {
-            if (state === 'thinking') return '🧐';
-            if (state === 'hungry') return '🤤';
-            if (state === 'eating') return '😋';
-            return '💀';
+        const getPhilIcon = (state) => {
+            if (state === 'thinking') return <EyeIcon size={20} />;
+            if (state === 'hungry') return <ClockIcon size={20} />;
+            if (state === 'eating') return <FoodIcon size={20} />;
+            return <BlockIcon size={20} />;
         };
 
         return (
@@ -1362,8 +1379,8 @@ export default function ProcessSyncSim() {
                 }}>
                     {deadlocked && (
                         <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,107,157,0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10, pointerEvents: 'none' }}>
-                            <motion.div animate={{ scale: [1, 1.04, 1] }} transition={{ repeat: Infinity, duration: 1 }} style={{ background: 'var(--pink)', border: '3px solid var(--border)', padding: '6px 12px', fontWeight: 900, boxShadow: '3px 3px 0 var(--border)', fontSize: '0.8rem' }}>
-                                🚨 DEADLOCK CYCLE DETECTED!
+                            <motion.div animate={{ scale: [1, 1.04, 1] }} transition={{ repeat: Infinity, duration: 1 }} style={{ background: 'var(--pink)', border: '3px solid var(--border)', padding: '6px 12px', fontWeight: 900, boxShadow: '3px 3px 0 var(--border)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <AlertIcon size={16} /> DEADLOCK CYCLE DETECTED!
                             </motion.div>
                         </div>
                     )}
@@ -1373,14 +1390,13 @@ export default function ProcessSyncSim() {
                         width: 120, height: 120, borderRadius: '50%', border: '4px solid var(--border)', background: 'var(--yellow)',
                         display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', zIndex: 3, boxShadow: '2px 2px 0 var(--border)'
                     }}>
-                        <span style={{ fontWeight: 900, fontSize: '0.8rem' }}>🍝 Table</span>
+                        <span style={{ fontWeight: 900, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}><FoodIcon size={14} /> Table</span>
                         <span style={{ fontSize: '0.55rem', opacity: 0.6, fontWeight: 800 }}>{philCount} Seats</span>
                     </div>
 
                     {/* Mathematically computed Philosopher Nodes */}
                     {Array.from({ length: philCount }).map((_, idx) => {
                         const state = phils[idx] || 'thinking';
-                        const emoji = getPhilEmoji(state);
 
                         // Calculate polar coordinates
                         const angle = (idx * 2 * Math.PI) / philCount - Math.PI / 2;
@@ -1398,8 +1414,10 @@ export default function ProcessSyncSim() {
                                     boxShadow: '2px 2px 0 var(--border)', zIndex: 5
                                 }}
                             >
-                                <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{emoji}</span>
-                                <strong style={{ fontSize: '0.62rem', fontWeight: 900 }}>Phil {idx}</strong>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 20 }}>
+                                    {getPhilIcon(state)}
+                                </div>
+                                <strong style={{ fontSize: '0.62rem', fontWeight: 900, marginTop: '2px' }}>Phil {idx}</strong>
                             </motion.div>
                         );
                     })}
@@ -1449,8 +1467,8 @@ export default function ProcessSyncSim() {
                     {/* Database Central Spotlights */}
                     <div style={{ border: '3px solid var(--border)', background: 'var(--white)', padding: '1rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '1rem', boxShadow: '3px 3px 0 var(--border)', position: 'relative' }}>
                         
-                        <div style={{ fontSize: '0.55rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.6, position: 'absolute', top: 10 }}>
-                            📖 Shared Database Library
+                        <div style={{ fontSize: '0.55rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.6, position: 'absolute', top: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <ClipboardIcon size={14} /> Shared Database Library
                         </div>
 
                         {/* Giant Book in the middle */}
@@ -1458,21 +1476,21 @@ export default function ProcessSyncSim() {
                             width: 130, height: 90, border: '3.5px solid var(--border)', background: 'var(--yellow)',
                             boxShadow: '4px 4px 0 var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 3
                         }}>
-                            <span style={{ fontSize: '2rem' }}>📖</span>
-                            <span style={{ fontSize: '0.58rem', fontWeight: 900, textTransform: 'uppercase', color: '#000' }}>SHARED LEDGER</span>
+                            <ClipboardIcon size={32} />
+                            <span style={{ fontSize: '0.58rem', fontWeight: 900, textTransform: 'uppercase', color: '#000', marginTop: '4px' }}>SHARED LEDGER</span>
                             <span style={{ fontSize: '0.5rem', fontFamily: 'var(--font-mono)', fontWeight: 800 }}>lock: {rwMutex}</span>
                         </div>
 
                         {/* Ray projections for readers */}
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center', zIndex: 4 }}>
                             {writer ? (
-                                <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 1 }} style={{ background: 'var(--pink)', border: '2px solid var(--border)', padding: '4px 10px', fontWeight: 900, fontSize: '0.72rem', fontFamily: 'var(--font-mono)' }}>
-                                    ✒️ Excl. Writer Scribe: {writer}
+                                <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 1 }} style={{ background: 'var(--pink)', border: '2px solid var(--border)', padding: '4px 10px', fontWeight: 900, fontSize: '0.72rem', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <WrenchIcon size={14} /> Excl. Writer Scribe: {writer}
                                 </motion.div>
                             ) : readers.length > 0 ? (
                                 readers.map(r => (
-                                    <div key={r} style={{ background: 'var(--cyan)', border: '2px solid var(--border)', padding: '4px 8px', fontWeight: 900, fontSize: '0.7rem', fontFamily: 'var(--font-mono)' }}>
-                                        🔦 Spotlight Beam: {r}
+                                    <div key={r} style={{ background: 'var(--cyan)', border: '2px solid var(--border)', padding: '4px 8px', fontWeight: 900, fontSize: '0.7rem', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <EyeIcon size={14} /> Spotlight Beam: {r}
                                     </div>
                                 ))
                             ) : (
@@ -1529,8 +1547,12 @@ export default function ProcessSyncSim() {
                             <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 64, height: 64, borderRadius: '50%', border: '4.5px solid var(--yellow)' }} />
                             
                             <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 6, ease: 'linear' }} style={{ position: 'absolute', inset: 0 }}>
-                                <div style={{ position: 'absolute', top: 5, left: '45%', border: '1.5px solid var(--border)', background: 'var(--pink)', width: 18, height: 18, fontSize: '0.5rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🚗</div>
-                                <div style={{ position: 'absolute', bottom: 5, left: '45%', border: '1.5px solid var(--border)', background: 'var(--cyan)', width: 18, height: 18, fontSize: '0.5rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🚙</div>
+                                <div style={{ position: 'absolute', top: 5, left: '45%', border: '1.5px solid var(--border)', background: 'var(--pink)', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <RocketIcon size={12} color="var(--text)" />
+                                </div>
+                                <div style={{ position: 'absolute', bottom: 5, left: '45%', border: '1.5px solid var(--border)', background: 'var(--cyan)', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <UFOIcon size={12} color="var(--text)" />
+                                </div>
                             </motion.div>
 
                             <span style={{ position: 'absolute', top: '42%', left: '18%', fontSize: '0.5rem', fontWeight: 900, color: 'red', background: '#fff', border: '1px solid var(--border)', padding: '1px 3px' }}>MUTUAL BLOCK</span>
@@ -1559,18 +1581,18 @@ export default function ProcessSyncSim() {
                                 <motion.div
                                     animate={curState.llState === 'bounce' ? { x: [2, 35, 2] } : { x: 2 }}
                                     transition={{ repeat: Infinity, duration: 1.2 }}
-                                    style={{ position: 'absolute', top: 1, left: 0, fontSize: '0.8rem' }}
+                                    style={{ position: 'absolute', top: 1, left: 0, display: 'flex', alignItems: 'center', gap: '2px', fontSize: '0.68rem', fontWeight: 900 }}
                                 >
-                                    🚶‍♂️ P1
+                                    <ActivityIcon size={12} /> P1
                                 </motion.div>
 
                                 {/* Avatar 2 */}
                                 <motion.div
                                     animate={curState.llState === 'bounce' ? { x: [-2, -35, -2] } : { x: -2 }}
                                     transition={{ repeat: Infinity, duration: 1.2 }}
-                                    style={{ position: 'absolute', top: 1, right: 0, fontSize: '0.8rem' }}
+                                    style={{ position: 'absolute', top: 1, right: 0, display: 'flex', alignItems: 'center', gap: '2px', fontSize: '0.68rem', fontWeight: 900 }}
                                 >
-                                    🚶‍♀️ P2
+                                    <ActivityIcon size={12} /> P2
                                 </motion.div>
                             </div>
                             <span style={{ fontSize: '0.5rem', fontWeight: 900, background: 'var(--yellow)', border: '1px solid var(--border)', padding: '1px 4px', marginTop: 6 }}>ACTIVE SPINNING: YIELD LOOP</span>
@@ -1595,13 +1617,13 @@ export default function ProcessSyncSim() {
                         
                         <div style={{ height: 110, border: '2px dashed var(--border)', background: '#334155', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '0.4rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <motion.div animate={{ x: [0, 120] }} transition={{ repeat: Infinity, duration: 1.5 }} style={{ fontSize: '1.2rem', zIndex: 3 }}>
-                                    🏎️💨 P_high
+                                <motion.div animate={{ x: [0, 120] }} transition={{ repeat: Infinity, duration: 1.5 }} style={{ fontSize: '0.8rem', zIndex: 3 }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '2px', color: '#fff', fontWeight: 900 }}><ZapIcon size={14} /> P_high</span>
                                 </motion.div>
                                 <span style={{ background: 'var(--green)', border: '1px solid var(--border)', fontSize: '0.5rem', padding: '1px 3px', fontWeight: 900 }}>Bypass active</span>
                             </div>
                             <div style={{ border: '2.5px solid var(--border)', background: 'var(--pink)', padding: '3px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 4 }}>
-                                <span style={{ fontSize: '0.62rem', fontWeight: 900 }}>🚜 P_low</span>
+                                <span style={{ fontSize: '0.62rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '2px' }}><ClockIcon size={14} /> P_low</span>
                                 <span style={{ fontSize: '0.6rem', fontFamily: 'var(--font-mono)', fontWeight: 900 }}>Starve={curState.starvCount ?? 0}</span>
                             </div>
                         </div>
@@ -1708,7 +1730,7 @@ export default function ProcessSyncSim() {
                         background: 'var(--purple)', border: '2px solid var(--border)',
                         boxShadow: '3px 3px 0 var(--border)', padding: '0.5rem 0.75rem', fontSize: '0.72rem', fontWeight: 800
                     }}>
-                        ℹ️ CONCEPT MODE ACTIVE:<br/>
+                        Concept Mode Active:<br/>
                         Showing academic guidelines and core theorems side-by-side!
                     </div>
                 )}
@@ -1810,7 +1832,7 @@ Starvation: Priority lockout`}
     return (
         <ImmersiveLayout
             isActive={true}
-            title="Process Synchronization" icon="🔄" moduleLabel="OS Module"
+            title="Process Synchronization" icon={<SyncIcon size={22} />} moduleLabel="OS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={handleSpeedChange}
             onStart={handleStart} onPause={handlePause} onResume={handleResume}

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import { LinkIcon, ClipboardIcon } from '../../components/Icons';
 
 export default function SqlJoinsSim() {
     const [joinType, setJoinType] = useState('inner'); // inner, left, right, full, cross, self
@@ -226,7 +227,7 @@ export default function SqlJoinsSim() {
     return (
         <ImmersiveLayout
             isActive={true}
-            title="SQL Joins Simulator" icon="🔗" moduleLabel="DBMS Module"
+            title="SQL Joins Simulator" icon={<LinkIcon size={20} />} moduleLabel="DBMS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}
             onStart={handleStart} onPause={handlePause} onResume={handleStart}
@@ -334,8 +335,8 @@ export default function SqlJoinsSim() {
 
                     {/* Result compilation compiling dynamic row-by-row */}
                     <div style={{ border: '3px solid var(--border)', background: 'var(--white)', boxShadow: '4px 4px 0 var(--border)', display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ background: 'var(--green)', borderBottom: '3px solid var(--border)', padding: '6px 12px', fontSize: '0.78rem', fontWeight: 900, display: 'flex', justifyContent: 'space-between' }}>
-                            <span>📋 Result Joined Set: SQL Output</span>
+                        <div style={{ background: 'var(--green)', borderBottom: '3px solid var(--border)', padding: '6px 12px', fontSize: '0.78rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
+                            <span><ClipboardIcon size={14} /> Result Joined Set: SQL Output</span>
                             <span style={{ fontSize: '0.62rem', fontFamily: 'var(--font-mono)' }}>Total Rows: {joinedResults.length}</span>
                         </div>
                         <div style={{ maxH: 150, overflowY: 'auto' }}>

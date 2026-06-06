@@ -2,25 +2,26 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import { GlobeIcon, LaptopIcon, SyncIcon, ClipboardIcon, CheckIcon, OutboxIcon, InboxIcon, KeyIcon, LockIcon, AlertIcon, SaveIcon, ChartIcon } from '../../components/Icons';
 
 /* ════════════════════════════════════════
    DATA — DNS chain, TLS panels, status codes
    ════════════════════════════════════════ */
 const DNS_CHAIN = [
-    { id: 'browser', label: 'Browser Cache', icon: '🌐', color: '#b39ddb' },
-    { id: 'os', label: 'OS Cache', icon: '💻', color: '#ce93d8' },
-    { id: 'resolver', label: 'Recursive Resolver', icon: '🔄', color: '#90caf9' },
-    { id: 'root', label: 'Root NS', icon: '🌍', color: '#a5d6a7' },
-    { id: 'tld', label: 'TLD NS (.com)', icon: '📋', color: '#ffcc80' },
-    { id: 'auth', label: 'Authoritative NS', icon: '✅', color: '#4dd0e1' },
+    { id: 'browser', label: 'Browser Cache', icon: 'browser', color: '#b39ddb' },
+    { id: 'os', label: 'OS Cache', icon: 'os', color: '#ce93d8' },
+    { id: 'resolver', label: 'Recursive Resolver', icon: 'resolver', color: '#90caf9' },
+    { id: 'root', label: 'Root NS', icon: 'root', color: '#a5d6a7' },
+    { id: 'tld', label: 'TLD NS (.com)', icon: 'tld', color: '#ffcc80' },
+    { id: 'auth', label: 'Authoritative NS', icon: 'auth', color: '#4dd0e1' },
 ];
 
 const TLS_PANELS = [
-    { id: 'client-hello', title: 'Client Hello', desc: 'Client sends supported cipher suites, TLS version, and random number to server.', icon: '📤', color: '#b39ddb' },
-    { id: 'server-hello', title: 'Server Hello + Certificate', desc: 'Server selects cipher suite, sends its certificate (public key + CA signature).', icon: '📜', color: '#90caf9' },
-    { id: 'key-exchange', title: 'Key Exchange', desc: 'Client and server perform Diffie-Hellman exchange to derive a shared secret key.', icon: '🔑', color: '#ffcc80' },
-    { id: 'cipher-spec', title: 'Change Cipher Spec', desc: 'Both sides confirm switching to encrypted communication using the shared key.', icon: '🔄', color: '#a5d6a7' },
-    { id: 'finished', title: 'Finished', desc: 'Handshake complete! All subsequent data is encrypted. Padlock secures the connection.', icon: '🔒', color: '#4dd0e1' },
+    { id: 'client-hello', title: 'Client Hello', desc: 'Client sends supported cipher suites, TLS version, and random number to server.', icon: 'client-hello', color: '#b39ddb' },
+    { id: 'server-hello', title: 'Server Hello + Certificate', desc: 'Server selects cipher suite, sends its certificate (public key + CA signature).', icon: 'server-hello', color: '#90caf9' },
+    { id: 'key-exchange', title: 'Key Exchange', desc: 'Client and server perform Diffie-Hellman exchange to derive a shared secret key.', icon: 'key-exchange', color: '#ffcc80' },
+    { id: 'cipher-spec', title: 'Change Cipher Spec', desc: 'Both sides confirm switching to encrypted communication using the shared key.', icon: 'resolver', color: '#a5d6a7' },
+    { id: 'finished', title: 'Finished', desc: 'Handshake complete! All subsequent data is encrypted. Padlock secures the connection.', icon: 'finished', color: '#4dd0e1' },
 ];
 
 const STATUS_CODES = {
@@ -38,11 +39,11 @@ const HTTP_METHODS = {
 };
 
 const FAILURES = [
-    { id: 'dns-timeout', label: 'DNS Timeout', icon: '⏱', breakAt: 'dns', desc: 'DNS resolver fails to respond → ERR_NAME_NOT_RESOLVED' },
-    { id: 'ssl-expired', label: 'Expired SSL Cert', icon: '⚠', breakAt: 'tls', desc: 'TLS handshake fails — certificate expired or invalid' },
-    { id: 'server-500', label: 'Server 500', icon: '💥', breakAt: 'response', desc: 'Server crashes — returns 500 Internal Server Error' },
-    { id: 'redirect-loop', label: 'Redirect Loop', icon: '🔁', breakAt: 'response-redirect', desc: '301→301→301 infinite redirect loop detected' },
-    { id: 'slow-ttfb', label: 'Slow TTFB', icon: '🐢', breakAt: 'ttfb', desc: 'Time to First Byte is very high — server processing is slow' },
+    { id: 'dns-timeout', label: 'DNS Timeout', icon: 'dns-timeout', breakAt: 'dns', desc: 'DNS resolver fails to respond → ERR_NAME_NOT_RESOLVED' },
+    { id: 'ssl-expired', label: 'Expired SSL Cert', icon: 'ssl-expired', breakAt: 'tls', desc: 'TLS handshake fails — certificate expired or invalid' },
+    { id: 'server-500', label: 'Server 500', icon: 'server-500', breakAt: 'response', desc: 'Server crashes — returns 500 Internal Server Error' },
+    { id: 'redirect-loop', label: 'Redirect Loop', icon: 'redirect-loop', breakAt: 'response-redirect', desc: '301→301→301 infinite redirect loop detected' },
+    { id: 'slow-ttfb', label: 'Slow TTFB', icon: 'Slow TTFB', breakAt: 'ttfb', desc: 'Time to First Byte is very high — server processing is slow' },
 ];
 
 /* ════════════════════════════════════════
@@ -69,7 +70,7 @@ function buildSteps(url, isHttps, cacheHitAt, failure) {
             timings.dns += 5000;
             steps.push({
                 phase: 'dns', dnsNode: i, dnsHit: false, failed: true, timings: { ...timings },
-                explanation: `❌ DNS TIMEOUT at ${node.label}! The recursive resolver failed to respond within the timeout period.`,
+                explanation: `DNS TIMEOUT at ${node.label}! The recursive resolver failed to respond within the timeout period.`,
                 insight: 'DNS FAILURE: If no DNS server responds, the browser shows ERR_NAME_NOT_RESOLVED. Check your internet connection or DNS settings.',
             });
             steps.push({ phase: 'done-error', error: 'ERR_NAME_NOT_RESOLVED', timings: { ...timings }, explanation: 'Browser displays error page: DNS name could not be resolved.', insight: 'Without DNS resolution, the browser has no IP address to connect to.' });
@@ -109,7 +110,7 @@ function buildSteps(url, isHttps, cacheHitAt, failure) {
             timings.tls = 50;
             steps.push({
                 phase: 'tls', tlsPanel: 1, failed: true, timings: { ...timings },
-                explanation: '❌ TLS HANDSHAKE FAILED! Server certificate has expired. Browser refuses to establish encrypted connection.',
+                explanation: 'TLS HANDSHAKE FAILED! Server certificate has expired. Browser refuses to establish encrypted connection.',
                 insight: 'CERTIFICATE EXPIRY: SSL/TLS certificates have a validity period. Expired certs trigger browser security warnings.',
             });
             steps.push({
@@ -143,7 +144,7 @@ function buildSteps(url, isHttps, cacheHitAt, failure) {
         timings.ttfb = 200;
         steps.push({
             phase: 'response', statusCode: 500, timings: { ...timings },
-            explanation: '💥 Server returned 500 Internal Server Error! An unexpected error occurred on the server.',
+            explanation: 'Server returned 500 Internal Server Error! An unexpected error occurred on the server.',
             insight: '5xx ERRORS: Server-side errors. The client request was valid, but the server failed to process it.',
         });
     } else if (failure === 'redirect-loop') {
@@ -151,7 +152,7 @@ function buildSteps(url, isHttps, cacheHitAt, failure) {
         for (let i = 0; i < 4; i++) {
             steps.push({
                 phase: 'response', statusCode: 301, redirectCount: i + 1, timings: { ...timings },
-                explanation: `🔁 Redirect #${i + 1}: 301 Moved Permanently → ${parsedUrl.domain}${parsedUrl.path}. ${i >= 2 ? 'REDIRECT LOOP DETECTED!' : 'Following redirect...'}`,
+                explanation: `Redirect #${i + 1}: 301 Moved Permanently → ${parsedUrl.domain}${parsedUrl.path}. ${i >= 2 ? 'REDIRECT LOOP DETECTED!' : 'Following redirect...'}`,
                 insight: i >= 2 ? 'REDIRECT LOOP: The browser detects circular redirects and stops after a few iterations, showing ERR_TOO_MANY_REDIRECTS.' : '301 REDIRECT: The resource has permanently moved. Browser automatically follows the new Location header.',
             });
         }
@@ -159,14 +160,14 @@ function buildSteps(url, isHttps, cacheHitAt, failure) {
         timings.ttfb = 3000;
         steps.push({
             phase: 'response', statusCode: 200, slowTtfb: true, timings: { ...timings },
-            explanation: '🐢 Extremely slow TTFB (3000ms)! Server took too long to start sending the response.',
+            explanation: 'Extremely slow TTFB (3000ms)! Server took too long to start sending the response.',
             insight: 'TTFB (Time to First Byte): Measures how long the browser waits for the first byte of the response. Ideally < 200ms.',
         });
     } else {
         timings.ttfb = 120;
         steps.push({
             phase: 'response', statusCode: 200, timings: { ...timings },
-            explanation: '✅ 200 OK! Server responds with the requested HTML document.',
+            explanation: '200 OK! Server responds with the requested HTML document.',
             insight: '200 OK: The request was successful. The response body contains the requested resource.',
         });
     }
@@ -248,7 +249,7 @@ function BrowserMockup({ curStep, url, activeFailure, timingTotal }) {
                     overflow: 'hidden',
                     whiteSpace: 'nowrap'
                 }}>
-                    🔒 {parsed.domain}
+                    {parsed.domain}
                 </div>
             </div>
             {/* Window body viewport */}
@@ -269,7 +270,7 @@ function BrowserMockup({ curStep, url, activeFailure, timingTotal }) {
                 <AnimatePresence mode="wait">
                     {!curStep || curStep.phase === 'parse' ? (
                         <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                            <div style={{ fontSize: '1.1rem' }}>🌐</div>
+                            <div style={{ fontSize: '1.1rem', display: 'flex', justifyContent: 'center' }}><GlobeIcon size={24} /></div>
                             <div style={{ fontWeight: 800 }}>Enter URL & Run</div>
                         </motion.div>
                     ) : isError ? (
@@ -281,7 +282,7 @@ function BrowserMockup({ curStep, url, activeFailure, timingTotal }) {
                     ) : curStep.phase === 'done' ? (
                         <motion.div key="done" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ background: 'var(--yellow)', borderBottom: '1px solid var(--border)', padding: '2px', fontWeight: 800, fontSize: '0.52rem' }}>
-                                🏠 Welcome Page
+                                Welcome Page
                             </div>
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '2px', padding: '2px' }}>
                                 <span style={{ fontWeight: 800, color: '#2e7d32' }}>✓ Loaded OK!</span>
@@ -299,7 +300,7 @@ function BrowserMockup({ curStep, url, activeFailure, timingTotal }) {
                         </motion.div>
                     ) : (
                         <motion.div key="status" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                            <div style={{ fontSize: '1.1rem', animation: 'spin 2s linear infinite' }}>⌛</div>
+                            <div style={{ fontSize: '1.1rem', animation: 'spin 2s linear infinite', display: 'flex', justifyContent: 'center' }}><SyncIcon size={24} /></div>
                             <div style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.5rem', marginTop: '3px' }}>
                                 {curStep.phase === 'dns' ? 'DNS Lookup' :
                                  curStep.phase === 'tcp' ? 'TCP handshake' :
@@ -318,6 +319,35 @@ function BrowserMockup({ curStep, url, activeFailure, timingTotal }) {
 /* ════════════════════════════════════════
    COMPONENT
    ════════════════════════════════════════ */
+
+function getDnsIcon(nodeName) {
+    if (nodeName === 'browser' || nodeName === 'root') return <GlobeIcon size={14} />;
+    if (nodeName === 'os') return <LaptopIcon size={14} />;
+    if (nodeName === 'resolver') return <SyncIcon size={14} />;
+    if (nodeName === 'tld') return <ClipboardIcon size={14} />;
+    if (nodeName === 'auth') return <CheckIcon size={14} />;
+    return null;
+}
+
+function getTlsIcon(id) {
+    if (id === 'client-hello') return <OutboxIcon size={14} />;
+    if (id === 'server-hello') return <InboxIcon size={14} />;
+    if (id === 'key-exchange') return <KeyIcon size={14} />;
+    if (id === 'cipher-spec') return <SyncIcon size={14} />;
+    if (id === 'finished') return <LockIcon size={14} />;
+    return null;
+}
+
+function getFailureIcon(id) {
+    if (id === 'dns-timeout') return <ClockIcon size={14} />;
+    if (id === 'ssl-expired') return <AlertIcon size={14} color="var(--pink)" />;
+    if (id === 'server-500') return <AlertIcon size={14} color="var(--pink)" />;
+    if (id === 'redirect-loop') return <SyncIcon size={14} />;
+    if (id === 'slow-ttfb') return <ClockIcon size={14} />;
+    return null;
+}
+
+
 export default function HttpDnsSim() {
     const [url, setUrl] = useState('https://www.example.com/page?q=hello');
     const [isHttps, setIsHttps] = useState(true);
@@ -466,7 +496,7 @@ export default function HttpDnsSim() {
             if (curStep.failed) {
                 packetSrc = nodeCoords.server;
                 packetDst = nodeCoords.client;
-                packetLabel = '⚠️ Cert Date Invalid';
+                packetLabel = 'Cert Date Invalid';
                 packetColor = 'var(--pink)';
             } else if (curStep.tlsPanel === 0) {
                 packetSrc = nodeCoords.client;
@@ -481,7 +511,7 @@ export default function HttpDnsSim() {
             } else if (curStep.tlsPanel === 2) {
                 packetSrc = nodeCoords.client;
                 packetDst = nodeCoords.server;
-                packetLabel = '🔑 DH Key Exchange';
+                packetLabel = 'DH Key Exchange';
                 packetColor = 'var(--yellow)';
             } else if (curStep.tlsPanel === 3) {
                 packetSrc = nodeCoords.client;
@@ -491,7 +521,7 @@ export default function HttpDnsSim() {
             } else if (curStep.tlsPanel === 4) {
                 packetSrc = nodeCoords.server;
                 packetDst = nodeCoords.client;
-                packetLabel = '🔒 Handshake Finished';
+                packetLabel = 'Handshake Finished';
                 packetColor = 'var(--green)';
             }
         } else if (curStep.phase === 'request') {
@@ -525,7 +555,7 @@ export default function HttpDnsSim() {
             } else if (curStep.statusCode === 500) {
                 packetSrc = nodeCoords.server;
                 packetDst = nodeCoords.client;
-                packetLabel = '💥 Server Error 500';
+                packetLabel = 'Server Error 500';
                 packetColor = 'var(--pink)';
             } else {
                 packetSrc = nodeCoords.server;
@@ -559,7 +589,7 @@ export default function HttpDnsSim() {
             } else if (step.phase === 'tls') {
                 const p = TLS_PANELS[step.tlsPanel];
                 if (step.failed) {
-                    logs.push(`[TLS] ❌ SECURITY HANDSHAKE FAILED. Expired server certificate presented.`);
+                    logs.push(`[TLS] SECURITY HANDSHAKE FAILED. Expired server certificate presented.`);
                 } else {
                     logs.push(`[TLS] ${p?.title}: ${p?.desc}`);
                 }
@@ -567,11 +597,11 @@ export default function HttpDnsSim() {
                 logs.push(`[HTTP REQUEST] GET ${step.path} HTTP/1.1 (encrypted session)`);
             } else if (step.phase === 'response') {
                 if (step.statusCode === 500) {
-                    logs.push(`[HTTP RESPONSE] 💥 500 Internal Server Error returned from server.`);
+                    logs.push(`[HTTP RESPONSE] 500 Internal Server Error returned from server.`);
                 } else if (step.statusCode === 301) {
-                    logs.push(`[HTTP RESPONSE] 🔁 301 Redirect to Location: /redirect-${step.redirectCount}`);
+                    logs.push(`[HTTP RESPONSE] 301 Redirect to Location: /redirect-${step.redirectCount}`);
                 } else {
-                    logs.push(`[HTTP RESPONSE] ✅ 200 OK. Content-Type: text/html, length: 45230 bytes.`);
+                    logs.push(`[HTTP RESPONSE] 200 OK. Content-Type: text/html, length: 45230 bytes.`);
                 }
             } else if (step.phase === 'render') {
                 logs.push(`[RENDER] Building DOM tree, parsing styles, painting webpage.`);
@@ -591,9 +621,9 @@ export default function HttpDnsSim() {
             {/* View selectors */}
             <div style={{ display: 'flex', gap: '3px', background: 'var(--border)', padding: '3px', border: '3px solid var(--border)', marginBottom: '0.5rem', flexShrink: 0 }}>
                 {[
-                    { id: 'map', label: '🌐 Interactive Journey Map' },
-                    { id: 'console', label: '💻 HTTP Header Console' },
-                    { id: 'waterfall', label: '📊 DevTools Waterfall' }
+                    { id: 'map', label: 'Interactive Journey Map' },
+                    { id: 'console', label: 'HTTP Header Console' },
+                    { id: 'waterfall', label: 'DevTools Waterfall' }
                 ].map(tab => (
                     <button
                         key={tab.id}
@@ -671,7 +701,7 @@ export default function HttpDnsSim() {
                                     textAlign: 'center'
                                 }}
                             >
-                                <span style={{ fontSize: '1rem' }}>💾</span>
+                                <span style={{ display: 'inline-flex', alignItems: 'center' }}><SaveIcon size={16} /></span>
                                 <span>OS/Browser Cache</span>
                                 {curStep?.phase === 'dns' && curStep.dnsHit && curStep.dnsNode <= 1 && (
                                     <span style={{ color: '#1b5e20', fontWeight: 900, fontSize: '0.52rem', background: '#c8e6c9', border: '1px solid #1b5e20', padding: '1px 3px', marginTop: '2px' }}>✓ HIT</span>
@@ -701,9 +731,9 @@ export default function HttpDnsSim() {
                                 <motion.span
                                     animate={curStep?.phase === 'dns' && curStep.dnsNode >= 2 ? { rotate: 360 } : {}}
                                     transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                                    style={{ fontSize: '1.1rem' }}
+                                    style={{ display: 'inline-flex', alignItems: 'center' }}
                                 >
-                                    🔄
+                                    <SyncIcon size={20} />
                                 </motion.span>
                                 <span>Recursive Resolver</span>
                                 {curStep?.phase === 'dns' && curStep.failed && curStep.dnsNode === 2 && (
@@ -716,9 +746,9 @@ export default function HttpDnsSim() {
 
                         {/* DNS Servers Chain */}
                         {[
-                            { idx: 3, node: 'root', label: 'Root Nameserver', icon: '🌍', color: '#a5d6a7' },
-                            { idx: 4, node: 'tld', label: 'TLD NS (.com)', icon: '📋', color: '#ffcc80' },
-                            { idx: 5, node: 'auth', label: 'Authoritative NS', icon: '✅', color: '#4dd0e1' }
+                            { idx: 3, node: 'root', label: 'Root Nameserver', icon: 'root', color: '#a5d6a7' },
+                            { idx: 4, node: 'tld', label: 'TLD NS (.com)', icon: 'tld', color: '#ffcc80' },
+                            { idx: 5, node: 'auth', label: 'Authoritative NS', icon: 'auth', color: '#4dd0e1' }
                         ].map(ns => {
                             const isActive = curStep?.phase === 'dns' && curStep.dnsNode === ns.idx;
                             const isReached = curStep?.phase === 'dns' ? curStep.dnsNode >= ns.idx : curStep && curStep.phase !== 'parse';
@@ -742,7 +772,7 @@ export default function HttpDnsSim() {
                                             transition: 'opacity 0.3s'
                                         }}
                                     >
-                                        <span style={{ fontSize: '1rem' }}>{ns.icon}</span>
+                                        <span style={{ display: 'inline-flex', alignItems: 'center' }}>{getDnsIcon(ns.node)}</span>
                                         <span>{ns.label}</span>
                                     </motion.div>
                                 </div>
@@ -775,14 +805,14 @@ export default function HttpDnsSim() {
                                     <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#ffcc00', animation: 'blink 0.8s infinite alternate' }} />
                                 </div>
                                 <span style={{ fontSize: '1.2rem' }}>
-                                    {activeFailure === 'server-500' && curStep?.phase === 'response' ? '💥' : '🖥️'}
+                                    {activeFailure === 'server-500' && curStep?.phase === 'response' ? <AlertIcon size={16} color="#ef4444" /> : <LaptopIcon size={16} />}
                                 </span>
                                 <span style={{ fontFamily: 'var(--font-mono)' }}>93.184.216.34</span>
                                 <span style={{ fontSize: '0.52rem', opacity: 0.7 }}>Web Server (Port {isHttps ? '443' : '80'})</span>
                                 
                                 {isHttps && curStep && ['request','response','render','done'].includes(curStep.phase) && curStep.phase !== 'tls-error' && (
                                     <span style={{ color: '#1b5e20', fontWeight: 900, fontSize: '0.5rem', background: '#c8e6c9', border: '1px solid #1b5e20', padding: '1px 4px', marginTop: '3px' }}>
-                                        🔒 SECURED (TLS 1.3)
+                                        SECURED (TLS 1.3)
                                     </span>
                                 )}
                             </motion.div>
@@ -806,7 +836,7 @@ export default function HttpDnsSim() {
                                         textAlign: 'center'
                                     }}
                                 >
-                                    <span style={{ fontSize: '1rem' }}>🔁</span>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>Redirect</span>
                                     <span style={{ fontFamily: 'var(--font-mono)' }}>Redirect Server</span>
                                     <span style={{ fontSize: '0.5rem', opacity: 0.7 }}>Alt Port 8080</span>
                                 </motion.div>
@@ -833,7 +863,7 @@ export default function HttpDnsSim() {
                                     boxShadow: 'var(--shadow-sm)'
                                 }}
                             >
-                                🔒 Encrypted Session
+                                Encrypted Session
                             </motion.div>
                         )}
 
@@ -852,7 +882,7 @@ export default function HttpDnsSim() {
                                     pointerEvents: 'none'
                                 }}
                             >
-                                🐢
+                                Slow TTFB
                             </motion.div>
                         )}
 
@@ -883,7 +913,7 @@ export default function HttpDnsSim() {
                                     fontFamily: 'var(--font-mono)'
                                 }}
                             >
-                                📦 {packetLabel}
+                                <BoxIcon size={12} /> {packetLabel}
                             </motion.div>
                         )}
                     </div>
@@ -905,8 +935,8 @@ export default function HttpDnsSim() {
                         {logs.length > 0 ? (
                             logs.map((log, idx) => {
                                 let c = '#fff';
-                                if (log.includes('❌') || log.includes('💥')) c = 'var(--pink)';
-                                else if (log.includes('✅') || log.includes('✓') || log.includes('established')) c = 'var(--green)';
+                                if (log.includes('TIMEOUT') || log.includes('FAILED') || log.includes('Error')) c = 'var(--pink)';
+                                else if (log.includes('OK') || log.includes('established') || log.includes('HIT')) c = 'var(--green)';
                                 else if (log.includes('[SYSTEM]')) c = 'var(--yellow)';
                                 else if (log.includes('[HTTP REQUEST]')) c = '#a5d6a7';
                                 else if (log.includes('[TLS]')) c = '#b39ddb';
@@ -1074,7 +1104,7 @@ export default function HttpDnsSim() {
             )}
             {curStep && (
                 <div style={{ border: '2px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
-                    <div style={{ background: 'var(--yellow)', padding: '0.4rem 0.6rem', borderBottom: '2px solid var(--border)', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>💡 Educational Insight</div>
+                    <div style={{ background: 'var(--yellow)', padding: '0.4rem 0.6rem', borderBottom: '2px solid var(--border)', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>Educational Insight</div>
                     <div style={{ padding: '0.5rem 0.6rem', fontSize: '0.8rem', lineHeight: 1.5, opacity: 0.85 }}>{curStep.insight}</div>
                 </div>
             )}
@@ -1111,7 +1141,7 @@ export default function HttpDnsSim() {
         <ImmersiveLayout
             isActive={isSimMode}
             title="HTTP/HTTPS & DNS"
-            icon="🌍"
+            icon={<GlobeIcon size={20} />}
             moduleLabel="CN MODULE"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}
@@ -1132,7 +1162,7 @@ export default function HttpDnsSim() {
                 <div style={{ marginBottom: '0.4rem' }}><Link to="/networks" style={{ fontSize: '0.82rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← Networks Module</Link></div>
                 <div style={{ marginBottom: '1.5rem' }}>
                     <div className="section-header">Networks · Application Layer</div>
-                    <h1 style={{ fontSize: '1.9rem', fontWeight: 700 }}>🌍 HTTP/HTTPS & DNS</h1>
+                    <h1 style={{ fontSize: '1.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}><GlobeIcon size={28} /> HTTP/HTTPS & DNS</h1>
                     <p style={{ opacity: 0.6, fontSize: '0.9rem', marginTop: '0.3rem' }}>Type a URL and watch the full journey: DNS resolution, TLS handshake, HTTP request/response, waterfall timeline, and failure injection.</p>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>

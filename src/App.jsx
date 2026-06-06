@@ -22,6 +22,7 @@ import SqlJoinsSim from './modules/dbms/SqlJoinsSim';
 import TransactionsSim from './modules/dbms/TransactionsSim';
 import BPlusTreeSim from './modules/dbms/BPlusTreeSim';
 import ErDesignSim from './modules/dbms/ErDesignSim';
+import SqlQueryVisualizerSim from './modules/dbms/SqlQueryVisualizerSim';
 
 // Networks Module
 import NetworksLanding from './modules/networks/NetworksLanding';
@@ -45,11 +46,11 @@ import GitLanding from './modules/git/GitLanding';
 import GitSim from './modules/git/GitSim';
 
 const MODULE_LABELS = {
-  '/os': '🖥 OS',
-  '/dbms': '🗄 DBMS',
-  '/networks': '🌐 Networks',
-  '/oops': '🧱 OOP',
-  '/git': '🌿 Git',
+  '/os': 'OS',
+  '/dbms': 'DBMS',
+  '/networks': 'Networks',
+  '/oops': 'OOP',
+  '/git': 'Git',
 };
 
 function Footer() {
@@ -98,6 +99,7 @@ function AppContent() {
           <Route path="/dbms/transactions" element={<TransactionsSim />} />
           <Route path="/dbms/bplustree" element={<BPlusTreeSim />} />
           <Route path="/dbms/er-design" element={<ErDesignSim />} />
+          <Route path="/dbms/sql-visualizer" element={<SqlQueryVisualizerSim />} />
 
           {/* Networks Module */}
           <Route path="/networks" element={<NetworksLanding />} />

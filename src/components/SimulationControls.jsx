@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { ALGORITHM_LABELS } from '../engine/schedulerEngine';
 
-const SPEED_ICONS = { '0.5x': '🐢', '1x': '▶', '2x': '⚡', '5x': '🚀', '10x': '💥' };
+const SPEED_NAMES = { '0.5x': 'Slow', '1x': 'Normal', '2x': 'Fast', '5x': 'Super', '10x': 'Hyper' };
 
 export default function SimulationControls({
     isRunning, isPaused, isFinished,
@@ -22,7 +22,7 @@ export default function SimulationControls({
                         whileTap={{ scale: 0.97 }}
                         style={{ flex: 1, justifyContent: 'center' }}
                     >
-                        ▶ Run Simulation
+                        Run Simulation
                     </motion.button>
                 )}
 
@@ -30,22 +30,22 @@ export default function SimulationControls({
                     <>
                         {isRunning ? (
                             <button className="btn btn-sm btn-cyan" onClick={onPause} style={{ minWidth: 100 }}>
-                                ⏸ Pause
+                                Pause
                             </button>
                         ) : (
                             <button className="btn btn-sm btn-cyan" onClick={onResume} style={{ minWidth: 100 }}>
-                                ▶ Resume
+                                Resume
                             </button>
                         )}
                         <button className="btn btn-sm btn-green" onClick={onStep} disabled={isRunning}>
-                            ⏭ Step
+                            Step
                         </button>
                     </>
                 )}
 
                 {(isRunning || isPaused || isFinished) && (
                     <button className="btn btn-sm btn-pink" onClick={onReset}>
-                        ↺ Reset
+                        Reset
                     </button>
                 )}
             </div>
@@ -63,7 +63,7 @@ export default function SimulationControls({
                                 className={`chip${speed === s ? ' active' : ''}`}
                                 onClick={() => onSpeedChange(s)}
                             >
-                                {SPEED_ICONS[s] || s} {s}
+                                {SPEED_NAMES[s] || s} ({s})
                             </button>
                         ))}
                     </div>

@@ -163,24 +163,6 @@ body {
   background: var(--white);
 }
 
-.nav-theme-btn {
-  background: var(--cyan);
-  border: var(--border-width) solid var(--border);
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  padding: 0.35rem 0.75rem;
-  font-size: 1rem;
-  font-family: var(--font-main);
-  font-weight: 600;
-  color: var(--text);
-  transition: all 0.15s ease;
-}
-
-.nav-theme-btn:hover {
-  transform: translate(2px, 2px);
-  box-shadow: none;
-}
-
 /* ===== LOADER ===== */
 .loader-overlay {
   position: fixed;

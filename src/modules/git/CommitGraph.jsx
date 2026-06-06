@@ -1,6 +1,7 @@
 // CommitGraph.jsx — SVG DAG visualizer for Git commits
 import { motion, AnimatePresence } from 'framer-motion';
 import { computeDAGLayout } from './engine/gitEngine';
+import { GitBranchIcon } from '../../components/Icons';
 
 const BRANCH_COLORS = ['#ffd93d', '#66d9ef', '#ff6b9d', '#a8e6cf', '#c3aed6', '#ffb347', '#87ceeb'];
 const NODE_W = 120;
@@ -22,7 +23,7 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                 flexDirection: 'column', gap: '0.5rem', opacity: 0.5, padding: '2rem',
                 minHeight: '240px',
             }}>
-                <div style={{ fontSize: '3rem' }}>🌿</div>
+                <div style={{ fontSize: '3rem', display: 'flex', justifyContent: 'center' }}><GitBranchIcon size={48} color="var(--cyan)" /></div>
                 <div style={{ fontWeight: 800, fontSize: '0.85rem', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     No commits in DAG yet
                 </div>

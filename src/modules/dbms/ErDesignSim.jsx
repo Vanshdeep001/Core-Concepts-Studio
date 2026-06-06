@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import { FileIcon, LinkIcon, SyncIcon, KeyIcon, SwirlIcon, ZapIcon, ClipboardIcon, BlueprintIcon, CrownIcon, CheckIcon, WrenchIcon, BuildIcon, GearIcon } from '../../components/Icons';
 
 export default function ErDesignSim() {
     const [speed, setSpeed] = useState(700);
@@ -506,7 +507,7 @@ export default function ErDesignSim() {
     return (
         <ImmersiveLayout
             isActive={true}
-            title="ER Diagram to Relational Schema Mapping" icon="🏗️" moduleLabel="DBMS Module"
+            title="ER Diagram to Relational Schema Mapping" icon={<BuildIcon size={22} />} moduleLabel="DBMS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}
             onStart={() => {
@@ -559,7 +560,7 @@ export default function ErDesignSim() {
                             style={{ fontSize: '0.72rem', fontWeight: 800, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }} 
                             disabled={isRunning}
                         >
-                            📁 + Add New Table
+                            <FileIcon size={14} /> Add New Table
                         </button>
 
                         {/* Manual relationship connector form */}
@@ -602,7 +603,7 @@ export default function ErDesignSim() {
                             </select>
                             
                             <button type="submit" className="btn btn-sm btn-pink" style={{ fontSize: '0.65rem', padding: '3px 8px', fontWeight: 800, whiteSpace: 'nowrap' }} disabled={isRunning}>
-                                🔗 Link
+                                <LinkIcon size={12} /> Link
                             </button>
                         </form>
 
@@ -612,7 +613,7 @@ export default function ErDesignSim() {
                             onClick={handleReset} 
                             style={{ fontSize: '0.72rem', fontWeight: 800, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}
                         >
-                            🔄 Start Clean Slate
+                            <SyncIcon size={12} /> Start Clean Slate
                         </button>
                     </div>
 
@@ -783,7 +784,7 @@ export default function ErDesignSim() {
                                                         disabled={isRunning}
                                                         style={{ fontSize: '0.58rem', padding: '1px 4px', cursor: 'pointer', background: '#ef4444', color: 'white', border: '1.5px solid var(--border)', borderRadius: '3px' }}
                                                     >
-                                                        🗑️
+                                                        Del
                                                     </button>
                                                 </div>
                                             </div>
@@ -807,7 +808,7 @@ export default function ErDesignSim() {
                                                         >
                                                             {/* Badge for Attribute Type */}
                                                             <span style={{ fontSize: '0.55rem', fontWeight: 900, background: 'rgba(0,0,0,0.06)', padding: '1px 3px', borderRadius: '3px', textTransform: 'uppercase' }}>
-                                                                {attr.type === 'primary' ? '🔑 PK' : attr.type === 'multivalued' ? '🌀 ML' : attr.type === 'derived' ? '⚡ DV' : '📝'}
+                                                                {attr.type === 'primary' ? 'PK' : attr.type === 'multivalued' ? 'ML' : attr.type === 'derived' ? 'DV' : 'Col'}
                                                             </span>
 
                                                             {/* Manual column name editing */}
@@ -829,7 +830,7 @@ export default function ErDesignSim() {
                                                                 disabled={isRunning}
                                                                 style={{ fontSize: '0.52rem', padding: '1px 3px', cursor: 'pointer', flexShrink: 0, border: '1px solid var(--border)', borderRadius: '2px', background: 'white' }}
                                                             >
-                                                                ⚙
+                                                                <GearIcon size={10} />
                                                             </button>
                                                             {/* Delete Attribute */}
                                                             <button
@@ -938,7 +939,7 @@ export default function ErDesignSim() {
                                                             boxShadow: '1px 1px 0 var(--border)'
                                                         }}
                                                     >
-                                                        🗑️
+                                                        Del
                                                     </button>
                                                 </div>
                                                 
@@ -1012,8 +1013,8 @@ export default function ErDesignSim() {
                                         transition: 'all 0.25s ease'
                                     }}
                                 >
-                                    <div style={{ background: isActiveTable ? 'var(--yellow)' : 'var(--purple)', borderBottom: '2.5px solid var(--border)', padding: '4px 8px', fontSize: '0.72rem', fontWeight: 900, color: isActiveTable ? 'var(--text)' : '#fff', transition: 'all 0.25s' }}>
-                                        📋 Table: {table.name} {isActiveTable ? '⚡ (Compiling...)' : ''}
+                                    <div style={{ background: isActiveTable ? 'var(--yellow)' : 'var(--purple)', borderBottom: '2.5px solid var(--border)', padding: '4px 8px', fontSize: '0.72rem', fontWeight: 900, color: isActiveTable ? 'var(--text)' : '#fff', transition: 'all 0.25s', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                        <ClipboardIcon size={14} /> Table: {table.name} {isActiveTable ? '(Compiling...)' : ''}
                                     </div>
                                     <table className="neo-table" style={{ fontSize: '0.65rem', width: '100%' }}>
                                         <thead>
@@ -1049,7 +1050,7 @@ export default function ErDesignSim() {
                     {/* Live Translation Process Output */}
                     <div style={{ border: '2.5px solid var(--border)', background: currentStep === -1 ? 'var(--yellow)' : 'var(--cyan)', padding: '0.6rem', boxShadow: '3px 3px 0 var(--border)', borderRadius: '6px' }}>
                         <div style={{ fontSize: '0.55rem', fontWeight: 900, opacity: 0.6, textTransform: 'uppercase' }}>
-                            {currentStep === -1 ? '🎓 Simulation Lab Ready' : isFinished ? '🎉 compilation complete' : '🔄 Active Compiler Step'}
+                            {currentStep === -1 ? 'Simulation Lab Ready' : isFinished ? 'Compilation Complete' : 'Active Compiler Step'}
                         </div>
                         <h4 style={{ fontSize: '0.82rem', fontWeight: 900, margin: '4px 0', textTransform: 'uppercase' }}>
                             {currentStep === -1 ? 'Interactive Design Mode' : activeStepInfo?.title || 'Mapping...'}
@@ -1093,7 +1094,7 @@ export default function ErDesignSim() {
                                             transition: 'all 0.2s'
                                         }}
                                     >
-                                        <span>{isDone ? '✅' : isActive ? '⚡' : '🔘'}</span>
+                                        <span>{isDone ? <CheckIcon size={12} color="var(--green)" /> : isActive ? <ZapIcon size={12} color="var(--yellow)" /> : <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#ccc' }} />}</span>
                                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{step.title}</span>
                                     </div>
                                 );

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ALGORITHM_LABELS } from '../engine/schedulerEngine';
+import { CrownIcon } from './Icons';
 
 export default function RecommendationCard({ recommendation }) {
     if (!recommendation) return null;
@@ -8,7 +9,7 @@ export default function RecommendationCard({ recommendation }) {
     return (
         <div className="recommendation-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
-                <span style={{ fontSize: '1.5rem' }}>🏆</span>
+                <CrownIcon size={24} color="var(--yellow)" />
                 <div>
                     <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.6 }}>Recommended Algorithm</div>
                     <div className="recommendation-badge">{recommendedLabel}</div>

@@ -1,4 +1,5 @@
 import { getProcessColor } from '../utils/helpers';
+import { ClipboardIcon } from './Icons';
 
 const COLUMNS = [
     { key: 'id', label: 'PID', type: 'text', width: '80px' },
@@ -100,9 +101,11 @@ export default function ProcessInputForm({ processes, onChange }) {
 
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
                 <button className="btn btn-sm btn-cyan" onClick={addRow}>+ Add Process</button>
-                <button className="btn btn-sm" onClick={loadSample}>📋 Load Sample</button>
+                <button className="btn btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }} onClick={loadSample}>
+                    <ClipboardIcon size={14} /> Load Sample
+                </button>
                 {processes.length > 0 && (
-                    <button className="btn btn-sm" onClick={() => onChange([])}>🗑 Clear All</button>
+                    <button className="btn btn-sm" onClick={() => onChange([])}>Clear All</button>
                 )}
             </div>
         </div>

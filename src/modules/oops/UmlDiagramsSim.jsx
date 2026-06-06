@@ -2,11 +2,12 @@ import { useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import { BoxIcon, TerminalIcon, SyncIcon, ChartIcon, LightbulbIcon } from '../../components/Icons';
 
 /* ── CONSTANTS ── */
 const DIAGRAM_TABS = [
-    { id: 'class', name: 'Class Diagram', icon: '📦' },
-    { id: 'code', name: 'Code-to-UML', icon: '💻' },
+    { id: 'class', name: 'Class Diagram', icon: <BoxIcon size={16} /> },
+    { id: 'code', name: 'Code-to-UML', icon: <TerminalIcon size={16} /> },
 ];
 
 const PREBUILT = [
@@ -258,7 +259,7 @@ public class Course {
                             <div style={{ fontSize: '0.7rem', fontWeight: 800, marginBottom: '0.3rem' }}>Paste Java/Python Code:</div>
                             <textarea value={codeInput} onChange={e => setCodeInput(e.target.value)}
                                 style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '0.72rem', padding: '0.75rem', border: '3px solid var(--border)', borderRadius: '8px', background: '#0f172a', color: '#a8e6cf', resize: 'none' }} />
-                            <button className="btn btn-sm btn-cyan" onClick={handleParse} style={{ marginTop: '0.5rem' }}>🔄 Parse to UML</button>
+                            <button className="btn btn-sm btn-cyan" onClick={handleParse} style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '4px' }}><SyncIcon size={14} /> Parse to UML</button>
                         </div>
                         <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '0.7rem', fontWeight: 800, marginBottom: '0.3rem' }}>Parsed Classes ({parsedClasses.length}):</div>
@@ -311,14 +312,14 @@ public class Course {
     const RIGHT = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="panel">
-                <div className="panel-header" style={{ background: '#ff8a65' }}>📊 Algorithm Logic</div>
+                <div className="panel-header" style={{ background: '#ff8a65', display: 'flex', alignItems: 'center', gap: '4px' }}><ChartIcon size={14} /> Algorithm Logic</div>
                 <div style={{ padding: '0.75rem', fontSize: '0.78rem', lineHeight: 1.6 }}>
                     {activeTab === 'class' && <span><strong>Class Diagram</strong>: Shows the static structure of a system — classes, attributes, methods, and relationships. The foundation of OOP design.</span>}
                     {activeTab === 'code' && <span><strong>Code-to-UML</strong>: Paste Java or Python code and automatically extract class definitions, fields, methods, and visibility modifiers into UML class diagrams.</span>}
                 </div>
             </div>
             <div className="panel">
-                <div className="panel-header" style={{ background: '#ffd93d' }}>💡 Educational Insight</div>
+                <div className="panel-header" style={{ background: '#ffd93d', display: 'flex', alignItems: 'center', gap: '4px' }}><LightbulbIcon size={14} /> Educational Insight</div>
                 <div style={{ padding: '0.75rem', fontSize: '0.78rem', lineHeight: 1.6 }}>
                     {activeTab === 'class' && 'UML uses standard notation: + (public), - (private), # (protected). Relationships have priority: Composition > Aggregation > Association > Dependency.'}
                     {activeTab === 'code' && 'Most practical exam feature! Paste real code and see the UML structure instantly. Great for reverse engineering and documentation.'}
@@ -332,7 +333,7 @@ public class Course {
     );
 
     return (
-        <ImmersiveLayout isActive={true} title="UML Diagrams" icon="📊" moduleLabel="OOP MODULE"
+        <ImmersiveLayout isActive={true} title="UML Diagrams" icon={<ChartIcon size={22} />} moduleLabel="OOP MODULE"
             isRunning={false} isPaused={false} isFinished={false} speed={speed} onSpeedChange={setSpeed}
             onStart={() => {}} onPause={() => {}} onResume={() => {}} onStep={() => {}}
             onReset={() => { setActiveTab('class'); loadPrebuilt(0); }}
@@ -343,7 +344,7 @@ public class Course {
             legend={[{ color: '#ff8a65', label: 'Class' }, { color: '#64748b', label: 'Relationship' }]}>
             <div className="main-content">
                 <Link to="/oops" style={{ fontSize: '0.85rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← OOP Module</Link>
-                <h1>📊 UML Diagrams</h1>
+                <h1 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><ChartIcon size={28} /> UML Diagrams</h1>
             </div>
         </ImmersiveLayout>
     );

@@ -1,10 +1,24 @@
 // GitExplainPanel.jsx — Right panel: Educational explanations + beginner/advanced toggle
 import { motion, AnimatePresence } from 'framer-motion';
+import { CrownIcon, BoxIcon, SaveIcon, TagIcon, ShuffleIcon, SyncIcon, ResetIcon, SendIcon, LightbulbIcon } from '../../components/Icons';
+
+function getConceptIcon(iconKey) {
+    if (iconKey === 'init') return <CrownIcon size={14} color="var(--yellow)" />;
+    if (iconKey === 'add') return <BoxIcon size={14} />;
+    if (iconKey === 'commit') return <SaveIcon size={14} />;
+    if (iconKey === 'branch') return <TagIcon size={14} />;
+    if (iconKey === 'merge') return <ShuffleIcon size={14} />;
+    if (iconKey === 'rebase') return <SyncIcon size={14} />;
+    if (iconKey === 'reset') return <ResetIcon size={14} />;
+    if (iconKey === 'push') return <SendIcon size={14} />;
+    if (iconKey === 'default') return <LightbulbIcon size={14} />;
+    return null;
+}
 
 const CONCEPT_CARDS = {
     'git init': {
         title: 'Repository Initialization',
-        icon: '🎉',
+        icon: 'init',
         concepts: [
             { label: 'What is .git?', text: 'A hidden folder that IS your repository. It stores all objects (commits, trees, blobs), references (branches, HEAD), and configuration.' },
             { label: 'HEAD', text: 'A pointer to your current location. Initially points to "main" (an unborn branch with no commits yet).' },
@@ -13,7 +27,7 @@ const CONCEPT_CARDS = {
     },
     'git add': {
         title: 'Staging Area (Index)',
-        icon: '📦',
+        icon: 'add',
         concepts: [
             { label: 'Why stage?', text: 'The staging area lets you craft commits precisely. You can stage some changes without committing everything.' },
             { label: 'Blob Objects', text: 'When you add a file, Git creates a "blob" object — a compressed copy of the file content — stored in .git/objects.' },
@@ -22,7 +36,7 @@ const CONCEPT_CARDS = {
     },
     'git commit': {
         title: 'Snapshot Commit',
-        icon: '📸',
+        icon: 'commit',
         concepts: [
             { label: 'Three objects created', text: '1. Blob (file content) 2. Tree (directory listing mapping filenames→blobs) 3. Commit (points to tree + parent commit)' },
             { label: 'Branch Moves', text: 'After a commit, the current branch pointer automatically moves forward to point to the new commit.' },
@@ -31,7 +45,7 @@ const CONCEPT_CARDS = {
     },
     'git branch': {
         title: 'Branch = Pointer',
-        icon: '🏷️',
+        icon: 'branch',
         concepts: [
             { label: 'Just a file', text: 'A branch is literally a 41-byte text file in .git/refs/heads/ containing the SHA-1 hash of one commit. Nothing more!' },
             { label: 'Zero cost', text: 'Creating a branch is instant and takes no space. It\'s just writing a hash to a file.' },
@@ -40,7 +54,7 @@ const CONCEPT_CARDS = {
     },
     'git merge': {
         title: 'Merge Strategies',
-        icon: '🔀',
+        icon: 'merge',
         concepts: [
             { label: 'Fast-forward', text: 'If the target branch is directly behind the source, Git just moves the pointer forward. No new commit needed.' },
             { label: '3-way merge', text: 'When branches have diverged, Git finds the common ancestor and combines changes from both sides.' },
@@ -49,7 +63,7 @@ const CONCEPT_CARDS = {
     },
     'git rebase': {
         title: 'Rebase = Replay',
-        icon: '♻️',
+        icon: 'rebase',
         concepts: [
             { label: 'New hashes!', text: 'Rebase creates brand new commit objects. Even if the message is identical, the parent is different so the hash changes.' },
             { label: 'Linear history', text: 'After rebase, history looks like commits happened sequentially — no merge diamonds.' },
@@ -58,7 +72,7 @@ const CONCEPT_CARDS = {
     },
     'git reset': {
         title: 'Reset Modes',
-        icon: '⏮️',
+        icon: 'reset',
         concepts: [
             { label: '--soft', text: 'Only moves the branch pointer. Changes stay staged. Safe.' },
             { label: '--mixed (default)', text: 'Moves branch pointer + clears staging area. Changes stay in working directory.' },
@@ -67,7 +81,7 @@ const CONCEPT_CARDS = {
     },
     'git push': {
         title: 'Remote Sync',
-        icon: '🚀',
+        icon: 'push',
         concepts: [
             { label: 'Objects transfer', text: 'Git sends only the commit objects + trees + blobs that the remote doesn\'t already have.' },
             { label: 'Remote pointer', text: 'The remote updates its branch pointer (e.g. main) to your latest commit.' },
@@ -78,7 +92,7 @@ const CONCEPT_CARDS = {
 
 const DEFAULT_CONCEPTS = {
     title: 'Git Internals',
-    icon: '🧠',
+    icon: 'default',
     concepts: [
         { label: 'Git = DAG', text: 'Git\'s history is a Directed Acyclic Graph. Each commit points to parent commit(s). The DAG can never have cycles.' },
         { label: 'Content Addressable', text: 'Every object is named by the SHA-1 hash of its content. Same content = same hash. Change anything = new hash.' },
@@ -135,7 +149,7 @@ export default function GitExplainPanel({ lastCommand, explanation, conceptMode,
                 fontWeight: 800, fontSize: '0.68rem', textTransform: 'uppercase',
                 background: conceptMode ? '#a8e6cf' : '#66d9ef',
             }}>
-                {conceptMode ? '📘 Beginner Mode' : '🔬 Advanced Mode'}
+                {conceptMode ? 'Beginner Mode' : 'Advanced Mode'}
             </div>
 
             {/* Last command output */}
@@ -198,7 +212,7 @@ export default function GitExplainPanel({ lastCommand, explanation, conceptMode,
             {/* Concept Cards */}
             <div>
                 <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem' }}>
-                    {conceptData.icon} {conceptData.title}
+                    {getConceptIcon(conceptData.icon)} {conceptData.title}
                 </div>
                 <AnimatePresence mode="wait">
                     <motion.div key={cmdKey || 'default'} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

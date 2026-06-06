@@ -2,6 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import {
+    PillarIcon, TerminalIcon, SaveIcon, GearIcon, ShuffleIcon, PlayIcon,
+    InfoIcon, ShieldIcon, LightbulbIcon, ZapIcon, AlertIcon, TreeIcon, WrenchIcon,
+    BlueprintIcon, BuildIcon, PlugIcon, BoxIcon, CrownIcon
+} from '../../components/Icons';
 
 /* ── DATA TEMPLATES ── */
 const BASE_CLASSES = {
@@ -440,10 +445,10 @@ export default function AbstractInterfaceSim() {
             {/* Top View Selector Bar */}
             <div style={{ display: 'flex', borderBottom: '4px solid var(--border)', flexShrink: 0, background: 'var(--white)' }}>
                 {[
-                    ['blueprint', '📋 Class Blueprint', 'var(--yellow)'],
-                    ['multi', '🧩 Combine Rules', 'var(--cyan)'],
-                    ['lang', '💻 View Code', 'var(--purple)'],
-                    ['flowchart', '❓ Decision Guide', 'var(--pink)']
+                    ['blueprint', 'Class Blueprint', 'var(--yellow)'],
+                    ['multi', 'Combine Rules', 'var(--cyan)'],
+                    ['lang', 'View Code', 'var(--purple)'],
+                    ['flowchart', 'Decision Guide', 'var(--pink)']
                 ].map(([k, l, color]) => (
                     <button key={k} onClick={() => setView(k)} style={{
                         flex: 1, padding: '0.8rem 0.4rem', fontWeight: 900, fontSize: '0.75rem', cursor: 'pointer',
@@ -532,7 +537,7 @@ export default function AbstractInterfaceSim() {
                                 {/* PARENT CLASS BLOCK */}
                                 <div style={{ border: '4px solid #d69e2e', background: 'var(--white)', boxShadow: '6px 6px 0 #000' }}>
                                     <div style={{ background: '#fef08a', padding: '0.5rem 0.8rem', borderBottom: '4px solid #d69e2e', fontWeight: 900, fontSize: '0.75rem', color: '#854d0e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>🏗️ Parent: {selectedBaseClass !== 'None' ? selectedBaseClass : 'None Selected'}</span>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><BuildIcon size={14} /> Parent: {selectedBaseClass !== 'None' ? selectedBaseClass : 'None Selected'}</span>
                                         <span style={{ fontSize: '0.5rem', padding: '2px 6px', background: '#d69e2e', color: '#fff', fontWeight: 900 }}>PARENT</span>
                                     </div>
                                     <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
@@ -561,7 +566,7 @@ export default function AbstractInterfaceSim() {
                                 {activeInterfaceData.map(iface => (
                                     <div key={iface.name} style={{ border: `4px solid ${iface.color}`, background: 'var(--white)', boxShadow: '6px 6px 0 #000' }}>
                                         <div style={{ background: iface.color === '#2563eb' ? '#dbeafe' : iface.color === '#db2777' ? '#fce7f3' : '#ede9fe', padding: '0.4rem 0.8rem', borderBottom: `4px solid ${iface.color}`, fontWeight: 900, fontSize: '0.7rem', color: iface.color, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span>🔌 Interface Checklist: {iface.name}</span>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><PlugIcon size={14} /> Interface: {iface.name}</span>
                                             <span style={{ fontSize: '0.5rem', padding: '2px 6px', background: iface.color, color: '#fff', fontWeight: 900 }}>INTERFACE</span>
                                         </div>
                                         <div style={{ padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -577,7 +582,7 @@ export default function AbstractInterfaceSim() {
                                 {customInterfaceMethods.length > 0 && (
                                     <div style={{ border: '4px solid #6366f1', background: 'var(--white)', boxShadow: '6px 6px 0 #000' }}>
                                         <div style={{ background: '#e0e7ff', padding: '0.4rem 0.8rem', borderBottom: '4px solid #6366f1', fontWeight: 900, fontSize: '0.7rem', color: '#4338ca', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span>🔌 Custom Interfaces</span>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><PlugIcon size={14} /> Custom Interfaces</span>
                                             <span style={{ fontSize: '0.5rem', padding: '2px 6px', background: '#6366f1', color: '#fff', fontWeight: 900 }}>CUSTOM</span>
                                         </div>
                                         <div style={{ padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -616,7 +621,7 @@ export default function AbstractInterfaceSim() {
                                     borderBottom: '4px solid #000', fontWeight: 900, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                     color: '#000', fontSize: '0.82rem'
                                 }}>
-                                    <span>📦 Class: {concreteClassName}</span>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><BoxIcon size={16} /> Class: {concreteClassName}</span>
                                     <span style={{ fontSize: '0.55rem', padding: '2px 8px', background: '#000', color: blueprintCompleted ? '#48bb78' : '#f97316', fontWeight: 900 }}>
                                         {blueprintCompleted ? 'COMPLETE ✓' : `${Object.keys(craftedImplementations).length}/${requiredMethods.length} DONE`}
                                     </span>
@@ -657,7 +662,7 @@ export default function AbstractInterfaceSim() {
                                                             style={{ background: '#ef4444', border: '2px solid #000', color: '#fff', fontSize: '0.5rem', fontWeight: 900, cursor: 'pointer', padding: '0px 4px', lineHeight: 1.3 }}>✕</button>
                                                     </div>
                                                 ) : (
-                                                    <span style={{ marginLeft: 'auto', fontSize: '0.5rem', fontWeight: 900, color: '#b91c1c' }}>✏️ CLICK TO CODE</span>
+                                                    <span style={{ marginLeft: 'auto', fontSize: '0.55rem', fontWeight: 900, color: '#b91c1c' }}>CLICK TO CODE</span>
                                                 )}
                                             </div>
                                         );
@@ -692,7 +697,7 @@ export default function AbstractInterfaceSim() {
                                     style={{ border: '4px solid var(--border)', background: 'var(--white)', boxShadow: '6px 6px 0 #000', padding: '1rem' }}
                                 >
                                     <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--text)', marginBottom: '0.6rem' }}>
-                                        ✏️ Implementing: <span style={{ color: '#2563eb' }}>{activeCraftingMethod}</span>
+                                        Implementing: <span style={{ color: '#2563eb' }}>{activeCraftingMethod}</span>
                                     </div>
                                     <div style={{ background: 'var(--bg)', border: '3px solid var(--border)', padding: '0.6rem', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text)', borderRadius: '4px', marginBottom: '0.8rem' }}>
                                         <div>public double {activeCraftingMethod.replace('()', '')}() &#123;</div>
@@ -765,7 +770,7 @@ export default function AbstractInterfaceSim() {
                                     {showInheritanceError && (
                                         <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }}
                                             style={{ border: '4px solid #ef4444', background: '#fee2e2', padding: '0.5rem', fontSize: '0.62rem', fontWeight: 900, color: '#b91c1c', textAlign: 'center', boxShadow: '4px 4px 0 #000' }}>
-                                            ⚠️ Single Inheritance: You can only extend ONE parent class!
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}><AlertIcon size={12} color="#b91c1c" /> Single Inheritance: You can only extend ONE parent class!</span>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -774,7 +779,7 @@ export default function AbstractInterfaceSim() {
                             {/* CENTER: Assembled class Board */}
                             <div style={{ border: '5px solid var(--border)', background: 'var(--white)', boxShadow: '8px 8px 0 #000', display: 'flex', flexDirection: 'column' }}>
                                 <div style={{ background: '#f1f5f9', borderBottom: '4px solid var(--border)', padding: '0.6rem 1rem', fontWeight: 900, fontSize: '0.82rem', color: 'var(--text)', textAlign: 'center' }}>
-                                    🤖 Your Assembled Class: SmartRobot
+                                    Your Assembled Class: SmartRobot
                                 </div>
                                 
                                 <div style={{ padding: '0.7rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', flex: 1 }}>
@@ -788,7 +793,7 @@ export default function AbstractInterfaceSim() {
                                         transition: 'all 0.2s'
                                     }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <span style={{ fontSize: '0.9rem' }}>{extendedClassMulti ? '🏗️' : '🔌'}</span>
+                                            <span style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>{extendedClassMulti ? <BuildIcon size={16} /> : <PlugIcon size={16} />}</span>
                                             <span style={{ fontSize: '0.65rem', fontWeight: 900, color: extendedClassMulti ? '#854d0e' : '#94a3b8' }}>
                                                 {extendedClassMulti ? `extends ${extendedClassMulti} (Parent Chassis)` : 'Chassis Slot Empty'}
                                             </span>
@@ -814,7 +819,7 @@ export default function AbstractInterfaceSim() {
                                                 background: active ? 'var(--bg)' : 'var(--white)',
                                                 display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s'
                                             }}>
-                                                <span style={{ fontSize: '0.8rem', color: active ? iface.color : '#cbd5e1' }}>🔌</span>
+                                                <span style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center' }}><PlugIcon size={16} color={active ? iface.color : '#cbd5e1'} /></span>
                                                 <span style={{ fontSize: '0.6rem', fontWeight: 900, color: active ? iface.color : '#94a3b8' }}>
                                                     {active ? `implements ${iface.name}` : `Slot for ${iface.name}`}
                                                 </span>
@@ -833,7 +838,7 @@ export default function AbstractInterfaceSim() {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', maxHeight: 130, overflowY: 'auto' }}>
                                             {activeInterfacesMulti.length === 0 ? (
                                                 <div style={{ fontSize: '0.62rem', color: '#94a3b8', padding: '0.4rem', textAlign: 'center', border: '2px dashed #cbd5e1' }}>
-                                                    🔌 Plug in interface modules on the right to build your checklist!
+                                                    Plug in interface modules on the right to build your checklist!
                                                 </div>
                                             ) : (
                                                 activeInterfacesMulti.flatMap(ifaceName => {
@@ -1005,7 +1010,7 @@ export default function AbstractInterfaceSim() {
                                             textTransform: 'uppercase',
                                             letterSpacing: '0.05em'
                                         }}>
-                                            🏆 Recommendation
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}><CrownIcon size={14} /> Recommendation</span>
                                         </div>
                                         <div style={{ padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
                                             <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text)' }}>
@@ -1060,7 +1065,7 @@ export default function AbstractInterfaceSim() {
                                             textTransform: 'uppercase',
                                             letterSpacing: '0.05em'
                                         }}>
-                                            ❓ QUESTION {flowHistory.length}
+                                            QUESTION {flowHistory.length}
                                         </div>
                                         <div style={{ padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                                             <div style={{ fontSize: '1.1rem', fontWeight: 900, lineHeight: 1.5, color: 'var(--text)' }}>
@@ -1246,22 +1251,22 @@ export default function AbstractInterfaceSim() {
                 
                 {view === 'blueprint' && (
                     <div style={{ fontSize: '0.65rem', lineHeight: 1.5 }}>
-                        💡 A parent class is like a half-built house — some rooms are done, some are empty. An interface is just a checklist saying "you must build these rooms".
+                        <LightbulbIcon size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> A parent class is like a half-built house — some rooms are done, some are empty. An interface is just a checklist saying "you must build these rooms".
                     </div>
                 )}
                 {view === 'multi' && (
                     <div style={{ fontSize: '0.65rem', lineHeight: 1.5 }}>
-                        💡 You can only pick one parent class, but you can add as many interfaces as you want!
+                        <LightbulbIcon size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> You can only pick one parent class, but you can add as many interfaces as you want!
                     </div>
                 )}
                 {view === 'lang' && (
                     <div style={{ fontSize: '0.65rem', lineHeight: 1.5 }}>
-                        💡 Look at the keywords: "extends" means inheriting a parent class. "implements" means following an interface's rules.
+                        <LightbulbIcon size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Look at the keywords: "extends" means inheriting a parent class. "implements" means following an interface's rules.
                     </div>
                 )}
                 {view === 'flowchart' && (
                     <div style={{ fontSize: '0.65rem', lineHeight: 1.5 }}>
-                        💡 Answer YES or NO to each question. The guide will tell you which one to use.
+                        <LightbulbIcon size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} /> Answer YES or NO to each question. The guide will tell you which one to use.
                     </div>
                 )}
             </div>
@@ -1272,7 +1277,7 @@ export default function AbstractInterfaceSim() {
         <ImmersiveLayout
             isActive={true}
             title="Abstract Class vs Interface"
-            icon="📐"
+            icon={<BlueprintIcon size={22} />}
             moduleLabel="OOP MODULE"
             isRunning={false}
             isPaused={false}
@@ -1307,7 +1312,7 @@ export default function AbstractInterfaceSim() {
         >
             <div className="main-content">
                 <Link to="/oops" style={{ fontSize: '0.85rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← OOP Module</Link>
-                <h1>📐 Abstract Class vs Interface</h1>
+                <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><BlueprintIcon size={32} /> Abstract Class vs Interface</h1>
             </div>
         </ImmersiveLayout>
     );

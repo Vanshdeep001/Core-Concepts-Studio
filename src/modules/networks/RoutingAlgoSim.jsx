@@ -479,7 +479,7 @@ export default function RoutingAlgoSim() {
             ))}
 
             <div style={{ fontSize: '0.6rem', opacity: 0.4, fontWeight: 700, marginTop: '0.25rem' }}>
-                💡 Click an edge to cut it. Click a table row to highlight path.
+                Click an edge to cut it. Click a table row to highlight path.
             </div>
         </div>
     );
@@ -501,7 +501,7 @@ export default function RoutingAlgoSim() {
             )}
             {curStep && (
                 <div style={{ border: '2px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
-                    <div style={{ background: 'var(--yellow)', padding: '0.4rem 0.6rem', borderBottom: '2px solid var(--border)', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>💡 Educational Insight</div>
+                    <div style={{ background: 'var(--yellow)', padding: '0.4rem 0.6rem', borderBottom: '2px solid var(--border)', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>Educational Insight</div>
                     <div style={{ padding: '0.5rem 0.6rem', fontSize: '0.8rem', lineHeight: 1.5, opacity: 0.85 }}>{curStep.insight}</div>
                 </div>
             )}

@@ -2,15 +2,62 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import {
+    DiamondIcon,
+    FactoryIcon,
+    SignalIcon,
+    CoffeeIcon,
+    TargetIcon,
+    CircleShape,
+    SquareShape,
+    TriangleShape,
+    PentagonShape,
+    HexagonShape,
+    ClockIcon,
+    BlockIcon,
+    EmailIcon,
+    PhoneIcon,
+    BellIcon,
+    SendIcon,
+    LaptopIcon,
+    GearIcon,
+    PuzzleIcon,
+    ShuffleIcon,
+    ZapIcon
+} from '../../components/Icons';
 
 /* ── PATTERNS DATA ── */
 const PATTERNS = [
-    { id: 'singleton', name: 'Singleton', icon: '🔷', color: '#ffd93d', desc: 'One instance to rule them all' },
-    { id: 'factory', name: 'Factory', icon: '🏭', color: '#66d9ef', desc: 'Object creation without specifying exact class' },
-    { id: 'observer', name: 'Observer', icon: '📡', color: '#ff6b9d', desc: 'Publish-subscribe notification' },
-    { id: 'decorator', name: 'Decorator', icon: '☕', color: '#a8e6cf', desc: 'Add behavior dynamically' },
-    { id: 'strategy', name: 'Strategy', icon: '🎯', color: '#b39ddb', desc: 'Swap algorithms at runtime' },
+    { id: 'singleton', name: 'Singleton', icon: DiamondIcon, color: '#ffd93d', desc: 'One instance to rule them all' },
+    { id: 'factory', name: 'Factory', icon: FactoryIcon, color: '#66d9ef', desc: 'Object creation without specifying exact class' },
+    { id: 'observer', name: 'Observer', icon: SignalIcon, color: '#ff6b9d', desc: 'Publish-subscribe notification' },
+    { id: 'decorator', name: 'Decorator', icon: CoffeeIcon, color: '#a8e6cf', desc: 'Add behavior dynamically' },
+    { id: 'strategy', name: 'Strategy', icon: TargetIcon, color: '#b39ddb', desc: 'Swap algorithms at runtime' },
 ];
+
+const getShapeIcon = (iconName, size = 18, color = 'currentColor') => {
+    switch (iconName) {
+        case 'CircleShape': return <CircleShape size={size} color={color} />;
+        case 'SquareShape': return <SquareShape size={size} color={color} />;
+        case 'TriangleShape': return <TriangleShape size={size} color={color} />;
+        case 'PentagonShape': return <PentagonShape size={size} color={color} />;
+        case 'HexagonShape': return <HexagonShape size={size} color={color} />;
+        case 'DiamondIcon': return <DiamondIcon size={size} color={color} />;
+        default: return <CircleShape size={size} color={color} />;
+    }
+};
+
+const getObserverIcon = (iconName, size = 20, color = 'currentColor') => {
+    switch (iconName) {
+        case 'EmailIcon': return <EmailIcon size={size} color={color} />;
+        case 'PhoneIcon': return <PhoneIcon size={size} color={color} />;
+        case 'BellIcon': return <BellIcon size={size} color={color} />;
+        case 'SendIcon': return <SendIcon size={size} color={color} />;
+        case 'LaptopIcon': return <LaptopIcon size={size} color={color} />;
+        default: return <BellIcon size={size} color={color} />;
+    }
+};
+
 
 /* ── SHARED ── */
 const FULL = { width: '100%', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' };
@@ -26,7 +73,7 @@ const DOT_BG = (id) => (
 
 
 /* ══════════════════════════════════════════════════════════════
-   1. SINGLETON — One Instance 🔷
+   1. SINGLETON — One Instance
    ══════════════════════════════════════════════════════════════ */
 const SingletonSim = () => {
     const [initMode, setInitMode] = useState('lazy'); // 'lazy' | 'eager'
@@ -137,11 +184,11 @@ const SingletonSim = () => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.4rem' }}>
-                    <button className="btn btn-sm" style={{ background: '#ffd93d', color: '#000', fontSize: '0.65rem', padding: '0.3rem 0.6rem', fontWeight: 800 }} onClick={() => runRequest()} disabled={isSimulating}>
-                        ⚡ Query getInstance() (All)
+                    <button className="btn btn-sm" style={{ background: '#ffd93d', color: '#000', fontSize: '0.65rem', padding: '0.3rem 0.6rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }} onClick={() => runRequest()} disabled={isSimulating}>
+                        <ZapIcon size={12} /> Query getInstance() (All)
                     </button>
-                    <button className="btn btn-sm" style={{ background: '#ef4444', color: '#fff', fontSize: '0.65rem', padding: '0.3rem 0.6rem', fontWeight: 800 }} onClick={attemptDirectInstantiation} disabled={isSimulating}>
-                        🚫 new {className}()
+                    <button className="btn btn-sm" style={{ background: '#ef4444', color: '#fff', fontSize: '0.65rem', padding: '0.3rem 0.6rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }} onClick={attemptDirectInstantiation} disabled={isSimulating}>
+                        <BlockIcon size={12} /> new {className}()
                     </button>
                     <button className="btn btn-sm" style={{ background: '#64748b', color: '#fff', fontSize: '0.65rem', padding: '0.3rem 0.6rem' }} onClick={reset} disabled={isSimulating}>
                         Reset
@@ -276,7 +323,7 @@ const SingletonSim = () => {
                                     color: '#94a3b8'
                                 }}
                             >
-                                <span style={{ fontSize: '1.2rem', marginBottom: '0.2rem' }}>💤</span>
+                                <ClockIcon size={24} color="#94a3b8" style={{ marginBottom: '0.2rem' }} />
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800 }}>null</span>
                                 <span style={{ fontSize: '0.55rem', opacity: 0.7 }}>Uninitialized</span>
                             </motion.div>
@@ -304,7 +351,7 @@ const SingletonSim = () => {
                                 }}
                             >
                                 <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#991b1b', textTransform: 'uppercase', marginBottom: '0.1rem' }}>
-                                    ❌ Access Blocked
+                                    Access Blocked
                                 </div>
                                 <div style={{ fontSize: '0.55rem', color: '#7f1d1d', fontFamily: 'var(--font-mono)' }}>
                                     Constructor is private! Direct creation is forbidden.
@@ -391,21 +438,21 @@ const SingletonSim = () => {
 
 
 /* ══════════════════════════════════════════════════════════════
-   2. FACTORY — Production Line 🏭
+   2. FACTORY — Production Line
    ══════════════════════════════════════════════════════════════ */
 const FactorySim = () => {
     const [products, setProducts] = useState([]);
     const [customTypes, setCustomTypes] = useState([
-        { type: 'Circle', icon: '⭕', color: '#66d9ef' },
-        { type: 'Square', icon: '⬜', color: '#ffd93d' },
-        { type: 'Triangle', icon: '🔺', color: '#ff6b9d' },
+        { type: 'Circle', icon: 'CircleShape', color: '#66d9ef' },
+        { type: 'Square', icon: 'SquareShape', color: '#ffd93d' },
+        { type: 'Triangle', icon: 'TriangleShape', color: '#ff6b9d' },
     ]);
     const [newType, setNewType] = useState('');
     const [animationState, setAnimationState] = useState('idle'); // 'idle' | 'ordering' | 'manufacturing' | 'dispatching'
     const [activeShape, setActiveShape] = useState(null);
 
     const COLORS = ['#b39ddb', '#ffb347', '#4dd0c8', '#f0a0c0', '#90cdf4', '#ffd93d'];
-    const ICONS = ['🔶', '🔵', '🟢', '🟣', '🟡', '🔴', '⬡', '◆'];
+    const ICONS = ['PentagonShape', 'HexagonShape', 'DiamondIcon', 'SquareShape', 'CircleShape', 'TriangleShape'];
 
     const produce = async (shape) => {
         if (animationState !== 'idle') return;
@@ -527,7 +574,7 @@ const FactorySim = () => {
                                 onClick={() => produce(s)} 
                                 disabled={animationState !== 'idle'}
                             >
-                                <span>{s.icon} {s.type} Blueprint</span>
+                                <span>{getShapeIcon(s.icon, 16, activeShape?.type === s.type ? '#0f172a' : s.color)} <span style={{ marginLeft: '0.3rem' }}>{s.type} Blueprint</span></span>
                                 <span style={{ fontSize: '0.6rem', fontWeight: 800 }}>Order →</span>
                             </motion.button>
                         ))}
@@ -560,22 +607,22 @@ const FactorySim = () => {
                         gap: '0.8rem'
                     }}>
                         {/* Interactive Gears */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            <motion.span 
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                            <motion.div 
                                 animate={animationState === 'manufacturing' ? { rotate: 360 } : {}} 
                                 transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }}
-                                style={{ fontSize: '2rem', color: '#1e293b' }}
+                                style={{ display: 'inline-block' }}
                             >
-                                ⚙
-                            </motion.span>
-                            <span style={{ fontSize: '2.8rem' }}>🏭</span>
-                            <motion.span 
+                                <GearIcon size={24} color="#1e293b" />
+                            </motion.div>
+                            <FactoryIcon size={44} color="#1e293b" />
+                            <motion.div 
                                 animate={animationState === 'manufacturing' ? { rotate: -360 } : {}} 
                                 transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }}
-                                style={{ fontSize: '2rem', color: '#1e293b' }}
+                                style={{ display: 'inline-block' }}
                             >
-                                ⚙
-                            </motion.span>
+                                <GearIcon size={24} color="#1e293b" />
+                            </motion.div>
                         </div>
 
                         <div style={{ 
@@ -634,10 +681,10 @@ const FactorySim = () => {
                                 marginBottom: '0.6rem',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.2rem',
+                                gap: '0.4rem',
                                 zIndex: 2
                             }}>
-                                <span>{typeObj.icon}</span>
+                                {getShapeIcon(typeObj.icon, 14, typeObj.color)}
                                 <span>{typeObj.type}s</span>
                             </div>
 
@@ -685,7 +732,7 @@ const FactorySim = () => {
                                                 boxShadow: `3px 3px 0 ${p.color}`,
                                             }}
                                         >
-                                            <span style={{ fontSize: '1.4rem' }}>{p.icon}</span>
+                                            {getShapeIcon(p.icon, 24, p.color)}
                                         </motion.div>
                                     ))}
                                 </AnimatePresence>
@@ -713,7 +760,7 @@ const FactorySim = () => {
                             zIndex: 20,
                         }}
                     >
-                        📩 request({activeShape.type})
+                                request({activeShape.type})
                     </motion.div>
                 )}
 
@@ -737,7 +784,7 @@ const FactorySim = () => {
                             zIndex: 20,
                         }}
                     >
-                        <span style={{ fontSize: '1.4rem' }}>{activeShape.icon}</span>
+                        {getShapeIcon(activeShape.icon, 24, activeShape.color)}
                     </motion.div>
                 )}
 
@@ -748,15 +795,15 @@ const FactorySim = () => {
 
 
 /* ══════════════════════════════════════════════════════════════
-   3. OBSERVER — Broadcast Tower 📡
+   3. OBSERVER — Broadcast Tower
    ══════════════════════════════════════════════════════════════ */
 const ObserverSim = () => {
     const [subscribers, setSubscribers] = useState([
-        { id: 1, name: 'EmailNotifier', icon: '📧', subscribed: true, active: false, msg: '' },
-        { id: 2, name: 'SMSNotifier', icon: '📱', subscribed: true, active: false, msg: '' },
-        { id: 3, name: 'PushNotifier', icon: '🔔', subscribed: true, active: false, msg: '' },
-        { id: 4, name: 'SlackWebhook', icon: '💬', subscribed: false, active: false, msg: '' },
-        { id: 5, name: 'ConsoleLogger', icon: '🖥️', subscribed: true, active: false, msg: '' },
+        { id: 1, name: 'EmailNotifier', icon: 'EmailIcon', subscribed: true, active: false, msg: '' },
+        { id: 2, name: 'SMSNotifier', icon: 'PhoneIcon', subscribed: true, active: false, msg: '' },
+        { id: 3, name: 'PushNotifier', icon: 'BellIcon', subscribed: true, active: false, msg: '' },
+        { id: 4, name: 'SlackWebhook', icon: 'SendIcon', subscribed: false, active: false, msg: '' },
+        { id: 5, name: 'ConsoleLogger', icon: 'LaptopIcon', subscribed: true, active: false, msg: '' },
     ]);
     const [publishing, setPublishing] = useState(false);
     const [wave, setWave] = useState(false);
@@ -767,7 +814,7 @@ const ObserverSim = () => {
     const [newSubName, setNewSubName] = useState('');
     const [customMsg, setCustomMsg] = useState('');
     const nextId = useRef(10);
-    const SUB_ICONS = ['📧', '📱', '🔔', '💬', '📟', '🖥️', '📺', '🔊'];
+    const SUB_ICONS = ['EmailIcon', 'PhoneIcon', 'BellIcon', 'SendIcon', 'LaptopIcon'];
 
     const getObserverPosition = (index, total) => {
         // Distribute evenly around a circle
@@ -885,7 +932,7 @@ const ObserverSim = () => {
                     </div>
 
                     <button className="btn btn-sm" style={{ background: '#ff6b9d', color: '#fff', border: '2px solid var(--border)', fontSize: '0.65rem', padding: '0.3rem 0.6rem', fontWeight: 800, cursor: 'pointer' }} onClick={publish} disabled={publishing || subscribers.filter(s => s.subscribed).length === 0}>
-                        📢 notifyObservers()
+                        notifyObservers()
                     </button>
                 </div>
             </div>
@@ -975,11 +1022,10 @@ const ObserverSim = () => {
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    fontSize: '0.6rem',
                                     zIndex: 15,
                                 }}
                             >
-                                ⚡
+                                <ZapIcon size={12} color="#fff" />
                             </motion.div>
                         );
                     })}
@@ -1016,7 +1062,7 @@ const ObserverSim = () => {
                                 cursor: 'default'
                             }}
                         >
-                            <span style={{ fontSize: '2rem' }}>📡</span>
+                            <SignalIcon size={32} color="#ff6b9d" />
                             <span style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', color: '#ff6b9d', marginTop: '2px' }}>
                                 {publishing ? 'Broadcasting' : 'Subject'}
                             </span>
@@ -1075,8 +1121,8 @@ const ObserverSim = () => {
                                         transition: 'all 0.3s'
                                     }}
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.2rem' }}>
-                                        <span style={{ fontSize: '1.2rem' }}>{sub.icon}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
+                                        {getObserverIcon(sub.icon, 18, sub.subscribed ? '#0f172a' : '#64748b')}
                                         <span style={{ fontSize: '0.62rem', fontWeight: 900, color: '#0f172a' }}>{sub.name}</span>
                                     </div>
                                     
@@ -1111,7 +1157,7 @@ const ObserverSim = () => {
                                             textAlign: 'center',
                                             wordBreak: 'break-all'
                                         }}>
-                                            📬 {sub.msg}
+                                            {sub.msg}
                                         </div>
                                     )}
 
@@ -1177,10 +1223,10 @@ const ObserverSim = () => {
                                 }}
                             >
                                 <div style={{ fontWeight: 800, color: '#0f172a' }}>"{m.msg}"</div>
-                                <div style={{ opacity: 0.7, marginTop: '2px', display: 'flex', justifyContent: 'space-between', color: '#334155', fontWeight: 700 }}>
-                                    <span>📡 Broadcasted</span>
-                                    <span>{m.count} notified</span>
-                                </div>
+                                        <div style={{ opacity: 0.7, marginTop: '2px', display: 'flex', justifyContent: 'space-between', color: '#334155', fontWeight: 700 }}>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><SignalIcon size={12} color="#ff6b9d" /> Broadcasted</span>
+                                            <span>{m.count} notified</span>
+                                        </div>
                             </motion.div>
                         ))}
                         {msgLog.length === 0 && (
@@ -1198,7 +1244,7 @@ const ObserverSim = () => {
                         fontWeight: 700,
                         lineHeight: 1.4
                     }}>
-                        💡 <strong>Interactive Hint:</strong> Click any observer node to toggle its subscription. When the Subject notifies observers, unsubscribed ones are ignored!
+                        <strong>Interactive Hint:</strong> Click any observer node to toggle its subscription. When the Subject notifies observers, unsubscribed ones are ignored!
                     </div>
                 </div>
             </div>
@@ -1208,7 +1254,7 @@ const ObserverSim = () => {
 
 
 /* ══════════════════════════════════════════════════════════════
-   4. DECORATOR — Layered Enhancement ☕
+   4. DECORATOR — Layered Enhancement
    ══════════════════════════════════════════════════════════════ */
 const DecoratorSim = () => {
     const [decorators, setDecorators] = useState([]);
@@ -1363,7 +1409,7 @@ const DecoratorSim = () => {
                             position: 'relative',
                             boxShadow: '4px 4px 0 var(--border)',
                         }}>
-                            <div style={{ fontSize: '2rem' }}>☕</div>
+                            <CoffeeIcon size={32} color="#fff" style={{ marginBottom: '0.2rem' }} />
                             <div style={{ fontSize: '0.68rem', fontWeight: 900, color: '#fff' }}>{baseName}</div>
                             <div style={{ fontSize: '0.55rem', color: '#ffd93d', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>₹{baseCost}</div>
                         </div>
@@ -1424,7 +1470,7 @@ const DecoratorSim = () => {
                             fontWeight: 900,
                             boxShadow: '1.5px 1.5px 0 var(--border)'
                         }}>
-                            <span>☕ {baseName} (Base)</span>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><CoffeeIcon size={14} /> {baseName} (Base)</span>
                             <span style={{ fontFamily: 'var(--font-mono)' }}>₹{baseCost}</span>
                         </div>
                     </div>
@@ -1440,7 +1486,7 @@ const DecoratorSim = () => {
                             Total: ₹{totalCost}
                         </div>
                         <div style={{ fontSize: '0.5rem', color: '#475569', textAlign: 'center', fontWeight: 700 }}>
-                            💡 Click any ring to remove that decorator layer
+                            Click any ring to remove that decorator layer
                         </div>
 
                         {/* Base editor */}
@@ -1457,7 +1503,7 @@ const DecoratorSim = () => {
 
 
 /* ══════════════════════════════════════════════════════════════
-   5. STRATEGY — Swap Algorithms 🎯
+   5. STRATEGY — Swap Algorithms
    ══════════════════════════════════════════════════════════════ */
 const StrategySim = () => {
     const [strategy, setStrategy] = useState(null);
@@ -1557,11 +1603,11 @@ const StrategySim = () => {
                             </span>
                         </div>
                         <div style={{ display: 'flex', gap: '0.3rem' }}>
-                            <button className="btn btn-sm" style={{ background: '#f8f9fa', fontSize: '0.6rem' }} onClick={randomize}>🎲 Randomize</button>
+                            <button className="btn btn-sm" style={{ background: '#f8f9fa', fontSize: '0.6rem', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }} onClick={randomize}><ShuffleIcon size={12} /> Randomize</button>
                             {strategy && (
                                 <button className="btn btn-sm" style={{ background: strategy.color, fontSize: '0.65rem' }}
                                     onClick={runSort} disabled={sorting}>
-                                    {sorting ? '⏳ Sorting...' : '▶ sort()'}
+                                    {sorting ? 'Sorting...' : 'sort()'}
                                 </button>
                             )}
                         </div>
@@ -1620,17 +1666,21 @@ export default function DesignPatternsSim() {
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* Pattern Selector Tabs */}
             <div style={{ display: 'flex', borderBottom: '3px solid var(--border)', flexShrink: 0 }}>
-                {PATTERNS.map(p => (
-                    <button key={p.id} onClick={() => setActivePattern(p.id)} style={{
-                        flex: 1, padding: '0.55rem', fontWeight: 800, fontSize: '0.72rem', cursor: 'pointer',
-                        background: activePattern === p.id ? p.color : 'var(--white)', border: 'none',
-                        borderRight: '2px solid var(--border)', fontFamily: 'var(--font-main)', color: 'var(--text)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem',
-                        transition: 'background 0.2s',
-                    }}>
-                        {p.icon} {p.name}
-                    </button>
-                ))}
+                {PATTERNS.map(p => {
+                    const IconComp = p.icon;
+                    return (
+                        <button key={p.id} onClick={() => setActivePattern(p.id)} style={{
+                            flex: 1, padding: '0.55rem', fontWeight: 800, fontSize: '0.72rem', cursor: 'pointer',
+                            background: activePattern === p.id ? p.color : 'var(--white)', border: 'none',
+                            borderRight: '2px solid var(--border)', fontFamily: 'var(--font-main)', color: 'var(--text)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+                            transition: 'background 0.2s',
+                        }}>
+                            <IconComp size={16} color={activePattern === p.id ? '#000000' : 'var(--text)'} />
+                            {p.name}
+                        </button>
+                    );
+                })}
             </div>
             {/* Full-height sim area */}
             <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
@@ -1677,22 +1727,25 @@ export default function DesignPatternsSim() {
             </div>
             <div style={{ fontSize: '0.65rem', fontWeight: 800, opacity: 0.4 }}>PATTERN CATEGORY</div>
             <div style={{ fontSize: '0.72rem', fontWeight: 700 }}>
-                {activePattern === 'singleton' || activePattern === 'factory' ? '🏗️ Creational' : activePattern === 'decorator' ? '🏗️ Structural' : '🔄 Behavioral'}
+                {activePattern === 'singleton' || activePattern === 'factory' ? 'Creational' : activePattern === 'decorator' ? 'Structural' : 'Behavioral'}
             </div>
         </div>
     );
 
+    const ActiveIcon = active?.icon;
     const RIGHT = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="panel">
-                <div className="panel-header" style={{ background: active?.color || '#4dd0c8' }}>{active?.icon} Algorithm Logic</div>
+                <div className="panel-header" style={{ background: active?.color || '#4dd0c8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    {ActiveIcon && <ActiveIcon size={16} color="#000" />} Algorithm Logic
+                </div>
                 <div style={{ padding: '0.75rem' }}>
                     <div style={{ fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.3rem' }}>{pd.title}</div>
                     <div style={{ fontSize: '0.78rem', lineHeight: 1.6, opacity: 0.8 }}>{pd.text}</div>
                 </div>
             </div>
             <div className="panel">
-                <div className="panel-header" style={{ background: '#ffd93d' }}>💡 Educational Insight</div>
+                <div className="panel-header" style={{ background: '#ffd93d' }}>Educational Insight</div>
                 <div style={{ padding: '0.75rem', fontSize: '0.78rem', lineHeight: 1.6 }}>
                     {activePattern === 'singleton' && 'Database connections, configuration managers, and thread pools typically use Singleton. Be careful — it can make testing harder!'}
                     {activePattern === 'factory' && 'Used extensively in frameworks: Document.createElement(), Calendar.getInstance(), NumberFormat.getInstance() — all are factories!'}
@@ -1709,7 +1762,7 @@ export default function DesignPatternsSim() {
     );
 
     return (
-        <ImmersiveLayout isActive={true} title="Design Patterns" icon="🧩" moduleLabel="OOP MODULE"
+        <ImmersiveLayout isActive={true} title="Design Patterns" icon={<PuzzleIcon size={22} />} moduleLabel="OOP MODULE"
             isRunning={false} isPaused={false} isFinished={false} speed={speed} onSpeedChange={setSpeed}
             onStart={() => { }} onPause={() => { }} onResume={() => { }} onStep={() => { }}
             onReset={() => setActivePattern('singleton')}
@@ -1720,7 +1773,7 @@ export default function DesignPatternsSim() {
             legend={PATTERNS.map(p => ({ color: p.color, label: p.name }))}>
             <div className="main-content">
                 <Link to="/oops" style={{ fontSize: '0.85rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← OOP Module</Link>
-                <h1>🧩 Design Patterns</h1>
+                <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><PuzzleIcon size={32} /> Design Patterns</h1>
             </div>
         </ImmersiveLayout>
     );

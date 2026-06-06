@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import { runFIFO, runLRU, runOptimal, runLFU } from './pageReplacement';
+import { FileIcon, CircleFilled, TrendUpIcon, AlertIcon, TargetIcon, GearIcon, ClipboardIcon, LightbulbIcon } from '../../components/Icons';
 
 const ALGOS = ['FIFO', 'LRU', 'Optimal', 'LFU'];
 
@@ -171,9 +172,9 @@ export default function PageReplacementSim() {
             {/* Performance Metrics */}
             <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
                 {[
-                    { label: 'Faults', val: totalFaults, color: 'var(--pink)', icon: '🔴' },
-                    { label: 'Hits', val: totalHits, color: 'var(--green)', icon: '🟢' },
-                    { label: 'Hit Rate', val: `${hitRate}%`, color: 'var(--yellow)', icon: '📈' },
+                    { label: 'Faults', val: totalFaults, color: 'var(--pink)', icon: <CircleFilled size={10} color="var(--text)" /> },
+                    { label: 'Hits', val: totalHits, color: 'var(--green)', icon: <CircleFilled size={10} color="var(--text)" /> },
+                    { label: 'Hit Rate', val: `${hitRate}%`, color: 'var(--yellow)', icon: <TrendUpIcon size={14} /> },
                 ].map(s => (
                     <div key={s.label} style={{ flex: 1, border: '3px solid var(--border)', borderRadius: '8px', background: s.color, padding: '0.5rem', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
                         <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.7, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
@@ -195,7 +196,7 @@ export default function PageReplacementSim() {
                             display: 'flex', alignItems: 'center', gap: '8px'
                         }}
                     >
-                        <span style={{ fontSize: '1.2rem' }}>{curStep.fault ? '⚠️' : '🎯'}</span>
+                        <span style={{ display: 'flex', alignItems: 'center' }}>{curStep.fault ? <AlertIcon size={18} /> : <TargetIcon size={18} />}</span>
                         <span>
                             {curStep.fault
                                 ? `PAGE FAULT: Page ${curStep.page} fetched from disk.`
@@ -258,8 +259,8 @@ export default function PageReplacementSim() {
 
             {conceptMode && (
                 <div style={{ marginTop: '0.5rem' }}>
-                    <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--green)', marginBottom: '0.5rem' }}>
-                        💡 Strategy: {algo}
+                    <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--green)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <LightbulbIcon size={14} /> Strategy: {algo}
                     </div>
                     <div style={{ fontSize: '0.78rem', background: 'rgba(46, 204, 113, 0.1)', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--green)' }}>
                         {exp.insight}
@@ -270,8 +271,8 @@ export default function PageReplacementSim() {
             <div style={{ marginTop: 'auto', borderTop: '2.5px dashed var(--border)', paddingTop: '1rem' }}>
                 <div style={{ fontSize: '0.72rem', opacity: 0.7, fontStyle: 'italic', lineHeight: 1.4 }}>
                     {curStep.fault
-                        ? '🔴 Each fault triggers disk I/O, which is expensive. Minimizing faults is the primary goal of paging algorithms.'
-                        : '🟢 A Page Hit means the data was already in memory. These are much faster than faults.'}
+                        ? 'Each fault triggers disk I/O, which is expensive. Minimizing faults is the primary goal of paging algorithms.'
+                        : 'A Page Hit means the data was already in memory. These are much faster than faults.'}
                 </div>
             </div>
         </div>
@@ -292,7 +293,7 @@ export default function PageReplacementSim() {
         <ImmersiveLayout
             isActive={isSimMode}
             title={`${algo} Paging`}
-            icon="📄"
+            icon={<FileIcon size={22} />}
             moduleLabel="OS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}
@@ -315,12 +316,16 @@ export default function PageReplacementSim() {
                 </div>
                 <div style={{ marginBottom: '1.5rem' }}>
                     <div className="section-header">OS · Memory Management</div>
-                    <h1 style={{ fontSize: '1.9rem', fontWeight: 700 }}>📄 Page Replacement Simulator</h1>
+                    <h1 style={{ fontSize: '1.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <FileIcon size={28} /> Page Replacement Simulator
+                    </h1>
                     <p style={{ opacity: 0.6, fontSize: '0.9rem', marginTop: '0.3rem' }}>Configure and launch an immersive, step-by-step visualization of page replacement algorithms.</p>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
                     <div className="panel">
-                        <div className="panel-header">⚙ Configuration</div>
+                        <div className="panel-header" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <GearIcon size={18} /> Configuration
+                        </div>
                         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             <div>
                                 <label className="form-label">Reference String (space separated)</label>
@@ -347,7 +352,9 @@ export default function PageReplacementSim() {
                         </div>
                     </div>
                     <div className="panel">
-                        <div className="panel-header">📋 About the Algorithms</div>
+                        <div className="panel-header" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <ClipboardIcon size={18} /> About the Algorithms
+                        </div>
                         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
                             {[
                                 { name: 'FIFO', desc: 'Evict the oldest page. Simple but prone to Belady\'s Anomaly.' },

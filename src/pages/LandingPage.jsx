@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { MonitorIcon, DatabaseIcon, GlobeIcon, CubeIcon, GitBranchIcon } from '../components/Icons';
 
 const MODULES = [
     {
         id: 'os',
         label: 'Operating Systems',
-        icon: '🖥',
+        icon: MonitorIcon,
         color: 'var(--yellow)',
         description: 'CPU Scheduling · Page Replacement · Banker\'s Algorithm · Disk Scheduling',
         sims: ['FCFS', 'SJF', 'SRTF', 'RR', 'MLFQ', 'LRU', 'Optimal', 'SCAN'],
@@ -14,7 +15,7 @@ const MODULES = [
     {
         id: 'dbms',
         label: 'DBMS',
-        icon: '🗄',
+        icon: DatabaseIcon,
         color: 'var(--cyan)',
         description: '2-Phase Locking · B+ Tree Index · Query Execution Plan',
         sims: ['2PL', 'B+ Tree', 'Query Plan', 'Deadlock'],
@@ -23,7 +24,7 @@ const MODULES = [
     {
         id: 'networks',
         label: 'Computer Networks',
-        icon: '🌐',
+        icon: GlobeIcon,
         color: 'var(--pink)',
         description: 'OSI Model · TCP/UDP · IP Subnetting · Routing Algorithms · HTTP/DNS',
         sims: ['OSI', 'TCP', 'UDP', 'Subnetting', 'Dijkstra', 'DNS', 'TLS'],
@@ -32,7 +33,7 @@ const MODULES = [
     {
         id: 'oops',
         label: 'OOP Concepts',
-        icon: '🧱',
+        icon: CubeIcon,
         color: 'var(--green)',
         description: 'Four Pillars · Inheritance · Abstract vs Interface · Design Patterns · SOLID · UML',
         sims: ['4 Pillars', 'MRO', 'Patterns', 'SOLID', 'UML', 'Contracts'],
@@ -41,7 +42,7 @@ const MODULES = [
     {
         id: 'git',
         label: 'Git & GitHub',
-        icon: '🌿',
+        icon: GitBranchIcon,
         color: '#a8e6cf',
         description: 'Commit DAG · Branching · Merge · Rebase · Remote Sync',
         sims: ['DAG Viz', 'Branch', 'Merge', 'Rebase', 'Push/Pull'],
@@ -97,6 +98,7 @@ export default function LandingPage() {
                 style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gridAutoRows: '1fr',
                     gap: '1.5rem',
                     marginBottom: '2.5rem',
                 }}
@@ -108,16 +110,20 @@ export default function LandingPage() {
                         initial="hidden"
                         animate="visible"
                         variants={cardVariants}
+                        style={{ height: '100%' }}
                     >
                         <Link
                             to={mod.path}
-                            style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+                            style={{ textDecoration: 'none', color: 'inherit', display: 'block', height: '100%' }}
                         >
                             <div
                                 className="panel"
                                 style={{
                                     cursor: 'pointer',
                                     transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.transform = 'translate(4px,4px)';
@@ -133,12 +139,12 @@ export default function LandingPage() {
                                     className="panel-header"
                                     style={{ background: mod.color, fontSize: '1.05rem', padding: '0.8rem 1rem' }}
                                 >
-                                    <span style={{ fontSize: '1.3rem' }}>{mod.icon}</span>
+                                    <span style={{ display: 'flex', alignItems: 'center' }}>{mod.icon({ size: 22 })}</span>
                                     <strong>{mod.label}</strong>
                                 </div>
 
                                 {/* Card body */}
-                                <div style={{ padding: '1.25rem' }}>
+                                <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
                                     <p style={{ fontSize: '0.88rem', opacity: 0.7, marginBottom: '1rem' }}>
                                         {mod.description}
                                     </p>
@@ -164,6 +170,7 @@ export default function LandingPage() {
 
                                     <div
                                         style={{
+                                            marginTop: 'auto',
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '0.4rem',

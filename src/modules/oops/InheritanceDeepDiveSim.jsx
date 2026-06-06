@@ -2,6 +2,10 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import {
+    PillarIcon, TerminalIcon, SaveIcon, GearIcon, ShuffleIcon, PlayIcon,
+    InfoIcon, ShieldIcon, LightbulbIcon, ZapIcon, AlertIcon, TreeIcon, WrenchIcon, TargetIcon
+} from '../../components/Icons';
 
 /* ══════════════════════════════════════════════════════════════════
    CONSTANTS & DEFAULT PRESETS WITH FIELDS & METHODS
@@ -28,8 +32,8 @@ const PRESETS = {
             id: 'Dog', parents: ['Animal'], color: '#ffd93d', x: 280, y: 220,
             fields: [{ id: 'f2', name: 'breed', type: 'String', value: '"Labrador"', visibility: '-' }],
             methods: [
-                { id: 'm2', name: 'speak', returnType: 'void', visibility: '+', response: 'Woof! Woof! 🐕', overridden: true },
-                { id: 'm3', name: 'fetch', returnType: 'void', visibility: '+', response: 'Fetching ball... 🎾' }
+                { id: 'm2', name: 'speak', returnType: 'void', visibility: '+', response: 'Woof! Woof!', overridden: true },
+                { id: 'm3', name: 'fetch', returnType: 'void', visibility: '+', response: 'Fetching ball...' }
             ]
         }
     ],
@@ -43,13 +47,13 @@ const PRESETS = {
             id: 'Dog', parents: ['Animal'], color: '#ffd93d', x: 280, y: 190,
             fields: [{ id: 'f2', name: 'breed', type: 'String', value: '"Labrador"', visibility: '-' }],
             methods: [
-                { id: 'm2', name: 'speak', returnType: 'void', visibility: '+', response: 'Woof! 🐕', overridden: true }
+                { id: 'm2', name: 'speak', returnType: 'void', visibility: '+', response: 'Woof!', overridden: true }
             ]
         },
         {
             id: 'Puppy', parents: ['Dog'], color: '#a8e6cf', x: 280, y: 350,
             fields: [{ id: 'f3', name: 'age', type: 'int', value: '1', visibility: '-' }],
-            methods: [{ id: 'm3', name: 'play', returnType: 'void', visibility: '+', response: 'Puppy plays with toys! 🧸' }]
+            methods: [{ id: 'm3', name: 'play', returnType: 'void', visibility: '+', response: 'Puppy plays with toys!' }]
         }
     ],
     Hierarchical: [
@@ -61,29 +65,29 @@ const PRESETS = {
         {
             id: 'Dog', parents: ['Animal'], color: '#ffd93d', x: 120, y: 220,
             fields: [{ id: 'f2', name: 'breed', type: 'String', value: '"Labrador"', visibility: '-' }],
-            methods: [{ id: 'm2', name: 'speak', returnType: 'void', visibility: '+', response: 'Woof! 🐕', overridden: true }]
+            methods: [{ id: 'm2', name: 'speak', returnType: 'void', visibility: '+', response: 'Woof!', overridden: true }]
         },
         {
             id: 'Cat', parents: ['Animal'], color: '#ff6b9d', x: 440, y: 220,
             fields: [{ id: 'f3', name: 'lives', type: 'int', value: '9', visibility: '-' }],
-            methods: [{ id: 'm3', name: 'speak', returnType: 'void', visibility: '+', response: 'Meow! 🐈', overridden: true }]
+            methods: [{ id: 'm3', name: 'speak', returnType: 'void', visibility: '+', response: 'Meow!', overridden: true }]
         }
     ],
     Multiple: [
         {
             id: 'Flyable', parents: [], color: '#b39ddb', x: 140, y: 40,
             fields: [],
-            methods: [{ id: 'm1', name: 'fly', returnType: 'void', visibility: '+', response: 'Flying high in the clouds! ☁️' }]
+            methods: [{ id: 'm1', name: 'fly', returnType: 'void', visibility: '+', response: 'Flying high in the clouds!' }]
         },
         {
             id: 'Swimmable', parents: [], color: '#4dd0c8', x: 420, y: 40,
             fields: [],
-            methods: [{ id: 'm2', name: 'swim', returnType: 'void', visibility: '+', response: 'Swimming deep in the ocean! 🌊' }]
+            methods: [{ id: 'm2', name: 'swim', returnType: 'void', visibility: '+', response: 'Swimming deep in the ocean!' }]
         },
         {
             id: 'Duck', parents: ['Flyable', 'Swimmable'], color: '#ffd93d', x: 280, y: 220,
             fields: [{ id: 'f1', name: 'quackVolume', type: 'int', value: '5', visibility: '-' }],
-            methods: [{ id: 'm3', name: 'quack', returnType: 'void', visibility: '+', response: 'Quack! Quack! 🦆' }]
+            methods: [{ id: 'm3', name: 'quack', returnType: 'void', visibility: '+', response: 'Quack! Quack!' }]
         }
     ],
     Hybrid: [
@@ -95,7 +99,7 @@ const PRESETS = {
         {
             id: 'Dog', parents: ['Animal'], color: '#ffd93d', x: 120, y: 170,
             fields: [],
-            methods: [{ id: 'm2', name: 'speak', returnType: 'void', visibility: '+', response: 'Woof! 🐕', overridden: true }]
+            methods: [{ id: 'm2', name: 'speak', returnType: 'void', visibility: '+', response: 'Woof!', overridden: true }]
         },
         {
             id: 'Cat', parents: ['Animal'], color: '#ff6b9d', x: 440, y: 170,
@@ -427,8 +431,8 @@ const ClassHierarchyBuilder = ({ nodes, onAddClass, onUpdateClass, editNode, onC
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', color: 'var(--text)' }}>
-            <div style={{ fontSize: '0.58rem', fontWeight: 900, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.6 }}>
-                {editNode ? `✏️ Edit Class: ${editNode.id}` : '🔧 Class Builder'}
+            <div style={{ fontSize: '0.58rem', fontWeight: 900, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.6, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                {editNode ? `Edit Class: ${editNode.id}` : <><WrenchIcon size={12} /> Class Builder</>}
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
@@ -497,8 +501,8 @@ const ClassHierarchyBuilder = ({ nodes, onAddClass, onUpdateClass, editNode, onC
             </div>
 
             <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.3rem' }}>
-                <NeonBtn onClick={handleCreate} color="#ffd93d" style={{ flex: 1, justifyContent: 'center' }} disabled={!name.trim()}>
-                    {editNode ? '💾 Save Changes' : '📦 Add Class Card'}
+                <NeonBtn onClick={handleCreate} color="#ffd93d" style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '0.25rem' }} disabled={!name.trim()}>
+                    {editNode ? <><SaveIcon size={12} /> Save Changes</> : 'Add Class Card'}
                 </NeonBtn>
                 {editNode && (
                     <NeonBtn onClick={onCancelEdit} color="#666666" style={{ justifyContent: 'center' }}>
@@ -517,12 +521,12 @@ const LiveCodePanel = ({ nodes, codeLang, onLangChange }) => {
     const code = codeLang === 'java' ? genJava(nodes) : genPython(nodes);
     return (
         <div className="panel">
-            <div className="panel-header" style={{ background: 'var(--yellow)', color: '#000000', padding: '0.4rem 0.6rem', fontSize: '0.68rem' }}>💻 Live Code</div>
+            <div className="panel-header" style={{ background: 'var(--yellow)', color: '#000000', padding: '0.4rem 0.6rem', fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><TerminalIcon size={14} color="#000000" /> Live Code</div>
             <div style={{ padding: '0.4rem' }}>
                 <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '0.3rem' }}>
                     {['java', 'python'].map(l => (
                         <NeonBtn key={l} onClick={() => onLangChange(l)} color={codeLang === l ? '#58a6ff' : '#666666'} small>
-                            {l === 'java' ? '☕ Java' : '🐍 Python'}
+                            {l === 'java' ? 'Java' : 'Python'}
                         </NeonBtn>
                     ))}
                 </div>
@@ -563,8 +567,8 @@ const ClassNodeCard = ({ node, isActive, mroPath, foundNodeId, currentMroSearch,
                 padding: '0.4rem 0.6rem', borderBottom: '3px solid var(--border)', fontWeight: 800, fontSize: '0.75rem',
                 color: '#000000', background: node.color, display: 'flex', alignItems: 'center', gap: '0.3rem'
             }}>
-                🌳 {node.id}
-                <button onClick={e => { e.stopPropagation(); onEdit(node); }} style={{ marginLeft: 'auto', border: 'none', background: 'rgba(0,0,0,0.15)', borderRadius: '4px', padding: '2px 5px', cursor: 'pointer', fontSize: '0.55rem', fontWeight: 900, color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>✏️ Edit</button>
+                <TreeIcon size={14} color="#000000" /> {node.id}
+                <button onClick={e => { e.stopPropagation(); onEdit(node); }} style={{ marginLeft: 'auto', border: 'none', background: 'rgba(0,0,0,0.15)', borderRadius: '4px', padding: '2px 5px', cursor: 'pointer', fontSize: '0.55rem', fontWeight: 900, color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>Edit</button>
                 <button onClick={e => { e.stopPropagation(); onRemove(node.id); }} style={{ border: 'none', background: 'rgba(0,0,0,0.15)', borderRadius: '50%', width: 16, height: 16, cursor: 'pointer', fontSize: '0.55rem', fontWeight: 900, color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
             
@@ -965,7 +969,7 @@ const OverrideOverloadPanel = ({ nodes }) => {
                                 padding: '0.4rem 0.6rem', borderBottom: '3px solid var(--border)', fontWeight: 800, fontSize: '0.7rem',
                                 color: '#000000', background: parentNode.color || 'var(--cyan)'
                             }}>
-                                🌳 {parentNode.id} VTable (vptr: {getVTableBaseAddress(parentNode.id)})
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><TreeIcon size={14} color="#000000" /> {parentNode.id} VTable (vptr: {getVTableBaseAddress(parentNode.id)})</span>
                             </div>
                             <div style={{ padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                                 <div style={{ display: 'flex', fontSize: '0.5rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.5, borderBottom: '1px solid var(--border)', paddingBottom: '0.2rem', fontFamily: 'var(--font-mono)' }}>
@@ -1030,7 +1034,7 @@ const OverrideOverloadPanel = ({ nodes }) => {
                             padding: '0.4rem 0.6rem', borderBottom: '3px solid var(--border)', fontWeight: 800, fontSize: '0.7rem',
                             color: '#000000', background: 'var(--bg-outer)', textAlign: 'center'
                         }}>
-                            💻 Compiled Code Segment (Executable Blocks)
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}><TerminalIcon size={14} color="#000000" /> Compiled Code Segment (Executable Blocks)</span>
                         </div>
                         <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto', flex: 1 }}>
                             {codeBlocks.map(block => {
@@ -1080,7 +1084,7 @@ const OverrideOverloadPanel = ({ nodes }) => {
                                 padding: '0.4rem 0.6rem', borderBottom: '3px solid var(--border)', fontWeight: 800, fontSize: '0.7rem',
                                 color: '#000000', background: childNode.color
                             }}>
-                                🌳 {childNode.id} VTable (vptr: {getVTableBaseAddress(childNode.id)})
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><TreeIcon size={14} color="#000000" /> {childNode.id} VTable (vptr: {getVTableBaseAddress(childNode.id)})</span>
                             </div>
                             <div style={{ padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                                 <div style={{ display: 'flex', fontSize: '0.5rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.5, borderBottom: '1px solid var(--border)', paddingBottom: '0.2rem', fontFamily: 'var(--font-mono)' }}>
@@ -1196,7 +1200,7 @@ const RuntimeDispatchPanel = ({
     if (dispatchPairs.length === 0) {
         return (
             <div style={{ height: '100%', width: '100%', background: 'var(--bg)', padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.8rem', color: 'var(--text)' }}>
-                <div style={{ fontSize: '2.5rem' }}>🎯</div>
+                <TargetIcon size={48} color="var(--pink)" />
                 <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>No Polymorphic Pairs Available</div>
                 <div style={{ fontSize: '0.7rem', opacity: 0.6, textAlign: 'center', maxWidth: 320, lineHeight: 1.5 }}>
                     Polymorphism requires parent-child inheritance. Add classes on the canvas with parents to start!
@@ -1282,7 +1286,7 @@ const RuntimeDispatchPanel = ({
             case 4:
                 return `Code execution: The JVM jumps to address ${res ? getMethodAddress(res.classId, selectedMethod) : '0x0000'} in the Code Segment and runs the instructions compiled for '${res?.classId}::${selectedMethod}()'. Console prints: "${res?.method.response || 'calling ' + selectedMethod}"!`;
             default:
-                return `Dynamic dispatch tracing. Select ref/object setup and click "⚡ Dispatch" (or press Start/Step on the top simulation toolbar) to step through how virtual methods are resolved at runtime.`;
+                return `Dynamic dispatch tracing. Select ref/object setup and click "Dispatch" (or press Start/Step on the top simulation toolbar) to step through how virtual methods are resolved at runtime.`;
         }
     };
 
@@ -1374,7 +1378,7 @@ const RuntimeDispatchPanel = ({
                 )}
                 <div style={{ display: 'flex', gap: '0.3rem', marginLeft: 'auto' }}>
                     <button className="btn btn-yellow btn-sm" onClick={runSimulation} disabled={step > 0 && step < 4} style={{ fontSize: '0.68rem', padding: '0.35rem 0.75rem' }}>
-                        ⚡ Dispatch
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><ZapIcon size={12} color="#000000" /> Dispatch</span>
                     </button>
                     {step > 0 && (
                         <button className="btn btn-sm" onClick={onReset} style={{ fontSize: '0.68rem', padding: '0.35rem 0.75rem', background: 'var(--white)', border: '2px solid var(--border)' }}>
@@ -1642,7 +1646,7 @@ const RuntimeDispatchPanel = ({
             }}>
                 <span style={{ fontWeight: 800, color: 'var(--pink)' }}>System Console Log:</span>
                 <div style={{ marginTop: '0.2rem', color: step === 4 ? 'var(--green)' : 'var(--text)', fontWeight: step === 4 ? 800 : 500 }}>
-                    {log || 'Click "⚡ Dispatch" or use simulation controls to start step-by-step memory tracking.'}
+                    {log || 'Click "Dispatch" or use simulation controls to start step-by-step memory tracking.'}
                 </div>
             </div>
         </div>
@@ -2093,7 +2097,7 @@ export default function InheritanceDeepDiveSim() {
             {/* Presets selector */}
             <div className="panel">
                 <div className="panel-header" style={{ background: 'var(--yellow)', color: '#000000', padding: '0.4rem 0.6rem', fontSize: '0.68rem' }}>
-                    📂 Class Presets
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><PillarIcon size={14} /> Class Presets</span>
                 </div>
                 <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                     {Object.keys(PRESETS).map(k => (
@@ -2109,7 +2113,7 @@ export default function InheritanceDeepDiveSim() {
                                 transform: 'none',
                                 boxShadow: 'none'
                             }}>
-                            {treeType === k ? '👉 ' : ''}{k}
+                            {treeType === k ? '> ' : ''}{k}
                         </button>
                     ))}
                 </div>
@@ -2118,7 +2122,7 @@ export default function InheritanceDeepDiveSim() {
             {/* Stats panel */}
             <div className="panel">
                 <div className="panel-header" style={{ background: 'var(--cyan)', color: '#000000', padding: '0.4rem 0.6rem', fontSize: '0.68rem' }}>
-                    📊 System Stats
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><ActivityIcon size={14} /> System Stats</span>
                 </div>
                 <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.2rem', fontSize: '0.65rem', fontFamily: 'var(--font-mono)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -2136,7 +2140,7 @@ export default function InheritanceDeepDiveSim() {
             {selectedClassMro.length > 0 && (
                 <div className="panel">
                     <div className="panel-header" style={{ background: 'var(--green)', color: '#000000', padding: '0.4rem 0.6rem', fontSize: '0.68rem' }}>
-                        🌿 C3 MRO Order
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><TreeIcon size={14} /> C3 MRO Order</span>
                     </div>
                     <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.3rem', fontSize: '0.62rem', fontFamily: 'var(--font-mono)' }}>
                         <div style={{ opacity: 0.6, fontSize: '0.55rem' }}>Method Resolution Path:</div>
@@ -2160,14 +2164,14 @@ export default function InheritanceDeepDiveSim() {
             <LiveCodePanel nodes={nodes} codeLang={codeLang} onLangChange={setCodeLang} />
             
             <div className="panel">
-                <div className="panel-header" style={{ background: 'var(--cyan)', color: '#000000', padding: '0.4rem 0.6rem', fontSize: '0.68rem' }}>🧠 Method Resolution Order</div>
+                <div className="panel-header" style={{ background: 'var(--cyan)', color: '#000000', padding: '0.4rem 0.6rem', fontSize: '0.68rem' }}>Method Resolution Order</div>
                 <div style={{ padding: '0.5rem', fontSize: '0.68rem', lineHeight: 1.5, color: 'var(--text)' }}>
                     MRO defines the search path when looking up methods in multiple inheritance structures. Python uses <strong>C3 Linearization</strong> to merge parent lookup tables, preventing conflicts.
                 </div>
             </div>
             
             <div className="panel">
-                <div className="panel-header" style={{ background: 'var(--pink)', color: '#000000', padding: '0.4rem 0.6rem', fontSize: '0.68rem' }}>💡 Diamond Problem</div>
+                <div className="panel-header" style={{ background: 'var(--pink)', color: '#000000', padding: '0.4rem 0.6rem', fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><LightbulbIcon size={14} color="#000000" /> Diamond Problem</div>
                 <div style={{ padding: '0.5rem', fontSize: '0.68rem', lineHeight: 1.5, color: 'var(--text)' }}>
                     Occurs when a child class inherits from multiple parents who share a common ancestor. Trace hybrid presets to see MRO path routing resolution in real time.
                 </div>
@@ -2180,7 +2184,7 @@ export default function InheritanceDeepDiveSim() {
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* View selectors */}
             <div style={{ display: 'flex', borderBottom: 'var(--border-width) solid var(--border)', flexShrink: 0, background: 'var(--white)' }}>
-                {[['tree', '🌳 Inheritance Canvas'], ['override', '⚔️ Overriding'], ['dispatch', '🎯 Runtime Dispatch']].map(([k, label]) => (
+                {[['tree', 'Inheritance Canvas'], ['override', 'Overriding'], ['dispatch', 'Runtime Dispatch']].map(([k, label]) => (
                     <button key={k} onClick={() => setView(k)} style={{
                         flex: 1, padding: '0.55rem', fontWeight: 800, fontSize: '0.75rem', cursor: 'pointer',
                         background: view === k ? 'var(--yellow)' : 'transparent',
@@ -2240,7 +2244,7 @@ export default function InheritanceDeepDiveSim() {
                                 maxHeight: 'calc(100% - 30px)', overflowY: 'auto'
                             }}>
                                 <div style={{ background: 'var(--yellow)', color: '#000000', padding: '0.4rem 0.6rem', borderBottom: 'var(--border-width) solid var(--border)', fontWeight: 800, fontSize: '0.72rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <span>{editingClassNode ? `✏️ Edit Class: ${editingClassNode.id}` : '🔧 Class Builder'}</span>
+                                    <span>{editingClassNode ? `Edit Class: ${editingClassNode.id}` : 'Class Builder'}</span>
                                     <button onClick={handleCancelEdit} style={{ border: 'none', background: 'rgba(0,0,0,0.1)', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 900, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                                 </div>
                                 <div style={{ padding: '0.6rem' }}>
@@ -2249,13 +2253,13 @@ export default function InheritanceDeepDiveSim() {
                             </div>
                         ) : (
                             <button onClick={() => { setEditingClassNode(null); setShowBuilder(true); }} className="btn btn-yellow" style={{ position: 'absolute', top: 15, left: 15, zIndex: 100, fontSize: '0.7rem', padding: '0.4rem 0.8rem', boxShadow: 'var(--shadow-sm)' }}>
-                                🔧 Open Class Builder
+                                Open Class Builder
                             </button>
                         )}
 
                         {/* Drag and Drop instructions */}
                         <div style={{ position: 'absolute', bottom: 10, left: 10, display: 'flex', gap: '0.4rem', zIndex: 10, pointerEvents: 'none', opacity: 0.6, fontSize: '0.55rem', color: 'var(--text)', fontWeight: 800 }}>
-                            ✋ Drag any class card card to arrange UML structure. Click method (+ name) to visual trace MRO.
+                            Drag any class card to arrange UML structure. Click method name to trace MRO.
                         </div>
 
                         {/* Interactive MRO Step Tracker */}
@@ -2277,7 +2281,7 @@ export default function InheritanceDeepDiveSim() {
                             {mroError && (
                                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
                                     style={{ position: 'absolute', bottom: 15, right: 15, background: 'var(--white)', border: '2px solid var(--border)', color: '#d73a49', padding: '0.5rem 0.8rem', borderRadius: 'var(--radius)', fontFamily: 'var(--font-mono)', fontSize: '0.62rem', fontWeight: 800, maxWidth: 300, zIndex: 10, boxShadow: 'var(--shadow)' }}>
-                                    ⚠️ {mroError}
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><AlertIcon size={12} color="#d73a49" /> {mroError}</span>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -2304,7 +2308,7 @@ export default function InheritanceDeepDiveSim() {
     );
 
     return (
-        <ImmersiveLayout isActive={true} title="Inheritance & Polymorphism Deep Dive" icon="🌳" moduleLabel="OOP MODULE"
+        <ImmersiveLayout isActive={true} title="Inheritance & Polymorphism Deep Dive" icon={<TreeIcon size={22} />} moduleLabel="OOP MODULE"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished} speed={speed} onSpeedChange={setSpeed}
             onStart={handleStart} onPause={handlePause} onResume={handleResume} onReset={handleReset} onStep={handleStep}
             currentStepNum={currentStep} totalSteps={totalSteps}
@@ -2315,7 +2319,7 @@ export default function InheritanceDeepDiveSim() {
             <StyleOverrides />
             <div className="main-content">
                 <Link to="/oops" style={{ fontSize: '0.85rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← OOP Module</Link>
-                <h1>🌳 Inheritance Deep Dive</h1>
+                <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><TreeIcon size={32} /> Inheritance Deep Dive</h1>
             </div>
         </ImmersiveLayout>
     );

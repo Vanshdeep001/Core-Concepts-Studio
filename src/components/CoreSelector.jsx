@@ -11,7 +11,7 @@ export default function CoreSelector({ cores, onChange }) {
                         className={`chip${cores === c ? ' active' : ''}`}
                         onClick={() => onChange(c)}
                     >
-                        {c === 1 ? '⬛ Single' : c === 2 ? '⬛⬛ Dual' : '⬛⬛⬛⬛ Quad'}
+                        {c === 1 ? 'Single Core' : c === 2 ? 'Dual Core' : 'Quad Core'}
                     </button>
                 ))}
             </div>

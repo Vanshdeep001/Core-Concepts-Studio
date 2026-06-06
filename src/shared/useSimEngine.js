@@ -23,7 +23,7 @@ export default function useSimEngine(speed = 700) {
             setCurrentStep(newIdx - 1);
             setIsRunning(false); setIsFinished(true);
             clearInterval(timerRef.current);
-            setLogs(prev => [...prev, { step: newIdx, message: '✅ Simulation complete', detail: '' }]);
+            setLogs(prev => [...prev, { step: newIdx, message: 'Simulation complete', detail: '' }]);
             return;
         }
         setCurrentStep(newIdx);

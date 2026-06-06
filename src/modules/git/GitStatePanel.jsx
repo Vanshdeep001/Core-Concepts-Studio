@@ -1,5 +1,6 @@
 // GitStatePanel.jsx — Left panel: Working Dir, Staging Area, HEAD inspector
 import { motion, AnimatePresence } from 'framer-motion';
+import { EyeIcon, GitBranchIcon, FileIcon, BoxIcon, SaveIcon, GlobeIcon, InboxIcon } from '../../components/Icons';
 
 const STATUS_STYLES = {
     untracked: { bg: '#fff3cd', color: '#856404', label: 'NEW' },
@@ -34,7 +35,7 @@ function FileRow({ filename, status, content, onFileClick }) {
             <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {filename}
             </span>
-            {status !== 'deleted' && <span style={{ fontSize: '0.65rem', opacity: 0.4 }}>✏️</span>}
+            {status !== 'deleted' && <span style={{ fontSize: '0.65rem', opacity: 0.4 }}>*</span>}
         </motion.div>
     );
 }
@@ -67,7 +68,7 @@ export default function GitStatePanel({ state, conceptMode, onFileClick }) {
     if (!state.initialized) {
         return (
             <div style={{ opacity: 0.4, textAlign: 'center', paddingTop: '2rem', fontSize: '0.85rem' }}>
-                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🗂️</div>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}><FileIcon size={32} /></div>
                 Run <strong>git init</strong> to start
             </div>
         );
@@ -84,7 +85,7 @@ export default function GitStatePanel({ state, conceptMode, onFileClick }) {
         <div style={{ fontSize: '0.82rem' }}>
 
             {/* HEAD */}
-            <Section title="HEAD" color="#ffd93d" icon="👁️" count={1}>
+            <Section title="HEAD" color="#ffd93d" icon={<EyeIcon size={14} />} count={1}>
                 <div style={{
                     padding: '0.5rem 0.6rem', background: '#fffbea',
                     border: '2px solid var(--border)', borderRadius: 6,
@@ -106,7 +107,7 @@ export default function GitStatePanel({ state, conceptMode, onFileClick }) {
             </Section>
 
             {/* Branches */}
-            <Section title="Branches" color="#66d9ef" icon="🌿" count={Object.keys(branches).length}>
+            <Section title="Branches" color="#66d9ef" icon={<GitBranchIcon size={14} />} count={Object.keys(branches).length}>
                 <AnimatePresence>
                     {Object.entries(branches).map(([name, hash]) => (
                         <motion.div
@@ -135,7 +136,7 @@ export default function GitStatePanel({ state, conceptMode, onFileClick }) {
             <Section
                 title="Working Dir"
                 color="#a8e6cf"
-                icon="📁"
+                icon={<FileIcon size={14} />}
                 count={Object.keys(workingDirectory).length}
             >
                 <AnimatePresence>
@@ -155,7 +156,7 @@ export default function GitStatePanel({ state, conceptMode, onFileClick }) {
             <Section
                 title="Staging Area"
                 color="#ffb347"
-                icon="📦"
+                icon={<BoxIcon size={14} />}
                 count={Object.keys(stagingArea).length}
             >
                 <AnimatePresence>
@@ -172,7 +173,7 @@ export default function GitStatePanel({ state, conceptMode, onFileClick }) {
             </Section>
 
             {/* Current Files (committed snapshot) */}
-            <Section title="Committed Snapshot" color="#e8d5f5" icon="📸" count={currentFiles.length}>
+            <Section title="Committed Snapshot" color="#e8d5f5" icon={<SaveIcon size={14} />} count={currentFiles.length}>
                 <AnimatePresence>
                     {currentFiles.length === 0 ? (
                         <div style={{ opacity: 0.4, fontSize: '0.75rem', fontStyle: 'italic', paddingLeft: '0.25rem' }}>No committed files</div>
@@ -186,7 +187,7 @@ export default function GitStatePanel({ state, conceptMode, onFileClick }) {
 
             {/* Remote */}
             {remote && (
-                <Section title="Remote (origin)" color="#c3aed6" icon="🌐" count={Object.keys(remote.branches || {}).length}>
+                <Section title="Remote (origin)" color="#c3aed6" icon={<GlobeIcon size={14} />} count={Object.keys(remote.branches || {}).length}>
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', padding: '0.3rem 0.5rem', background: '#f5f0ff', border: '1.5px solid var(--border)', borderRadius: 6 }}>
                         <div style={{ fontWeight: 700, marginBottom: '0.25rem', wordBreak: 'break-all' }}>{remote.url}</div>
                         {Object.entries(remote.branches || {}).map(([name, hash]) => (
@@ -198,7 +199,7 @@ export default function GitStatePanel({ state, conceptMode, onFileClick }) {
 
             {/* Stash */}
             {stash?.length > 0 && (
-                <Section title="Stash" color="#ffe0b2" icon="🗄️" count={stash.length}>
+                <Section title="Stash" color="#ffe0b2" icon={<InboxIcon size={14} />} count={stash.length}>
                     {stash.map((entry, i) => (
                         <div key={i} style={{
                             padding: '0.3rem 0.5rem', marginBottom: '0.25rem',

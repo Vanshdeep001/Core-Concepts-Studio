@@ -2,15 +2,35 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import {
+    ScissorsIcon, PlugIcon, SyncIcon, PlateIcon, ShuffleIcon,
+    XIcon, AlertIcon, LinkIcon, CheckIcon, WrenchIcon, ShieldIcon,
+    CircleShape, SquareShape, RectShape, TriangleShape, PentagonShape, HexagonShape,
+    GearIcon, LaptopIcon, ClockIcon, FoodIcon, CoffeeIcon, SleepIcon,
+    ClipboardIcon, HandshakeIcon, BlockIcon, CpuIcon, EmailIcon, PhoneIcon,
+    BellIcon, TargetIcon, DiamondIcon, PillarIcon, BuildIcon
+} from '../../components/Icons';
 
 /* ── PRINCIPLES DATA ── */
 const PRINCIPLES = [
-    { id: 'srp', name: 'SRP', full: 'Single Responsibility', icon: '🔪', color: '#ffd93d' },
-    { id: 'ocp', name: 'OCP', full: 'Open/Closed', icon: '🔌', color: '#66d9ef' },
-    { id: 'lsp', name: 'LSP', full: 'Liskov Substitution', icon: '🔄', color: '#a8e6cf' },
-    { id: 'isp', name: 'ISP', full: 'Interface Segregation', icon: '🍽️', color: '#ff6b9d' },
-    { id: 'dip', name: 'DIP', full: 'Dependency Inversion', icon: '🔀', color: '#b39ddb' },
+    { id: 'srp', name: 'SRP', full: 'Single Responsibility', color: '#ffd93d' },
+    { id: 'ocp', name: 'OCP', full: 'Open/Closed', color: '#66d9ef' },
+    { id: 'lsp', name: 'LSP', full: 'Liskov Substitution', color: '#a8e6cf' },
+    { id: 'isp', name: 'ISP', full: 'Interface Segregation', color: '#ff6b9d' },
+    { id: 'dip', name: 'DIP', full: 'Dependency Inversion', color: '#b39ddb' },
 ];
+
+const getPrincipleIcon = (id, size = 16) => {
+    switch (id) {
+        case 'srp': return <ScissorsIcon size={size} />;
+        case 'ocp': return <PlugIcon size={size} />;
+        case 'lsp': return <SyncIcon size={size} />;
+        case 'isp': return <PlateIcon size={size} />;
+        case 'dip': return <ShuffleIcon size={size} />;
+        default: return null;
+    }
+};
+
 
 /* ── SHARED STYLES ── */
 const SIM_WRAP = { width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'auto', padding: '1rem' };
@@ -48,7 +68,7 @@ const Particles = ({ active, color = '#ffd93d', count = 12, cx = 200, cy = 200 }
 
 
 /* ══════════════════════════════════════════════════════════════
-   1. SRP — Swiss Army Knife → Specialized Tools 🔪→🧰
+   1. SRP — Swiss Army Knife to Specialized Tools
    ══════════════════════════════════════════════════════════════ */
 const SRPSim = () => {
     const [phase, setPhase] = useState('violation');
@@ -113,7 +133,7 @@ const SRPSim = () => {
                             transition={phase === 'exploding' ? { duration: 0.8 } : { duration: 4, repeat: Infinity }}
                             style={{ border: '4px solid #e53e3e', borderRadius: '16px', overflow: 'hidden', maxWidth: 500, boxShadow: '0 0 25px rgba(229,62,62,0.25), 5px 5px 0 var(--border)' }}>
                             <div style={{ background: '#e53e3e', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ fontWeight: 900, fontSize: '0.85rem', color: '#fff' }}>❌ {className} (GOD CLASS)</span>
+                                <span style={{ fontWeight: 900, fontSize: '0.85rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><XIcon size={14} color="#fff" /> {className} (GOD CLASS)</span>
                                 <span style={{ fontSize: '0.6rem', color: '#ffcece', fontWeight: 700 }}>{allMethods.length} methods • {responsibilities.length} responsibilities</span>
                             </div>
                             <div style={{ padding: '0.6rem', display: 'flex', flexWrap: 'wrap', gap: '4px', background: 'var(--white)' }}>
@@ -122,14 +142,14 @@ const SRPSim = () => {
                                         animate={{ opacity: [0.7, 1, 0.7] }}
                                         transition={{ duration: 2, delay: mi * 0.1, repeat: Infinity }}
                                         style={{ padding: '0.2rem 0.5rem', background: resp.color + '30', border: `1.5px solid ${resp.color}`, borderRadius: '5px', fontSize: '0.62rem', fontFamily: 'var(--font-mono)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
-                                        {m} <span style={{ fontSize: '0.5rem', color: '#e53e3e', fontWeight: 900 }}>✗</span>
+                                        {m} <XIcon size={10} color="#e53e3e" />
                                     </motion.span>
                                 )))}
                             </div>
                         </motion.div>
                         <motion.div animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.02, 1] }} transition={{ duration: 1.5, repeat: Infinity }}
-                            style={{ background: '#fff5f5', border: '2px solid #e53e3e', borderRadius: '8px', padding: '0.35rem 0.8rem', fontSize: '0.68rem', fontWeight: 800, color: '#e53e3e' }}>
-                            💥 {responsibilities.length} different reasons to change — violates SRP!
+                            style={{ background: '#fff5f5', border: '2px solid #e53e3e', borderRadius: '8px', padding: '0.35rem 0.8rem', fontSize: '0.68rem', fontWeight: 800, color: '#e53e3e', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <AlertIcon size={14} color="#e53e3e" /> {responsibilities.length} different reasons to change — violates SRP!
                         </motion.div>
                     </motion.div>
                 ) : (
@@ -137,8 +157,8 @@ const SRPSim = () => {
                         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', width: '100%', maxWidth: 600 }}>
                         {/* Central hub label */}
                         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }}
-                            style={{ background: '#ffd93d', border: '2px solid var(--border)', borderRadius: '20px', padding: '0.3rem 1rem', fontWeight: 900, fontSize: '0.72rem', boxShadow: '3px 3px 0 var(--border)' }}>
-                            🔗 {className} — Decomposed
+                            style={{ background: '#ffd93d', border: '2px solid var(--border)', borderRadius: '20px', padding: '0.3rem 1rem', fontWeight: 900, fontSize: '0.72rem', boxShadow: '3px 3px 0 var(--border)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <LinkIcon size={14} /> {className} — Decomposed
                         </motion.div>
                         {/* Split services grid */}
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
@@ -157,7 +177,7 @@ const SRPSim = () => {
                                         transition: 'border-color 0.2s, box-shadow 0.2s',
                                     }}>
                                     <div style={{ background: resp.color, padding: '0.3rem 0.5rem', borderBottom: '2px solid var(--border)', fontWeight: 800, fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                        ✓ {resp.name}
+                                        <CheckIcon size={12} /> {resp.name}
                                     </div>
                                     <div style={{ padding: '0.35rem 0.4rem' }}>
                                         {resp.methods.map((m, mi) => (
@@ -171,16 +191,16 @@ const SRPSim = () => {
                             ))}
                         </div>
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-                            style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.3rem 0.8rem', fontSize: '0.66rem', fontWeight: 800, color: '#38a169' }}>
-                            ✅ Each class has exactly ONE reason to change
+                            style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.3rem 0.8rem', fontSize: '0.66rem', fontWeight: 800, color: '#38a169', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <CheckIcon size={14} color="#38a169" /> Each class has exactly ONE reason to change
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <button className="btn btn-sm" style={{ background: phase === 'clean' ? '#a8e6cf' : '#ffd93d', marginTop: '0.75rem', zIndex: 2 }}
+            <button className="btn btn-sm" style={{ background: phase === 'clean' ? '#a8e6cf' : '#ffd93d', marginTop: '0.75rem', zIndex: 2, display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                 onClick={handleApply}>
-                {phase === 'clean' ? '↺ Show God Class' : '🔪 Split Responsibilities'}
+                {phase === 'clean' ? (<><SyncIcon size={14} /> Show God Class</>) : (<><ScissorsIcon size={14} /> Split Responsibilities</>)}
             </button>
         </div>
     );
@@ -188,7 +208,7 @@ const SRPSim = () => {
 
 
 /* ══════════════════════════════════════════════════════════════
-   2. OCP — Plug & Play Interface Extension 🔌
+   2. OCP — Plug & Play Interface Extension
    ══════════════════════════════════════════════════════════════ */
 const OCPSim = () => {
     const [applied, setApplied] = useState(false);
@@ -200,13 +220,13 @@ const OCPSim = () => {
     const CUSTOM_COLORS = ['#ff6b9d', '#b39ddb', '#ffb347', '#4dd0c8', '#f0a0c0', '#90cdf4'];
 
     const baseShapes = [
-        { id: 'circle', icon: '⭕', name: 'Circle', formula: 'π·r²', color: '#66d9ef' },
-        { id: 'square', icon: '⬜', name: 'Square', formula: 's²', color: '#ffd93d' },
-        { id: 'rect', icon: '▬', name: 'Rectangle', formula: 'l×w', color: '#a8e6cf' },
+        { id: 'circle', icon: CircleShape, name: 'Circle', formula: 'π·r²', color: '#66d9ef' },
+        { id: 'square', icon: SquareShape, name: 'Square', formula: 's²', color: '#ffd93d' },
+        { id: 'rect', icon: RectShape, name: 'Rectangle', formula: 'l×w', color: '#a8e6cf' },
     ];
     const presetExtras = [
-        { id: 'triangle', icon: '🔺', name: 'Triangle', formula: '½·b·h', color: '#ff6b9d' },
-        { id: 'pentagon', icon: '⬠', name: 'Pentagon', formula: '¼√5·s²', color: '#b39ddb' },
+        { id: 'triangle', icon: TriangleShape, name: 'Triangle', formula: '½·b·h', color: '#ff6b9d' },
+        { id: 'pentagon', icon: PentagonShape, name: 'Pentagon', formula: '¼√5·s²', color: '#b39ddb' },
     ];
 
     const handleDrill = () => {
@@ -223,7 +243,7 @@ const OCPSim = () => {
         if (!customName.trim()) return;
         const shape = {
             id: `custom_${nextCustom.current++}`,
-            icon: '🔷',
+            icon: DiamondIcon,
             name: customName.trim(),
             formula: customFormula.trim() || '?',
             color: CUSTOM_COLORS[pluggedExtras.length % CUSTOM_COLORS.length],
@@ -252,8 +272,8 @@ const OCPSim = () => {
                                 transition: 'border-color 0.3s',
                             }}>
                             <div style={{ background: drilling ? '#e53e3e' : '#f8f9fa', padding: '0.5rem 0.8rem', borderBottom: '2px solid var(--border)', fontWeight: 900, fontSize: '0.78rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: drilling ? '#fff' : 'var(--text)' }}>
-                                <span>❌ AreaCalculator</span>
-                                {drilling && <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.3, repeat: 4 }} style={{ fontSize: '0.65rem' }}>💥 CRACKING OPEN!</motion.span>}
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><XIcon size={14} /> AreaCalculator</span>
+                                {drilling && <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.3, repeat: 4 }} style={{ fontSize: '0.65rem' }}>CRACKING OPEN!</motion.span>}
                             </div>
                             <pre style={{ padding: '0.7rem 0.9rem', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', margin: 0, background: '#0f172a', color: '#e2e8f0', lineHeight: 1.7, position: 'relative' }}>
                                 {drilling && <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
@@ -264,18 +284,19 @@ const OCPSim = () => {
   else if (shape == "Rect")      → l * w`}
                                 <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }}
                                     style={{ color: '#e53e3e' }}>{`
-  // Adding Triangle = MODIFY this! ❌`}</motion.span>
+  // Adding Triangle = MODIFY this! `}</motion.span>
+                                <span style={{ color: '#e53e3e', display: 'inline-flex', verticalAlign: 'middle' }}><XIcon size={10} color="#e53e3e" /></span>
 {`
 }`}
                             </pre>
                         </motion.div>
 
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button className="btn btn-sm" style={{ background: '#e53e3e', color: '#fff' }} onClick={handleDrill}>
-                                🔨 Try Adding Shape
+                            <button className="btn btn-sm" style={{ background: '#e53e3e', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.3rem' }} onClick={handleDrill}>
+                                <WrenchIcon size={14} /> Try Adding Shape
                             </button>
-                            <button className="btn btn-sm" style={{ background: '#66d9ef' }} onClick={() => setApplied(true)}>
-                                🔌 Apply OCP
+                            <button className="btn btn-sm" style={{ background: '#66d9ef', display: 'flex', alignItems: 'center', gap: '0.3rem' }} onClick={() => setApplied(true)}>
+                                <PlugIcon size={14} /> Apply OCP
                             </button>
                         </div>
                     </motion.div>
@@ -295,36 +316,45 @@ const OCPSim = () => {
 
                         {/* Shape implementations */}
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', justifyContent: 'center' }}>
-                            {[...baseShapes, ...pluggedExtras].map((s, i) => (
-                                <motion.div key={s.id}
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ delay: i * 0.08, type: 'spring', stiffness: 250 }}
-                                    style={{
-                                        width: 90, background: 'var(--white)', border: `3px solid ${s.color}`,
-                                        borderRadius: '12px', padding: '0.5rem', textAlign: 'center',
-                                        boxShadow: '3px 3px 0 var(--border)', position: 'relative',
-                                    }}>
-                                    <span style={{ fontSize: '1.3rem' }}>{s.icon}</span>
-                                    <div style={{ fontWeight: 800, fontSize: '0.68rem' }}>{s.name}</div>
-                                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', opacity: 0.5 }}>{s.formula}</div>
-                                    {i >= baseShapes.length && (
-                                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-                                            style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, background: '#38a169', borderRadius: '50%', fontSize: '0.55rem', color: '#fff', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid var(--border)' }}>✓</motion.div>
-                                    )}
-                                </motion.div>
-                            ))}
+                            {[...baseShapes, ...pluggedExtras].map((s, i) => {
+                                const ShapeIcon = s.icon;
+                                return (
+                                    <motion.div key={s.id}
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ delay: i * 0.08, type: 'spring', stiffness: 250 }}
+                                        style={{
+                                            width: 90, background: 'var(--white)', border: `3px solid ${s.color}`,
+                                            borderRadius: '12px', padding: '0.5rem', textAlign: 'center',
+                                            boxShadow: '3px 3px 0 var(--border)', position: 'relative',
+                                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                                        }}>
+                                        <span style={{ color: s.color, display: 'inline-flex', marginBottom: '0.3rem' }}>
+                                            {ShapeIcon && <ShapeIcon size={24} />}
+                                        </span>
+                                        <div style={{ fontWeight: 800, fontSize: '0.68rem' }}>{s.name}</div>
+                                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', opacity: 0.5 }}>{s.formula}</div>
+                                        {i >= baseShapes.length && (
+                                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                                style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, background: '#38a169', borderRadius: '50%', fontSize: '0.55rem', color: '#fff', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid var(--border)' }}><CheckIcon size={10} color="#fff" /></motion.div>
+                                        )}
+                                    </motion.div>
+                                );
+                            })}
                         </div>
 
                         {/* Plug in presets */}
                         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                            {presetExtras.filter(s => !pluggedExtras.find(p => p.id === s.id)).map(s => (
-                                <motion.button key={s.id} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                                    onClick={() => handlePlugShape(s)}
-                                    style={{ background: `${s.color}15`, border: `2px solid ${s.color}`, borderRadius: '8px', padding: '0.3rem 0.6rem', cursor: 'pointer', fontWeight: 700, fontSize: '0.68rem', fontFamily: 'var(--font-main)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                                    {s.icon} + {s.name}
-                                </motion.button>
-                            ))}
+                            {presetExtras.filter(s => !pluggedExtras.find(p => p.id === s.id)).map(s => {
+                                const ShapeIcon = s.icon;
+                                return (
+                                    <motion.button key={s.id} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                                        onClick={() => handlePlugShape(s)}
+                                        style={{ background: `${s.color}15`, border: `2px solid ${s.color}`, borderRadius: '8px', padding: '0.3rem 0.6rem', cursor: 'pointer', fontWeight: 700, fontSize: '0.68rem', fontFamily: 'var(--font-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                        {ShapeIcon && <ShapeIcon size={16} color={s.color} />} + {s.name}
+                                    </motion.button>
+                                );
+                            })}
                         </div>
 
                         {/* Custom shape input */}
@@ -338,14 +368,14 @@ const OCPSim = () => {
 
                         {pluggedExtras.length > 0 && (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.3rem 0.8rem', fontSize: '0.65rem', fontWeight: 800, color: '#38a169' }}>
-                                🛡️ {pluggedExtras.length} new shape{pluggedExtras.length > 1 ? 's' : ''} added — ZERO existing code modified!
+                                style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.3rem 0.8rem', fontSize: '0.65rem', fontWeight: 800, color: '#38a169', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <ShieldIcon size={14} color="#38a169" /> {pluggedExtras.length} new shape{pluggedExtras.length > 1 ? 's' : ''} added — ZERO existing code modified!
                             </motion.div>
                         )}
 
-                        <button className="btn btn-sm" style={{ background: '#a8e6cf' }}
+                        <button className="btn btn-sm" style={{ background: '#a8e6cf', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                             onClick={() => { setApplied(false); setPluggedExtras([]); }}>
-                            ↺ Show Violation
+                            <SyncIcon size={14} /> Show Violation
                         </button>
                     </motion.div>
                 )}
@@ -356,7 +386,7 @@ const OCPSim = () => {
 
 
 /* ══════════════════════════════════════════════════════════════
-   3. LSP — Substitutability Tester 🔄
+   3. LSP — Substitutability Tester
    ══════════════════════════════════════════════════════════════ */
 const LSPSim = () => {
     const [showClean, setShowClean] = useState(false);
@@ -451,9 +481,9 @@ const LSPSim = () => {
                         transition: 'border-color 0.3s',
                     }}>
                         <div style={{ background: testing ? '#66d9ef' : '#f8f9fa', padding: '0.5rem 0.8rem', borderBottom: '2px solid var(--border)', fontWeight: 900, fontSize: '0.78rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
-                            {testing && <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>⚙</motion.span>}
-                            🔄 Substitutability Checker
-                            {testing && <motion.span animate={{ rotate: -360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>⚙</motion.span>}
+                            {testing && <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ display: 'inline-flex' }}><GearIcon size={14} /></motion.span>}
+                            <SyncIcon size={16} /> Substitutability Checker
+                            {testing && <motion.span animate={{ rotate: -360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ display: 'inline-flex' }}><GearIcon size={14} /></motion.span>}
                         </div>
                         <div style={{ padding: '0.6rem', textAlign: 'center' }}>
                             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', opacity: 0.6, marginBottom: '0.3rem' }}>Contract: area() must return</div>
@@ -480,8 +510,8 @@ const LSPSim = () => {
                                     <motion.div
                                         animate={r.pass ? { scale: [1, 1.2, 1] } : { rotate: [0, 10, -10, 10, -10, 0] }}
                                         transition={{ duration: r.pass ? 0.4 : 0.5 }}
-                                        style={{ fontSize: '1.2rem' }}>
-                                        {r.pass ? '✅' : '🚨'}
+                                        style={{ fontSize: '1.2rem', display: 'inline-flex', alignItems: 'center' }}>
+                                        {r.pass ? <CheckIcon size={20} color="#38a169" /> : <AlertIcon size={20} color="#e53e3e" />}
                                     </motion.div>
                                     <div style={{ flex: 1 }}>
                                         <div style={{ fontWeight: 800, fontSize: '0.72rem' }}>{r.name}</div>
@@ -498,26 +528,26 @@ const LSPSim = () => {
 
                         {testResults.length >= 2 && !testResults[1].pass && (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                style={{ background: '#fff5f5', border: '2px solid #e53e3e', borderRadius: '8px', padding: '0.4rem 0.6rem', fontSize: '0.62rem', color: '#c53030', fontWeight: 700, textAlign: 'center' }}>
-                                ⚠ {childName} cannot substitute {parentName} — setting width also sets height, breaking the contract!
+                                style={{ background: '#fff5f5', border: '2px solid #e53e3e', borderRadius: '8px', padding: '0.4rem 0.6rem', fontSize: '0.62rem', color: '#c53030', fontWeight: 700, textAlign: 'center', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
+                                <AlertIcon size={14} color="#e53e3e" /> <span>{childName} cannot substitute {parentName} — setting width also sets height, breaking contract!</span>
                             </motion.div>
                         )}
                         {testResults.length >= 2 && testResults[1].pass && showClean && (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.4rem 0.6rem', fontSize: '0.62rem', color: '#38a169', fontWeight: 700, textAlign: 'center' }}>
-                                ✓ Both implement Shape independently — no forced inheritance!
+                                style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.4rem 0.6rem', fontSize: '0.62rem', color: '#38a169', fontWeight: 700, textAlign: 'center', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
+                                <CheckIcon size={14} color="#38a169" /> <span>Both implement Shape independently — no forced inheritance!</span>
                             </motion.div>
                         )}
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="btn btn-sm" style={{ background: showClean ? '#ffd93d' : '#a8e6cf' }}
+                        <button className="btn btn-sm" style={{ background: showClean ? '#ffd93d' : '#a8e6cf', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                             onClick={() => { setShowClean(!showClean); setTestResults([]); }}>
-                            {showClean ? '↺ Show Violation' : '✓ Fix Design'}
+                            {showClean ? (<><SyncIcon size={14} /> Show Violation</>) : (<><CheckIcon size={14} /> Fix Design</>)}
                         </button>
-                        <button className="btn btn-sm" style={{ background: '#66d9ef' }}
+                        <button className="btn btn-sm" style={{ background: '#66d9ef', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                             onClick={runTest} disabled={testing}>
-                            🔄 Run Test
+                            <SyncIcon size={14} /> Run Test
                         </button>
                     </div>
                 </div>
@@ -531,14 +561,14 @@ const LSPSim = () => {
    4. ISP — Restaurant Menu 🍽️
    ══════════════════════════════════════════════════════════════ */
 const DEFAULT_MENU_ITEMS = [
-    { id: 'work', name: 'work()', cat: 'workable', icon: '⚙️', canRobot: true },
-    { id: 'code', name: 'code()', cat: 'workable', icon: '💻', canRobot: true },
-    { id: 'overtime', name: 'overtime()', cat: 'workable', icon: '⏰', canRobot: true },
-    { id: 'eat', name: 'eat()', cat: 'eatable', icon: '🍕', canRobot: false },
-    { id: 'takeBreak', name: 'takeBreak()', cat: 'eatable', icon: '☕', canRobot: false },
-    { id: 'sleep', name: 'sleep()', cat: 'sleepable', icon: '😴', canRobot: false },
-    { id: 'manage', name: 'manage()', cat: 'manageable', icon: '📋', canRobot: false },
-    { id: 'meetClient', name: 'meetClient()', cat: 'manageable', icon: '🤝', canRobot: false },
+    { id: 'work', name: 'work()', cat: 'workable', icon: GearIcon, canRobot: true },
+    { id: 'code', name: 'code()', cat: 'workable', icon: LaptopIcon, canRobot: true },
+    { id: 'overtime', name: 'overtime()', cat: 'workable', icon: ClockIcon, canRobot: true },
+    { id: 'eat', name: 'eat()', cat: 'eatable', icon: FoodIcon, canRobot: false },
+    { id: 'takeBreak', name: 'takeBreak()', cat: 'eatable', icon: CoffeeIcon, canRobot: false },
+    { id: 'sleep', name: 'sleep()', cat: 'sleepable', icon: SleepIcon, canRobot: false },
+    { id: 'manage', name: 'manage()', cat: 'manageable', icon: ClipboardIcon, canRobot: false },
+    { id: 'meetClient', name: 'meetClient()', cat: 'manageable', icon: HandshakeIcon, canRobot: false },
 ];
 
 const ISPSim = () => {
@@ -558,14 +588,14 @@ const ISPSim = () => {
     const addMethod = () => {
         if (!newMethod.trim()) return;
         const m = newMethod.trim().endsWith(')') ? newMethod.trim() : newMethod.trim() + '()';
-        setMenuItems(prev => [...prev, { id: `custom_${nextItem.current++}`, name: m, cat: newCat, icon: newCanRobot ? '🔧' : '🚫', canRobot: newCanRobot }]);
+        setMenuItems(prev => [...prev, { id: `custom_${nextItem.current++}`, name: m, cat: newCat, icon: newCanRobot ? WrenchIcon : BlockIcon, canRobot: newCanRobot }]);
         setNewMethod('');
     };
 
     const cats = [...new Set(menuItems.map(i => i.cat))];
     const catLabels = { workable: 'IWorkable', eatable: 'IEatable', sleepable: 'ISleepable', manageable: 'IManageable' };
     const catColors = { workable: '#a8e6cf', eatable: '#ffd93d', sleepable: '#66d9ef', manageable: '#b39ddb' };
-    const catFor = { workable: '🤖 Robot', eatable: '👨 Human', sleepable: '👨 Human', manageable: '👔 Manager' };
+    const catFor = { workable: 'Robot', eatable: 'Human', sleepable: 'Human', manageable: 'Manager' };
 
     return (
         <div style={SIM_WRAP}>
@@ -578,31 +608,34 @@ const ISPSim = () => {
                         {/* Fat menu */}
                         <motion.div animate={{ rotate: [0, -0.3, 0.3, 0] }} transition={{ duration: 5, repeat: Infinity }}
                             style={{ width: 230, background: 'var(--white)', border: '3px solid #d69e2e', borderRadius: '14px', overflow: 'hidden', boxShadow: '5px 5px 0 var(--border)' }}>
-                            <div style={{ background: '#d69e2e', padding: '0.45rem 0.7rem', textAlign: 'center', fontWeight: 900, fontSize: '0.78rem', color: '#fff', borderBottom: '2px solid #b7791f' }}>
-                                📜 IWorker — MEGA MENU
+                            <div style={{ background: '#d69e2e', padding: '0.45rem 0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', fontWeight: 900, fontSize: '0.78rem', color: '#fff', borderBottom: '2px solid #b7791f' }}>
+                                <FileIcon size={16} /> IWorker — MEGA MENU
                             </div>
                             <div style={{ padding: '0.4rem', maxHeight: 280, overflowY: 'auto' }}>
-                                {menuItems.map(item => (
-                                    <motion.div key={item.id}
-                                        onMouseEnter={() => handleMenuItemHover(item)}
-                                        onMouseLeave={() => setRobotReaction(null)}
-                                        whileHover={{ x: 3 }}
-                                        style={{
-                                            padding: '0.25rem 0.45rem', marginBottom: '3px', borderRadius: '6px',
-                                            display: 'flex', alignItems: 'center', gap: '0.35rem',
-                                            fontSize: '0.68rem', fontWeight: 700, fontFamily: 'var(--font-mono)',
-                                            background: item.canRobot ? '#c6f6d520' : '#fed7d720',
-                                            border: `1.5px solid ${item.canRobot ? '#38a16940' : '#e53e3e40'}`,
-                                            cursor: 'default',
-                                        }}>
-                                        <span>{item.icon}</span>
-                                        <span style={{ flex: 1 }}>{item.name}</span>
-                                        {!item.canRobot && <span style={{ fontSize: '0.5rem', color: '#e53e3e', fontWeight: 900 }}>N/A</span>}
-                                    </motion.div>
-                                ))}
+                                {menuItems.map(item => {
+                                    const ItemIcon = item.icon;
+                                    return (
+                                        <motion.div key={item.id}
+                                            onMouseEnter={() => handleMenuItemHover(item)}
+                                            onMouseLeave={() => setRobotReaction(null)}
+                                            whileHover={{ x: 3 }}
+                                            style={{
+                                                padding: '0.25rem 0.45rem', marginBottom: '3px', borderRadius: '6px',
+                                                display: 'flex', alignItems: 'center', gap: '0.35rem',
+                                                fontSize: '0.68rem', fontWeight: 700, fontFamily: 'var(--font-mono)',
+                                                background: item.canRobot ? '#c6f6d520' : '#fed7d720',
+                                                border: `1.5px solid ${item.canRobot ? '#38a16940' : '#e53e3e40'}`,
+                                                cursor: 'default',
+                                            }}>
+                                            {ItemIcon && <ItemIcon size={14} />}
+                                            <span style={{ flex: 1 }}>{item.name}</span>
+                                            {!item.canRobot && <span style={{ fontSize: '0.5rem', color: '#e53e3e', fontWeight: 900 }}>N/A</span>}
+                                        </motion.div>
+                                    );
+                                })}
                             </div>
-                            <div style={{ background: '#fff5f5', padding: '0.25rem', textAlign: 'center', fontSize: '0.55rem', fontWeight: 800, color: '#e53e3e', borderTop: '2px solid #e53e3e40' }}>
-                                ⚠ {menuItems.length} items — Robot can only use {menuItems.filter(i => i.canRobot).length}!
+                            <div style={{ background: '#fff5f5', padding: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', fontSize: '0.55rem', fontWeight: 800, color: '#e53e3e', borderTop: '2px solid #e53e3e40' }}>
+                                <AlertIcon size={12} color="#e53e3e" /> {menuItems.length} items — Robot can only use {menuItems.filter(i => i.canRobot).length}!
                             </div>
                         </motion.div>
 
@@ -617,11 +650,13 @@ const ISPSim = () => {
                                     alignItems: 'center', justifyContent: 'center',
                                     boxShadow: '4px 4px 0 var(--border)', position: 'relative',
                                 }}>
-                                <div style={{ fontSize: '2.2rem' }}>🤖</div>
+                                <CpuIcon size={36} color="var(--text)" />
                                 <AnimatePresence>
                                     {robotReaction === 'confused' && (
                                         <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
-                                            style={{ position: 'absolute', top: -12, right: -12, fontSize: '1.2rem' }}>❓</motion.div>
+                                            style={{ position: 'absolute', top: -12, right: -12, display: 'inline-flex' }}>
+                                            <AlertIcon size={16} color="#e53e3e" />
+                                        </motion.div>
                                     )}
                                 </AnimatePresence>
                             </motion.div>
@@ -644,22 +679,25 @@ const ISPSim = () => {
                                     width: 135, background: 'var(--white)', borderRadius: '12px', overflow: 'hidden',
                                     border: `3px solid ${catColors[cat] || '#ccc'}`, boxShadow: '4px 4px 0 var(--border)',
                                 }}>
-                                <div style={{ background: catColors[cat] || '#ddd', padding: '0.3rem 0.5rem', borderBottom: '2px solid var(--border)', fontWeight: 800, fontSize: '0.65rem', textAlign: 'center' }}>
-                                    ✂️ {catLabels[cat] || `I${cat.charAt(0).toUpperCase() + cat.slice(1)}`}
+                                <div style={{ background: catColors[cat] || '#ddd', padding: '0.3rem 0.5rem', borderBottom: '2px solid var(--border)', fontWeight: 800, fontSize: '0.65rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
+                                    <ScissorsIcon size={14} /> {catLabels[cat] || `I${cat.charAt(0).toUpperCase() + cat.slice(1)}`}
                                 </div>
                                 <div style={{ padding: '0.3rem' }}>
-                                    {menuItems.filter(i => i.cat === cat).map(item => (
-                                        <div key={item.id} style={{
-                                            padding: '0.15rem 0.3rem', marginBottom: '2px', borderRadius: '4px',
-                                            background: `${catColors[cat] || '#ddd'}18`, fontSize: '0.6rem', fontWeight: 700,
-                                            fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '0.25rem',
-                                        }}>
-                                            {item.icon} {item.name}
-                                        </div>
-                                    ))}
+                                    {menuItems.filter(i => i.cat === cat).map(item => {
+                                        const ItemIcon = item.icon;
+                                        return (
+                                            <div key={item.id} style={{
+                                                padding: '0.15rem 0.3rem', marginBottom: '2px', borderRadius: '4px',
+                                                background: `${catColors[cat] || '#ddd'}18`, fontSize: '0.6rem', fontWeight: 700,
+                                                fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '0.25rem',
+                                            }}>
+                                                {ItemIcon && <ItemIcon size={12} />} <span>{item.name}</span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                                 <div style={{ background: '#f8f9fa', padding: '0.15rem', textAlign: 'center', fontSize: '0.5rem', fontWeight: 800, borderTop: '1.5px solid var(--border)', color: '#555' }}>
-                                    → {catFor[cat] || '🔧 Custom'}
+                                    → {catFor[cat] || 'Custom'}
                                 </div>
                             </motion.div>
                         ))}
@@ -668,7 +706,9 @@ const ISPSim = () => {
                         <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}
                             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', marginTop: '0.5rem' }}>
                             <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}
-                                style={{ fontSize: '2.2rem' }}>🤖</motion.div>
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <CpuIcon size={36} color="#38a169" />
+                            </motion.div>
                             <span style={{ fontWeight: 800, fontSize: '0.65rem' }}>Robot</span>
                             <span style={{ fontSize: '0.52rem', color: '#38a169', fontWeight: 700, textAlign: 'center' }}>implements only<br />IWorkable ✓</span>
                         </motion.div>
@@ -676,9 +716,9 @@ const ISPSim = () => {
                 )}
             </AnimatePresence>
 
-            <button className="btn btn-sm" style={{ background: applied ? '#a8e6cf' : '#ff6b9d', marginTop: '0.8rem', zIndex: 2 }}
+            <button className="btn btn-sm" style={{ background: applied ? '#a8e6cf' : '#ff6b9d', marginTop: '0.8rem', zIndex: 2, display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                 onClick={() => setApplied(!applied)}>
-                {applied ? '↺ Show Fat Interface' : '✂️ Split Interfaces (Apply ISP)'}
+                {applied ? (<><SyncIcon size={14} /> Show Fat Interface</>) : (<><ScissorsIcon size={14} /> Split Interfaces (Apply ISP)</>)}
             </button>
         </div>
     );
@@ -686,7 +726,7 @@ const ISPSim = () => {
 
 
 /* ══════════════════════════════════════════════════════════════
-   5. DIP — Dependency Flow Diagram 🔀
+   5. DIP — Dependency Flow Diagram
    ══════════════════════════════════════════════════════════════ */
 const DIPSim = () => {
     const [applied, setApplied] = useState(false);
@@ -696,9 +736,9 @@ const DIPSim = () => {
     const [highLevelName, setHighLevelName] = useState('NotificationService');
     const [interfaceName, setInterfaceName] = useState('MessageSender');
     const [implementations, setImplementations] = useState([
-        { id: 'email', name: 'EmailSender', icon: '📧', color: '#66d9ef' },
-        { id: 'sms', name: 'SMSSender', icon: '📱', color: '#a8e6cf' },
-        { id: 'push', name: 'PushSender', icon: '🔔', color: '#ffd93d' },
+        { id: 'email', name: 'EmailSender', icon: EmailIcon, color: '#66d9ef' },
+        { id: 'sms', name: 'SMSSender', icon: PhoneIcon, color: '#a8e6cf' },
+        { id: 'push', name: 'PushSender', icon: BellIcon, color: '#ffd93d' },
     ]);
     const [newImplName, setNewImplName] = useState('');
     const nextImpl = useRef(100);
@@ -719,7 +759,7 @@ const DIPSim = () => {
         setImplementations(prev => [...prev, {
             id: `impl_${nextImpl.current++}`,
             name: newImplName.trim(),
-            icon: '🔷',
+            icon: DiamondIcon,
             color: IMPL_COLORS[(implementations.length) % IMPL_COLORS.length],
         }]);
         setNewImplName('');
@@ -745,7 +785,9 @@ const DIPSim = () => {
                                 boxShadow: shaking ? '0 0 20px rgba(229,62,62,0.25), 4px 4px 0 var(--border)' : '4px 4px 0 var(--border)',
                                 transition: 'border-color 0.3s, box-shadow 0.3s',
                             }}>
-                            <div style={{ fontSize: '1.1rem', marginBottom: '0.1rem' }}>🎯</div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.1rem' }}>
+                                <TargetIcon size={24} />
+                            </div>
                             <div style={{ fontWeight: 900, fontSize: '0.82rem' }}>{highLevelName}</div>
                             <div style={{ fontSize: '0.55rem', opacity: 0.5, fontWeight: 700, textTransform: 'uppercase' }}>HIGH-LEVEL MODULE</div>
                         </motion.div>
@@ -770,12 +812,14 @@ const DIPSim = () => {
                                 borderRadius: '14px', padding: '0.6rem', textAlign: 'center',
                                 boxShadow: '4px 4px 0 var(--border)', transition: 'border-color 0.3s',
                             }}>
-                            <div style={{ fontSize: '1.3rem' }}>📧</div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0.3rem 0' }}>
+                                <EmailIcon size={24} />
+                            </div>
                             <div style={{ fontWeight: 800, fontSize: '0.78rem' }}>{implementations[0]?.name || 'EmailSender'}</div>
                             <div style={{ fontSize: '0.55rem', opacity: 0.5, fontWeight: 700, textTransform: 'uppercase' }}>LOW-LEVEL MODULE</div>
                             <motion.div animate={shaking ? { opacity: [0, 1, 0] } : { opacity: 0 }}
-                                style={{ fontSize: '0.58rem', color: '#e53e3e', fontWeight: 800, marginTop: '0.2rem' }}>
-                                💥 Changes here break above!
+                                style={{ fontSize: '0.58rem', color: '#e53e3e', fontWeight: 800, marginTop: '0.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.2rem' }}>
+                                <AlertIcon size={12} color="#e53e3e" /> <span>Changes here break above!</span>
                             </motion.div>
                         </motion.div>
 
@@ -794,7 +838,9 @@ const DIPSim = () => {
                                 borderRadius: '14px', padding: '0.6rem', textAlign: 'center',
                                 boxShadow: '0 0 12px rgba(56,161,105,0.15), 4px 4px 0 var(--border)',
                             }}>
-                            <div style={{ fontSize: '1.1rem' }}>🎯</div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.1rem' }}>
+                                <TargetIcon size={24} />
+                            </div>
                             <div style={{ fontWeight: 900, fontSize: '0.82rem' }}>{highLevelName}</div>
                             <div style={{ fontSize: '0.55rem', opacity: 0.5, fontWeight: 700, textTransform: 'uppercase' }}>HIGH-LEVEL (STABLE)</div>
                         </motion.div>
@@ -851,11 +897,13 @@ const DIPSim = () => {
                                     }}>
                                     <motion.div animate={i === activePuppet ? { y: [0, -3, 0] } : {}}
                                         transition={{ duration: 1.5, repeat: Infinity }}
-                                        style={{ fontSize: '1.3rem' }}>{impl.icon}</motion.div>
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 28, margin: '0.2rem 0' }}>
+                                        {impl.icon && <impl.icon size={24} color={i === activePuppet ? impl.color : 'var(--text)'} />}
+                                    </motion.div>
                                     <div style={{ fontWeight: 800, fontSize: '0.6rem' }}>{impl.name}</div>
                                     {i === activePuppet && (
                                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                            style={{ fontSize: '0.48rem', color: '#38a169', fontWeight: 800, marginTop: '0.1rem' }}>ACTIVE ✓</motion.div>
+                                            style={{ fontSize: '0.48rem', color: '#38a169', fontWeight: 800, marginTop: '0.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.1rem' }}>ACTIVE <CheckIcon size={10} color="#38a169" /></motion.div>
                                     )}
                                 </motion.div>
                             ))}
@@ -869,16 +917,16 @@ const DIPSim = () => {
                         </div>
 
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
-                            style={{ fontSize: '0.6rem', fontWeight: 700, color: '#38a169', textAlign: 'center' }}>
-                            Click any implementation to swap — {highLevelName} is unaffected! 🔀
+                            style={{ fontSize: '0.6rem', fontWeight: 700, color: '#38a169', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
+                            <span>Click any implementation to swap — {highLevelName} is unaffected!</span> <ShuffleIcon size={12} />
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <button className="btn btn-sm" style={{ background: applied ? '#a8e6cf' : '#b39ddb', marginTop: '0.5rem', zIndex: 2 }}
+            <button className="btn btn-sm" style={{ background: applied ? '#a8e6cf' : '#b39ddb', marginTop: '0.5rem', zIndex: 2, display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                 onClick={() => { setApplied(!applied); setActivePuppet(0); }}>
-                {applied ? '↺ Show Direct Coupling' : '🔀 Invert Dependencies'}
+                {applied ? (<><SyncIcon size={14} /> Show Direct Coupling</>) : (<><ShuffleIcon size={14} /> Invert Dependencies</>)}
             </button>
         </div>
     );
@@ -913,7 +961,7 @@ export default function SolidPrinciplesSim() {
                         borderRight: '2px solid var(--border)', fontFamily: 'var(--font-main)', color: 'var(--text)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem',
                         transition: 'background 0.2s',
-                    }}>{p.icon} {p.name}</button>
+                    }}>{getPrincipleIcon(p.id)} {p.name}</button>
                 ))}
             </div>
             <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
@@ -944,7 +992,7 @@ export default function SolidPrinciplesSim() {
                     padding: '0.5rem 0.75rem', cursor: 'pointer', background: activePrinciple === p.id ? p.color + '30' : 'var(--white)',
                     transition: 'all 0.2s', boxShadow: activePrinciple === p.id ? `0 0 10px ${p.color}30` : 'none',
                 }}>
-                    <div style={{ fontWeight: 800, fontSize: '0.78rem' }}>{p.icon} {p.name}</div>
+                    <div style={{ fontWeight: 800, fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>{getPrincipleIcon(p.id, 18)} {p.name}</div>
                     <div style={{ fontSize: '0.6rem', opacity: 0.5 }}>{p.full} Principle</div>
                 </div>
             ))}
@@ -954,14 +1002,14 @@ export default function SolidPrinciplesSim() {
     const RIGHT = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="panel">
-                <div className="panel-header" style={{ background: active?.color }}>{active?.icon} Algorithm Logic</div>
+                <div className="panel-header" style={{ background: active?.color, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>{active && getPrincipleIcon(active.id, 16)} Algorithm Logic</div>
                 <div style={{ padding: '0.75rem' }}>
                     <div style={{ fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.3rem' }}>{desc.title}</div>
                     <div style={{ fontSize: '0.78rem', lineHeight: 1.6, opacity: 0.8 }}>{desc.text}</div>
                 </div>
             </div>
             <div className="panel">
-                <div className="panel-header" style={{ background: '#ffd93d' }}>💡 Educational Insight</div>
+                <div className="panel-header" style={{ background: '#ffd93d', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><LightbulbIcon size={16} /> Educational Insight</div>
                 <div style={{ padding: '0.75rem', fontSize: '0.78rem', lineHeight: 1.6 }}>{desc.insight}</div>
             </div>
             <div style={{ background: '#111', color: active?.color, padding: '0.75rem', borderRadius: '8px', border: `2px solid ${active?.color}` }}>
@@ -972,7 +1020,7 @@ export default function SolidPrinciplesSim() {
     );
 
     return (
-        <ImmersiveLayout isActive={true} title="SOLID Principles" icon="🏗️" moduleLabel="OOP MODULE"
+        <ImmersiveLayout isActive={true} title="SOLID Principles" icon={<BuildIcon />} moduleLabel="OOP MODULE"
             isRunning={false} isPaused={false} isFinished={false} speed={speed} onSpeedChange={setSpeed}
             onStart={() => {}} onPause={() => {}} onResume={() => {}} onStep={() => {}}
             onReset={() => setActivePrinciple('srp')}
@@ -983,7 +1031,7 @@ export default function SolidPrinciplesSim() {
             legend={PRINCIPLES.map(p => ({ color: p.color, label: p.name }))}>
             <div className="main-content">
                 <Link to="/oops" style={{ fontSize: '0.85rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← OOP Module</Link>
-                <h1>🏗️ SOLID Principles</h1>
+                <h1><BuildIcon size={28} /> SOLID Principles</h1>
             </div>
         </ImmersiveLayout>
     );

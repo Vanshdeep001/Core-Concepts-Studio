@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import { FileIcon, ChartIcon, LightbulbIcon, CrownIcon } from '../../components/Icons';
 
 export default function NormalizationSim() {
     const [step, setStep] = useState(0); // 0: UNF, 1: 1NF, 2: 2NF, 3: 3NF, 4: BCNF
@@ -142,7 +143,7 @@ export default function NormalizationSim() {
                     1NF SECURED: All cells are now atomic. Composite Key is (RollNo, Course).
                 </div>
                 <div style={{ background: '#fef3c7', border: '2px solid var(--border)', padding: '0.4rem', fontSize: '0.7rem', fontWeight: 900, color: 'red' }}>
-                    🔴 PARTIAL DEPENDENCY DETECTED: (RollNo) determines (Name). Candidate Key is (RollNo, Course). Since Name depends on a subset of the PK, this violates 2NF!
+                    [PARTIAL DEPENDENCY VIOLATION]: (RollNo) determines (Name). Candidate Key is (RollNo, Course). Since Name depends on a subset of the PK, this violates 2NF!
                 </div>
                 <table className="neo-table" style={{ fontSize: '0.78rem' }}>
                     <thead>
@@ -196,14 +197,14 @@ export default function NormalizationSim() {
                     2NF SECURED: Partial dependency removed. Tables split into StudentInfo and CourseEnroll.
                 </div>
                 <div style={{ background: '#fef3c7', border: '2px solid var(--border)', padding: '0.4rem', fontSize: '0.7rem', fontWeight: 900, color: 'red' }}>
-                    🔴 TRANSITIVE DEPENDENCY DETECTED: (Course) determines (Teacher), and (Teacher) determines (TeacherPhone). Since Phone depends transitively on Course, this violates 3NF!
+                    [TRANSITIVE DEPENDENCY VIOLATION]: (Course) determines (Teacher), and (Teacher) determines (TeacherPhone). Since Phone depends transitively on Course, this violates 3NF!
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr', gap: '1rem' }}>
                     {/* StudentInfo */}
                     <div style={{ border: '3px solid var(--border)', background: 'var(--white)', boxShadow: '3px 3px 0 var(--border)', overflow: 'hidden' }}>
-                        <div style={{ background: 'var(--yellow)', borderBottom: '3px solid var(--border)', padding: '0.35rem 0.6rem', fontWeight: 900, fontSize: '0.72rem' }}>
-                            📁 Table: StudentInfo
+                        <div style={{ background: 'var(--yellow)', borderBottom: '3px solid var(--border)', padding: '0.35rem 0.6rem', fontWeight: 900, fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <FileIcon size={14} /> Table: StudentInfo
                         </div>
                         <table className="neo-table" style={{ fontSize: '0.72rem' }}>
                             <thead>
@@ -225,8 +226,8 @@ export default function NormalizationSim() {
 
                     {/* Enrollment */}
                     <div style={{ border: '3px solid var(--border)', background: 'var(--white)', boxShadow: '3px 3px 0 var(--border)', overflow: 'hidden' }}>
-                        <div style={{ background: 'var(--pink)', borderBottom: '3px solid var(--border)', padding: '0.35rem 0.6rem', fontWeight: 900, fontSize: '0.72rem' }}>
-                            📁 Table: CourseEnroll
+                        <div style={{ background: 'var(--pink)', borderBottom: '3px solid var(--border)', padding: '0.35rem 0.6rem', fontWeight: 900, fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <FileIcon size={14} /> Table: CourseEnroll
                         </div>
                         <table className="neo-table" style={{ fontSize: '0.72rem' }}>
                             <thead>
@@ -288,8 +289,8 @@ export default function NormalizationSim() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
                     <div style={{ border: '3px solid var(--border)', background: 'var(--white)', boxShadow: '2px 2px 0 var(--border)', overflow: 'hidden' }}>
-                        <div style={{ background: 'var(--yellow)', borderBottom: '3px solid var(--border)', padding: '0.3rem 0.5rem', fontWeight: 900, fontSize: '0.7rem' }}>
-                            📁 Table: StudentInfo
+                        <div style={{ background: 'var(--yellow)', borderBottom: '3px solid var(--border)', padding: '0.3rem 0.5rem', fontWeight: 900, fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <FileIcon size={14} /> Table: StudentInfo
                         </div>
                         <table className="neo-table" style={{ fontSize: '0.68rem' }}>
                             <thead>
@@ -304,8 +305,8 @@ export default function NormalizationSim() {
                     </div>
 
                     <div style={{ border: '3px solid var(--border)', background: 'var(--white)', boxShadow: '2px 2px 0 var(--border)', overflow: 'hidden' }}>
-                        <div style={{ background: 'var(--pink)', borderBottom: '3px solid var(--border)', padding: '0.3rem 0.5rem', fontWeight: 900, fontSize: '0.7rem' }}>
-                            📁 Table: CourseMarks
+                        <div style={{ background: 'var(--pink)', borderBottom: '3px solid var(--border)', padding: '0.3rem 0.5rem', fontWeight: 900, fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <FileIcon size={14} /> Table: CourseMarks
                         </div>
                         <table className="neo-table" style={{ fontSize: '0.68rem' }}>
                             <thead>
@@ -321,8 +322,8 @@ export default function NormalizationSim() {
                 </div>
 
                 <div style={{ border: '3px solid var(--border)', background: 'var(--white)', boxShadow: '3px 3px 0 var(--border)', overflow: 'hidden' }}>
-                    <div style={{ background: 'var(--cyan)', borderBottom: '3px solid var(--border)', padding: '0.3rem 0.5rem', fontWeight: 900, fontSize: '0.7rem' }}>
-                        📁 Table: TeacherDetails
+                    <div style={{ background: 'var(--cyan)', borderBottom: '3px solid var(--border)', padding: '0.3rem 0.5rem', fontWeight: 900, fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <FileIcon size={14} /> Table: TeacherDetails
                     </div>
                     <table className="neo-table" style={{ fontSize: '0.68rem' }}>
                         <thead>
@@ -356,13 +357,13 @@ export default function NormalizationSim() {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ background: 'var(--green)', border: '2px solid var(--border)', padding: '0.4rem 0.8rem', fontSize: '0.72rem', fontWeight: 900 }}>
-                    🏆 BCNF SECURED: All determinants are now superkeys! Decomposition complete.
+                    <CrownIcon size={14} color="var(--yellow)" /> BCNF SECURED: All determinants are now superkeys! Decomposition complete.
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1rem' }}>
                     <div style={{ border: '3px solid var(--border)', background: 'var(--white)', boxShadow: '3px 3px 0 var(--border)', overflow: 'hidden' }}>
-                        <div style={{ background: 'var(--purple)', borderBottom: '3px solid var(--border)', padding: '0.3rem 0.5rem', fontWeight: 900, fontSize: '0.7rem' }}>
-                            📁 Table: TeacherPhone (BCNF)
+                        <div style={{ background: 'var(--purple)', borderBottom: '3px solid var(--border)', padding: '0.3rem 0.5rem', fontWeight: 900, fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <FileIcon size={14} /> Table: TeacherPhone (BCNF)
                         </div>
                         <table className="neo-table" style={{ fontSize: '0.68rem' }}>
                             <thead>
@@ -377,8 +378,8 @@ export default function NormalizationSim() {
                     </div>
 
                     <div style={{ border: '3px solid var(--border)', background: 'var(--white)', boxShadow: '3px 3px 0 var(--border)', overflow: 'hidden' }}>
-                        <div style={{ background: 'var(--cyan)', borderBottom: '3px solid var(--border)', padding: '0.3rem 0.5rem', fontWeight: 900, fontSize: '0.7rem' }}>
-                            📁 Table: TeacherAssign (BCNF)
+                        <div style={{ background: 'var(--cyan)', borderBottom: '3px solid var(--border)', padding: '0.3rem 0.5rem', fontWeight: 900, fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <FileIcon size={14} /> Table: TeacherAssign (BCNF)
                         </div>
                         <table className="neo-table" style={{ fontSize: '0.68rem' }}>
                             <thead>
@@ -509,7 +510,7 @@ export default function NormalizationSim() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
             {conceptMode && (
                 <div style={{ background: 'var(--purple)', border: '2px solid var(--border)', padding: '0.5rem 0.75rem', fontSize: '0.72rem', fontWeight: 800, boxShadow: '2px 2px 0 var(--border)' }}>
-                    📚 CONCEPT RADAR:<br/>
+                    <LightbulbIcon size={14} color="var(--yellow)" /> CONCEPT RADAR:<br/>
                     1NF = Atomic values.<br/>
                     2NF = 1NF + No Partial dependency.<br/>
                     3NF = 2NF + No Transitive dependency.<br/>
@@ -587,7 +588,7 @@ Redundant cells freed!`}
     return (
         <ImmersiveLayout
             isActive={true}
-            title="Normalization (1NF to BCNF)" icon="📊" moduleLabel="DBMS Module"
+            title="Normalization (1NF to BCNF)" icon={<ChartIcon size={20} />} moduleLabel="DBMS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}
             onStart={handleStart} onPause={handlePause} onResume={handleStart}

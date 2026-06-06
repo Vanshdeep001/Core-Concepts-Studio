@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import { NetworkIcon, TreeIcon } from '../../components/Icons';
 
 /* ════════════════════════════════════════
    HELPERS — IP math
@@ -238,7 +239,7 @@ export default function SubnettingSim() {
                 throw new Error();
             }
         } catch {
-            logs.push(`[ROUTER] ❌ Invalid Destination IP format.`);
+            logs.push(`[ROUTER] Invalid Destination IP format.`);
             setRoutingLogs(logs);
             return;
         }
@@ -259,12 +260,12 @@ export default function SubnettingSim() {
             logs.push(`AND  : ${bitsToBinaryStr(andResult, 32)} (${intToIpStr(andResult)})`);
             
             if (andResult === s.start) {
-                logs.push(`✅ MATCH! Forwarding packet to Port #${i + 1} (${intToIpStr(s.start)}/${s.prefix})`);
+                logs.push(`MATCH! Forwarding packet to Port #${i + 1} (${intToIpStr(s.start)}/${s.prefix})`);
                 setMatchingSubnetIdx(i);
                 matched = true;
                 break;
             } else {
-                logs.push(`❌ MISMATCH. Expected network ${intToIpStr(s.start)}, got ${intToIpStr(andResult)}`);
+                logs.push(`MISMATCH. Expected network ${intToIpStr(s.start)}, got ${intToIpStr(andResult)}`);
             }
         }
 
@@ -521,8 +522,8 @@ export default function SubnettingSim() {
                     {isRoutingActive ? (
                         routingLogs.map((log, idx) => {
                             let color = '#fff';
-                            if (log.includes('✅') || log.includes('MATCH!')) color = 'var(--green)';
-                            else if (log.includes('❌') || log.includes('⚠️')) color = 'var(--pink)';
+                            if (log.includes('MATCH!')) color = 'var(--green)';
+                            else if (log.includes('MISMATCH') || log.includes('Invalid')) color = 'var(--pink)';
                             else if (log.includes('Testing Route')) color = 'var(--cyan)';
                             
                             return (
@@ -670,8 +671,8 @@ export default function SubnettingSim() {
                     <div style={{ display: 'flex', gap: '3px', background: 'var(--border)', padding: '3px', border: '3px solid var(--border)', flexShrink: 0 }}>
                         {[
                             { id: 'grid', label: '🎛️ Address Grid Map' },
-                            { id: 'routing', label: '🔌 AND Routing Simulator' },
-                            { id: 'tree', label: '🌳 Binary Tree Explorer' }
+                            { id: 'routing', label: 'AND Routing Simulator' },
+                            { id: 'tree', label: 'Binary Tree Explorer' }
                         ].map(tab => (
                             <button
                                 key={tab.id}
@@ -701,7 +702,7 @@ export default function SubnettingSim() {
                     {quizIdx !== null && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                             style={{ border: '3px solid var(--border)', background: 'var(--yellow)', padding: '0.6rem', boxShadow: 'var(--shadow-sm)', flexShrink: 0 }}>
-                            <div style={{ fontWeight: 900, fontSize: '0.8rem', marginBottom: '0.2rem' }}>🧩 Network Architect Challenge</div>
+                            <div style={{ fontWeight: 900, fontSize: '0.8rem', marginBottom: '0.2rem' }}>Network Architect Challenge</div>
                             <div style={{ fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>{QUIZ_SCENARIOS[quizIdx].prompt}</div>
                             
                             {/* Department cards inside Quiz */}
@@ -723,7 +724,7 @@ export default function SubnettingSim() {
                                                 fontWeight: 800
                                             }}
                                         >
-                                            <span style={{ fontSize: '0.7rem' }}>🏢 {dept.name}</span>
+                                            <span style={{ fontSize: '0.7rem' }}>{dept.name}</span>
                                             <span style={{ opacity: 0.6 }}>Needs: {dept.hosts.toLocaleString()} hosts</span>
                                             {matchingSubnet ? (
                                                 <span style={{ color: isCorrectSize ? 'green' : 'red', fontSize: '0.52rem', marginTop: '2px' }}>
@@ -745,7 +746,7 @@ export default function SubnettingSim() {
                                         background: quizResult === 'correct' ? 'var(--green)' : 'var(--pink)',
                                         border: '2px solid var(--border)',
                                         boxShadow: 'var(--shadow-sm)'
-                                    }}>{quizResult === 'correct' ? '🎉 Success! Subnets allocated correctly!' : '❌ Try again — check subnet count and allocations'}</span>
+                                    }}>{quizResult === 'correct' ? 'Success! Subnets allocated correctly!' : 'Try again — check subnet count and allocations'}</span>
                                 )}
                             </div>
                         </motion.div>
@@ -807,7 +808,7 @@ export default function SubnettingSim() {
             )}
             {curStep && (
                 <div style={{ border: '2px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
-                    <div style={{ background: 'var(--yellow)', padding: '0.4rem 0.6rem', borderBottom: '2px solid var(--border)', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>💡 Educational Insight</div>
+                    <div style={{ background: 'var(--yellow)', padding: '0.4rem 0.6rem', borderBottom: '2px solid var(--border)', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>Educational Insight</div>
                     <div style={{ padding: '0.5rem 0.6rem', fontSize: '0.8rem', lineHeight: 1.5, opacity: 0.85 }}>{curStep.insight}</div>
                 </div>
             )}
@@ -840,7 +841,7 @@ export default function SubnettingSim() {
         <ImmersiveLayout
             isActive={isSimMode}
             title="IP Addressing & Subnetting"
-            icon="🔢"
+            icon={<NetworkIcon size={20} />}
             moduleLabel="CN MODULE"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}
@@ -860,7 +861,7 @@ export default function SubnettingSim() {
                 <div style={{ marginBottom: '0.4rem' }}><Link to="/networks" style={{ fontSize: '0.82rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← Networks Module</Link></div>
                 <div style={{ marginBottom: '1.5rem' }}>
                     <div className="section-header">Networks · Network Layer</div>
-                    <h1 style={{ fontSize: '1.9rem', fontWeight: 700 }}>🔢 IP Addressing & Subnetting</h1>
+                    <h1 style={{ fontSize: '1.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}><NetworkIcon size={28} /> IP Addressing & Subnetting</h1>
                     <p style={{ opacity: 0.6, fontSize: '0.9rem', marginTop: '0.3rem' }}>Interactive 32-bit grid, CIDR slider, VLSM address-space bar, subnetting quiz, and IPv4 ↔ IPv6 toggle.</p>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
