@@ -325,9 +325,36 @@ export function dispatch(state, command, args = {}) {
 
         // ── git commit ─────────────────────────────────────────────────────────
         case 'git commit': {
+            let note = '';
             if (!Object.keys(s.stagingArea).length) {
-                output = 'Nothing to commit (use "git add" to stage changes)';
-                break;
+                if (Object.keys(s.workingDirectory).length > 0) {
+                    const files = Object.keys(s.workingDirectory);
+                    files.forEach(f => {
+                        s.stagingArea[f] = deepClone(s.workingDirectory[f]);
+                    });
+                    s.workingDirectory = {};
+                    note = ` (auto-staged: ${files.join(', ')})`;
+                } else {
+                    const existingFiles = Object.keys(s.currentFiles || {});
+                    if (existingFiles.length > 0) {
+                        const fileToModify = existingFiles[0];
+                        const prevContent = s.currentFiles[fileToModify] || '';
+                        const commitCount = Object.keys(s.commits).length + 1;
+                        const newContent = `${prevContent}\n// update #${commitCount}`;
+                        s.stagingArea[fileToModify] = {
+                            content: newContent,
+                            status: 'modified'
+                        };
+                        note = ` (auto-modified ${fileToModify})`;
+                    } else {
+                        const dummyFilename = 'file1.txt';
+                        s.stagingArea[dummyFilename] = {
+                            content: 'Content for commit #1',
+                            status: 'untracked'
+                        };
+                        note = ` (auto-created ${dummyFilename})`;
+                    }
+                }
             }
             const headHash = getHEADHash(s);
             const prevTree = getCommitTree(s, headHash);
@@ -338,7 +365,7 @@ export function dispatch(state, command, args = {}) {
                 else newTree[f] = v.content;
             });
             // Also apply currentFiles
-            Object.assign(s.currentFiles, newTree);
+            s.currentFiles = deepClone(newTree);
 
             const branch = s.HEAD.type === 'branch' ? s.HEAD.ref : null;
             const commit = makeCommit({
@@ -356,7 +383,7 @@ export function dispatch(state, command, args = {}) {
                 s.HEAD.ref = commit.hash;
             }
             s.stagingArea = {};
-            output = `[${branch || 'HEAD'} ${commit.shortHash}] ${commit.message}`;
+            output = `[${branch || 'HEAD'} ${commit.shortHash}] ${commit.message}${note}`;
             s.events.push({ type: 'COMMIT', hash: commit.hash, parentHashes: commit.parentHashes, branch });
             break;
         }
@@ -558,8 +585,8 @@ export function dispatch(state, command, args = {}) {
             }
             if (mode === 'hard') {
                 s.workingDirectory = {};
-                s.currentFiles = deepClone(targetCommit.tree);
             }
+            s.currentFiles = deepClone(targetCommit.tree || {});
 
             output = `HEAD is now at ${shortHash(targetHash)} ${targetCommit.message}\n(${mode} reset)`;
             s.events.push({ type: 'RESET', mode, hash: targetHash });
@@ -747,7 +774,7 @@ export function computeDAGLayout(commits, branches, HEAD, remote) {
     });
 
     const NODE_W = 120;
-    const NODE_H = 60;
+    const NODE_H = 70;
     const H_GAP = 50;
     const V_GAP = 80;
 
@@ -756,7 +783,7 @@ export function computeDAGLayout(commits, branches, HEAD, remote) {
         ids.forEach((id, i) => {
             positions[id] = {
                 x: parseInt(lvl) * (NODE_W + H_GAP) + 40,
-                y: i * (NODE_H + V_GAP) + 40,
+                y: i * (NODE_H + V_GAP) + 120,
             };
         });
     });

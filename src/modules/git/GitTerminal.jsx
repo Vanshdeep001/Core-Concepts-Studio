@@ -151,12 +151,12 @@ export default function GitTerminal({ onCommand, commandLog, disabled }) {
             </AnimatePresence>
 
             {/* Command History */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0.75rem' }}>
-                <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4, marginBottom: '0.4rem' }}>
-                    History
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0.75rem', minHeight: 80, background: '#1a1a2e' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', color: '#66d9ef' }}>
+                    History ({commandLog.length})
                 </div>
                 {commandLog.length === 0 ? (
-                    <div style={{ opacity: 0.3, fontSize: '0.8rem', fontStyle: 'italic' }}>
+                    <div style={{ opacity: 0.3, fontSize: '0.8rem', fontStyle: 'italic', color: '#ccc' }}>
                         Click a command above to run it
                     </div>
                 ) : (
@@ -166,15 +166,28 @@ export default function GitTerminal({ onCommand, commandLog, disabled }) {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             style={{
-                                marginBottom: '0.3rem', padding: '0.3rem 0.5rem',
-                                border: '1.5px solid var(--border)', borderRadius: 6,
-                                background: i === 0 ? '#fffbea' : 'var(--white)',
+                                marginBottom: '0.4rem', padding: '0.35rem 0.5rem',
+                                border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 6,
+                                background: i === 0 ? 'rgba(102,217,239,0.1)' : 'rgba(255,255,255,0.03)',
                                 fontSize: '0.72rem', fontFamily: 'var(--font-mono)',
+                                color: '#ddd',
                             }}
                         >
-                            <span style={{ color: '#999', marginRight: '0.4rem' }}>#{commandLog.length - i}</span>
-                            <span style={{ fontWeight: 700, color: '#2d6a4f' }}>$ {entry.command}</span>
-                            {entry.argsStr && <span style={{ opacity: 0.6 }}> {entry.argsStr}</span>}
+                            <div>
+                                <span style={{ color: '#666', marginRight: '0.4rem' }}>#{commandLog.length - i}</span>
+                                <span style={{ fontWeight: 700, color: '#a8e6cf' }}>$ {entry.command}</span>
+                                {entry.argsStr && <span style={{ opacity: 0.6 }}> {entry.argsStr}</span>}
+                            </div>
+                            {entry.output && (
+                                <div style={{
+                                    marginTop: '0.2rem', paddingLeft: '1.2rem',
+                                    fontSize: '0.65rem', opacity: 0.55, color: '#ccc',
+                                    whiteSpace: 'pre-wrap', lineHeight: 1.35,
+                                    maxHeight: 40, overflow: 'hidden',
+                                }}>
+                                    {entry.output.split('\n')[0]}
+                                </div>
+                            )}
                         </motion.div>
                     ))
                 )}

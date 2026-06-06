@@ -47,6 +47,7 @@ export default function ImmersiveLayout({
     conceptMode = false,
     onConceptModeToggle = () => {},
     hideFooter = false,
+    scenarioPicker = null,
 }) {
     const [leftOpen, setLeftOpen] = useState(false);
     const [rightOpen, setRightOpen] = useState(false);
@@ -137,6 +138,9 @@ export default function ImmersiveLayout({
                             </div>
                         </div>
                     </div>
+
+                    {/* Scenario Picker (optional) */}
+                    {scenarioPicker}
 
                     {/* Controls */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>

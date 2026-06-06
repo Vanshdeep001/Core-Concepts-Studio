@@ -4,7 +4,7 @@ import { computeDAGLayout } from './engine/gitEngine';
 
 const BRANCH_COLORS = ['#ffd93d', '#66d9ef', '#ff6b9d', '#a8e6cf', '#c3aed6', '#ffb347', '#87ceeb'];
 const NODE_W = 120;
-const NODE_H = 54;
+const NODE_H = 70;
 
 function getBranchColor(name, index) {
     if (name === 'main' || name === 'master') return '#ffd93d';
@@ -19,14 +19,15 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
         return (
             <div style={{
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexDirection: 'column', gap: '1rem', opacity: 0.4, padding: '2rem',
+                flexDirection: 'column', gap: '0.5rem', opacity: 0.5, padding: '2rem',
+                minHeight: '240px',
             }}>
                 <div style={{ fontSize: '3rem' }}>🌿</div>
-                <div style={{ fontWeight: 700, fontSize: '1rem', textAlign: 'center' }}>
-                    No commits yet
+                <div style={{ fontWeight: 800, fontSize: '0.85rem', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    No commits in DAG yet
                 </div>
-                <div style={{ fontSize: '0.82rem', textAlign: 'center' }}>
-                    Run <code style={{ background: '#eee', padding: '0.1rem 0.3rem', borderRadius: 4 }}>git init</code> then start making commits to see the DAG
+                <div style={{ fontSize: '0.72rem', color: '#666', textAlign: 'center' }}>
+                    Complete the active quest items to create your first commit.
                 </div>
             </div>
         );
@@ -36,7 +37,7 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
     const maxX = Math.max(...nodes.map(n => n.x + n.width), 400);
     const maxY = Math.max(...nodes.map(n => n.y + n.height), 200);
     const canvasW = maxX + 80;
-    const canvasH = maxY + 120;
+    const canvasH = maxY + 60;
 
     // Branch color map
     const branchColorMap = {};
@@ -69,6 +70,9 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                     </marker>
                     <marker id="arrow-rebase" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
                         <path d="M0,0 L0,6 L8,3 z" fill="#66d9ef" />
+                    </marker>
+                    <marker id="arrow-head" markerWidth="6" markerHeight="6" refX="5" refY="2" orient="auto">
+                        <path d="M0,0 L0,4 L5,2 z" fill="#000" />
                     </marker>
                 </defs>
 
@@ -156,7 +160,7 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                 {/* Commit hash */}
                                 <text
                                     x={node.x + NODE_W / 2}
-                                    y={node.y + 16}
+                                    y={node.y + 15}
                                     textAnchor="middle"
                                     fontSize="10"
                                     fontFamily="monospace"
@@ -171,7 +175,7 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                 {/* Commit message */}
                                 <text
                                     x={node.x + NODE_W / 2}
-                                    y={node.y + 32}
+                                    y={node.y + 30}
                                     textAnchor="middle"
                                     fontSize="11"
                                     fontFamily="sans-serif"
@@ -184,7 +188,7 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                 {/* Timestamp */}
                                 <text
                                     x={node.x + NODE_W / 2}
-                                    y={node.y + 47}
+                                    y={node.y + 44}
                                     textAnchor="middle"
                                     fontSize="9"
                                     fill="#999"
@@ -192,8 +196,54 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                     {node.commit.timestamp?.slice(11) || ''}
                                 </text>
 
+                                {/* File Changes */}
+                                {(() => {
+                                    const parentHash = node.commit.parentHashes[0];
+                                    const parentCommit = parentHash ? commits[parentHash] : null;
+
+                                    const changes = [];
+                                    const currentTree = node.commit.tree || {};
+                                    const parentTree = parentCommit ? (parentCommit.tree || {}) : {};
+
+                                    Object.keys(currentTree).forEach(f => {
+                                        if (parentTree[f] === undefined) {
+                                            changes.push({ file: f, type: 'added' });
+                                        } else if (parentTree[f] !== currentTree[f]) {
+                                            changes.push({ file: f, type: 'modified' });
+                                        }
+                                    });
+                                    Object.keys(parentTree).forEach(f => {
+                                        if (currentTree[f] === undefined) {
+                                            changes.push({ file: f, type: 'deleted' });
+                                        }
+                                    });
+
+                                    const changeTexts = changes.map(c => {
+                                        const icon = c.type === 'added' ? '+' : c.type === 'modified' ? '~' : '-';
+                                        return `${icon}${c.file}`;
+                                    });
+                                    const displayStr = changeTexts.join(', ');
+
+                                    if (changes.length === 0) return null;
+
+                                    return (
+                                        <text
+                                            x={node.x + NODE_W / 2}
+                                            y={node.y + 58}
+                                            textAnchor="middle"
+                                            fontSize="9"
+                                            fontFamily="monospace"
+                                            fontWeight="700"
+                                            fill={changes[0].type === 'added' ? '#2e7d32' : changes[0].type === 'modified' ? '#0288d1' : '#c62828'}
+                                        >
+                                            {displayStr.length > 18 ? `${displayStr.slice(0, 16)}…` : displayStr}
+                                        </text>
+                                    );
+                                })()}
+
                                 {/* Branch labels */}
                                 {node.branchLabels.map((bl, bi) => {
+                                    const isCurrentBranch = bl.name === HEAD.ref && HEAD.type === 'branch';
                                     const color = branchColorMap[bl.name] || '#c3aed6';
                                     const isRemote = bl.type === 'remote';
                                     const labelY = node.y - 20 - bi * 22;
@@ -209,8 +259,8 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                                 height={18}
                                                 rx={4}
                                                 fill={color}
-                                                stroke="var(--border)"
-                                                strokeWidth={isRemote ? 1.5 : 2}
+                                                stroke={isCurrentBranch ? '#000' : 'var(--border)'}
+                                                strokeWidth={isCurrentBranch ? 3 : 2}
                                                 strokeDasharray={isRemote ? '4 2' : 'none'}
                                             />
                                             <text
@@ -218,12 +268,36 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                                 y={labelY + 1}
                                                 textAnchor="middle"
                                                 fontSize="10"
-                                                fontWeight="800"
+                                                fontWeight="900"
                                                 fontFamily="monospace"
                                                 fill="#222"
                                             >
                                                 {bl.name}
                                             </text>
+                                            {isCurrentBranch && (
+                                                <g>
+                                                    {/* Arrow from branch badge to HEAD badge */}
+                                                    <path d={`M${labelX + approxWidth} ${labelY - 3} L${labelX + approxWidth + 8} ${labelY - 3}`} stroke="#000" strokeWidth="2" markerEnd="url(#arrow-head)" />
+                                                    <rect
+                                                        x={labelX + approxWidth + 10}
+                                                        y={labelY - 12}
+                                                        width={36}
+                                                        height={18}
+                                                        rx={3}
+                                                        fill="#000"
+                                                    />
+                                                    <text
+                                                        x={labelX + approxWidth + 28}
+                                                        y={labelY + 1}
+                                                        textAnchor="middle"
+                                                        fontSize="9"
+                                                        fontWeight="900"
+                                                        fill="white"
+                                                    >
+                                                        HEAD
+                                                    </text>
+                                                </g>
+                                            )}
                                             {/* connector line */}
                                             <line
                                                 x1={node.x + NODE_W / 2}
@@ -238,8 +312,8 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                     );
                                 })}
 
-                                {/* HEAD indicator */}
-                                {isHEAD && (
+                                {/* HEAD indicator (only in detached HEAD mode) */}
+                                {isHEAD && HEAD.type !== 'branch' && (
                                     <g>
                                         <rect
                                             x={node.x + NODE_W - 2}
@@ -267,19 +341,7 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                     })}
                 </AnimatePresence>
 
-                {/* Legend */}
-                <g transform={`translate(10, ${canvasH - 60})`}>
-                    {[
-                        { color: 'var(--white)', label: 'Normal Commit', stroke: 'var(--border)' },
-                        { color: '#ffe0f0', label: 'Merge Commit', stroke: 'var(--border)' },
-                        { color: '#e0f7ff', label: 'Rebased Commit', stroke: 'var(--border)' },
-                    ].map((item, i) => (
-                        <g key={i} transform={`translate(${i * 140}, 0)`}>
-                            <rect x={0} y={0} width={14} height={14} rx={3} fill={item.color} stroke={item.stroke} strokeWidth={2} />
-                            <text x={20} y={11} fontSize={10} fill="#888" fontWeight={600}>{item.label}</text>
-                        </g>
-                    ))}
-                </g>
+
             </svg>
         </div>
     );

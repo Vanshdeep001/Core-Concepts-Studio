@@ -1,6 +1,6 @@
-// GitSim.jsx — Git Internals Simulator with Guided Scenarios + Resizable Layout
+// GitSim.jsx — Git Internals Simulator (Direct Mode)
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import CommitGraph from './CommitGraph';
@@ -24,7 +24,7 @@ const GUIDED_SCENARIOS = {
             { type: 'file', filename: 'README.md', content: '# My Project\nThis is amazing.', narration: '📄 Create README.md — another untracked file in the working directory.' },
             { command: 'git add', args: { file: '.' }, narration: 'Stage README.md. Staging area now has the new file ready to snapshot.' },
             { command: 'git commit', args: { message: 'Add README' }, narration: '📸 Second commit! The DAG grows. Branch pointer "main" advances automatically.' },
-            { command: 'git log', args: {}, narration: 'remove git log traverses the DAG backward via parentHashes — like following a chain back in time.' },
+            { command: 'git log', args: {}, narration: 'git log traverses the DAG backward via parentHashes — like following a chain back in time.' },
             { type: 'file', filename: 'app.js', content: 'const app = require("express")();', narration: '📄 Add app.js — Working Dir has a change again.' },
             { command: 'git add', args: { file: '.' }, narration: ' Stage app.js.' },
             { command: 'git commit', args: { message: 'Add Express app' }, narration: '📸 Third commit! You can see the linear history forming in the DAG.' },
@@ -102,133 +102,104 @@ const GUIDED_SCENARIOS = {
     },
 };
 
-const SPEED_OPTIONS = [
-    { ms: 3000, label: '0.5×' },
-    { ms: 2000, label: '1×' },
-    { ms: 1200, label: '2×' },
-    { ms: 600, label: '4×' },
-];
+// ─── Floating Quest Log & Narration HUD ───────────────────────────────────────
+function GitQuestLog({ state }) {
+    const [collapsed, setCollapsed] = useState(false);
+    const isInitialized = state.initialized;
+    const hasFiles = Object.keys(state.workingDirectory || {}).length > 0 || Object.keys(state.stagingArea || {}).length > 0 || Object.keys(state.commits || {}).length > 0;
+    const hasStaged = Object.keys(state.stagingArea || {}).length > 0 || Object.keys(state.commits || {}).length > 0;
+    const hasCommits = Object.keys(state.commits || {}).length > 0;
 
-// ─── Config Panel ─────────────────────────────────────────────────────────────
-function ConfigPanel({ onLaunch }) {
-    const [repoName, setRepoName] = useState('my-project');
-    const [selectedScenario, setSelectedScenario] = useState('basic');
+    const completedCount = [isInitialized, hasFiles, hasStaged, hasCommits].filter(Boolean).length;
+    if (completedCount === 4) return null;
 
     return (
-        <div className="main-content">
-            <div style={{ marginBottom: '0.4rem' }}>
-                <Link to="/git" style={{ fontSize: '0.82rem', fontWeight: 700, opacity: 0.6, textDecoration: 'none' }}>← Git Module</Link>
+        <div style={{
+            position: 'absolute',
+            left: 12,
+            top: '2.3rem',
+            background: 'rgba(255, 255, 255, 0.95)',
+            border: '2px solid var(--border)',
+            borderRadius: '6px',
+            boxShadow: '3px 3px 0 var(--border)',
+            padding: collapsed ? '0.3rem 0.5rem' : '0.5rem 0.65rem',
+            width: collapsed ? 'auto' : '185px',
+            zIndex: 10,
+            fontSize: '0.7rem',
+            backdropFilter: 'blur(4px)',
+            transition: 'all 0.2s ease',
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem', cursor: 'pointer' }} onClick={() => setCollapsed(!collapsed)}>
+                <span style={{ fontWeight: 800, color: '#111' }}>
+                    {collapsed ? '🎯 Quest' : '🎯 Git Quest'}
+                </span>
+                <span style={{ fontSize: '0.62rem', background: completedCount === 4 ? '#e8f5e9' : '#e0f7ff', padding: '0.05rem 0.35rem', borderRadius: 4, fontWeight: 700, color: completedCount === 4 ? '#2e7d32' : '#0288d1' }}>
+                    {completedCount}/4
+                </span>
             </div>
-            <div style={{ marginBottom: '2rem' }}>
-                <div className="section-header">Module 5 · Git & GitHub</div>
-                <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>🌿 Git Internals Simulator</h1>
-                <p style={{ opacity: 0.6, fontSize: '0.92rem', marginTop: '0.3rem' }}>
-                    Pick a guided scenario and watch Git's internal model evolve step by step — DAG, staging, branching, merging, rebasing.
-                </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                {/* Scenario Selection */}
-                <div>
-                    <div className="panel">
-                        <div className="panel-header" style={{ background: 'var(--green)' }}>🎬 Choose a Scenario</div>
-                        <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                            {Object.entries(GUIDED_SCENARIOS).map(([key, scenario]) => (
-                                <button
-                                    key={key}
-                                    onClick={() => setSelectedScenario(key)}
-                                    style={{
-                                        padding: '0.75rem 1rem', textAlign: 'left',
-                                        border: `2px solid ${selectedScenario === key ? '#000' : 'var(--border)'}`,
-                                        borderRadius: 8, cursor: 'pointer',
-                                        background: selectedScenario === key ? scenario.color : 'var(--white)',
-                                        transition: 'all 0.12s',
-                                    }}
-                                >
-                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{scenario.label}</div>
-                                    <div style={{ fontSize: '0.75rem', opacity: 0.65, marginTop: '0.2rem' }}>{scenario.description}</div>
-                                    <div style={{ marginTop: '0.4rem', fontSize: '0.68rem', fontWeight: 700, opacity: 0.5 }}>
-                                        {scenario.steps.length} steps
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
+            {!collapsed && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.35rem', borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: '0.35rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', opacity: isInitialized ? 0.6 : 1 }}>
+                        <input type="checkbox" checked={isInitialized} readOnly style={{ pointerEvents: 'none', width: 12, height: 12 }} />
+                        <span style={{ textDecoration: isInitialized ? 'line-through' : 'none', fontWeight: 600 }}>1. git init</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', opacity: hasFiles ? 0.6 : 1 }}>
+                        <input type="checkbox" checked={hasFiles} readOnly style={{ pointerEvents: 'none', width: 12, height: 12 }} />
+                        <span style={{ textDecoration: hasFiles ? 'line-through' : 'none', fontWeight: 600 }}>2. Create a file (+ File)</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', opacity: hasStaged ? 0.6 : 1 }}>
+                        <input type="checkbox" checked={hasStaged} readOnly style={{ pointerEvents: 'none', width: 12, height: 12 }} />
+                        <span style={{ textDecoration: hasStaged ? 'line-through' : 'none', fontWeight: 600 }}>3. Stage changes</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', opacity: hasCommits ? 0.6 : 1 }}>
+                        <input type="checkbox" checked={hasCommits} readOnly style={{ pointerEvents: 'none', width: 12, height: 12 }} />
+                        <span style={{ textDecoration: hasCommits ? 'line-through' : 'none', fontWeight: 600 }}>4. Commit snapshot</span>
                     </div>
                 </div>
-
-                {/* Right side info */}
-                <div>
-                    <div className="panel" style={{ marginBottom: '1.25rem' }}>
-                        <div className="panel-header" style={{ background: GUIDED_SCENARIOS[selectedScenario].color }}>
-                            {GUIDED_SCENARIOS[selectedScenario].label} — Preview
-                        </div>
-                        <div style={{ padding: '1rem' }}>
-                            {GUIDED_SCENARIOS[selectedScenario].steps.map((step, i) => (
-                                <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.35rem', fontSize: '0.8rem' }}>
-                                    <span style={{ opacity: 0.35, fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{i + 1}.</span>
-                                    <span style={{ fontFamily: step.type === 'file' ? 'inherit' : 'var(--font-mono)', fontWeight: step.type === 'file' ? 400 : 700 }}>
-                                        {step.type === 'file' ? `📄 create ${step.filename}` : step.command + (step.args?.name ? ` ${step.args.name}` : step.args?.message ? ` -m "${step.args.message}"` : step.args?.branch ? ` ${step.args.branch}` : step.args?.file ? ` ${step.args.file}` : '')}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="panel">
-                        <div className="panel-header" style={{ background: 'var(--cyan)' }}>🗂️ Repo Name</div>
-                        <div style={{ padding: '1rem' }}>
-                            <input value={repoName} onChange={e => setRepoName(e.target.value)}
-                                style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', padding: '0.4rem 0.6rem', border: '2px solid var(--border)', borderRadius: 6, boxSizing: 'border-box' }} />
-                            <p style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '0.5rem' }}>
-                                You can also run commands manually at any time during the simulation using the Command Panel.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <motion.div style={{ marginTop: '2rem', textAlign: 'center' }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <button
-                    onClick={() => onLaunch(selectedScenario, repoName)}
-                    className="btn"
-                    style={{ background: 'var(--green)', fontSize: '1.1rem', fontWeight: 800, padding: '0.9rem 2.5rem', border: '3px solid var(--border)', boxShadow: '4px 4px 0 var(--border)', cursor: 'pointer' }}
-                >
-                    🚀 Launch Simulator
-                </button>
-            </motion.div>
+            )}
         </div>
     );
 }
 
-// ─── Narration Banner ──────────────────────────────────────────────────────────
-function NarrationBanner({ text, stepNum, totalSteps, color, isManual }) {
+function FloatingNarration({ text, stepNum, totalSteps, color, isManual }) {
+    const [collapsed, setCollapsed] = useState(false);
     if (!text) return null;
+
     return (
-        <AnimatePresence mode="wait">
-            <motion.div
-                key={text}
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                style={{
-                    padding: '0.55rem 1rem',
-                    background: color || '#fffbea',
-                    borderBottom: '2px solid var(--border)',
-                    fontSize: '0.82rem', lineHeight: 1.5,
-                    display: 'flex', gap: '0.65rem', alignItems: 'flex-start',
-                    flexShrink: 0,
-                }}
-            >
+        <div style={{
+            position: 'absolute',
+            right: 12,
+            top: '2.3rem',
+            maxWidth: collapsed ? '110px' : '250px',
+            background: color || '#fffbea',
+            border: '2px solid var(--border)',
+            borderRadius: '6px',
+            boxShadow: '3px 3px 0 var(--border)',
+            padding: collapsed ? '0.3rem 0.5rem' : '0.5rem 0.65rem',
+            zIndex: 10,
+            fontSize: '0.72rem',
+            lineHeight: 1.3,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.2rem',
+            backdropFilter: 'blur(4px)',
+            transition: 'all 0.2s ease',
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem', cursor: 'pointer' }} onClick={() => setCollapsed(!collapsed)}>
                 <span style={{
-                    fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.68rem',
-                    background: 'rgba(0,0,0,0.12)', padding: '0.12rem 0.4rem', borderRadius: 4,
-                    flexShrink: 0, whiteSpace: 'nowrap',
+                    fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.58rem',
+                    background: 'rgba(0,0,0,0.08)', padding: '0.05rem 0.3rem', borderRadius: 3,
                 }}>
-                    {isManual ? '⌨ manual' : `${stepNum}/${totalSteps}`}
+                    {isManual ? '⌨️ MANUAL' : `📖 STEP ${stepNum}/${totalSteps}`}
                 </span>
-                <span>{text}</span>
-            </motion.div>
-        </AnimatePresence>
+                <span style={{ fontSize: '0.55rem', opacity: 0.5 }}>{collapsed ? '▼' : '▲'}</span>
+            </div>
+            {!collapsed && (
+                <div style={{ color: '#222', fontWeight: 600, borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '0.3rem', marginTop: '0.15rem' }}>
+                    {text}
+                </div>
+            )}
+        </div>
     );
 }
 
@@ -271,23 +242,59 @@ function ResizableDivider({ onDrag }) {
 }
 
 // ─── File Editor Bar ───────────────────────────────────────────────────────────
-function FileEditorBar({ state, onAddFile, onEditFile }) {
-    const [filename, setFilename] = useState('');
-    const [content, setContent] = useState('');
-    const [open, setOpen] = useState(false);
+function FileEditorBar({ 
+    state, 
+    onAddFile, 
+    onEditFile,
+    filename,
+    setFilename,
+    content,
+    setContent,
+    open,
+    setOpen
+}) {
+    const allFiles = { ...(state.currentFiles || {}), ...(state.workingDirectory || {}) };
+    const fileList = Object.keys(allFiles);
 
     function handleSubmit() {
         if (!filename.trim()) return;
-        const allFiles = { ...(state.currentFiles || {}), ...(state.workingDirectory || {}) };
-        if (allFiles[filename]) onEditFile(filename, content);
+        if (allFiles[filename] !== undefined) onEditFile(filename, content);
         else onAddFile(filename, content);
         setFilename(''); setContent(''); setOpen(false);
+    }
+
+    function handleSelectFile(e) {
+        const selected = e.target.value;
+        if (selected === '__new__') {
+            setFilename('');
+            setContent('');
+        } else if (selected && allFiles[selected] !== undefined) {
+            setFilename(selected);
+            setContent(allFiles[selected] || '');
+        }
     }
 
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             {open ? (
                 <>
+                    {fileList.length > 0 && (
+                        <select
+                            onChange={handleSelectFile}
+                            value={fileList.includes(filename) ? filename : '__new__'}
+                            style={{
+                                fontFamily: 'var(--font-mono)', fontSize: '0.72rem',
+                                padding: '0.2rem 0.35rem', border: '2px solid var(--border)',
+                                borderRadius: 4, background: 'white', cursor: 'pointer',
+                                maxWidth: 120
+                            }}
+                        >
+                            <option value="__new__">+ New File...</option>
+                            {fileList.map(f => (
+                                <option key={f} value={f}>✏️ {f}</option>
+                            ))}
+                        </select>
+                    )}
                     <input value={filename} onChange={e => setFilename(e.target.value)} placeholder="filename.ext"
                         style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', padding: '0.2rem 0.35rem', border: '2px solid var(--border)', borderRadius: 4, width: 110 }} />
                     <input value={content} onChange={e => setContent(e.target.value)} placeholder="content..."
@@ -307,9 +314,17 @@ function FileEditorBar({ state, onAddFile, onEditFile }) {
 
 // ─── Main GitSim Component ────────────────────────────────────────────────────
 export default function GitSim() {
-    const [isActive, setIsActive] = useState(false);
-    const [state, setState] = useState(createInitialState());
-    const [repoName, setRepoName] = useState('my-project');
+    const navigate = useNavigate();
+
+    // Auto-init: start with git init already run
+    const [initState] = useState(() => {
+        const s = createInitialState();
+        const { state: inited } = dispatch(s, 'git init', {});
+        return inited;
+    });
+
+    const [state, setState] = useState(initState);
+    const [repoName] = useState('my-project');
     const [commandLog, setCommandLog] = useState([]);
     const [lastCommand, setLastCommand] = useState(null);
     const [lastExplanation, setLastExplanation] = useState(null);
@@ -326,11 +341,22 @@ export default function GitSim() {
     const [isPaused, setIsPaused] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
     const [speed, setSpeed] = useState(2000);
-    const [currentNarration, setCurrentNarration] = useState('');
+    const [currentNarration, setCurrentNarration] = useState('Repository initialized. Use the command panel below to run git commands, or press ▶ START to auto-play a guided scenario.');
 
     // Layout: resizable DAG / Terminal split
     const containerRef = useRef(null);
-    const [dagHeightPx, setDagHeightPx] = useState(null); // null = auto (default 58%)
+    const [dagHeightPx, setDagHeightPx] = useState(null);
+
+    // Editor state lifted up
+    const [editorFilename, setEditorFilename] = useState('');
+    const [editorContent, setEditorContent] = useState('');
+    const [editorOpen, setEditorOpen] = useState(false);
+
+    const triggerEditFile = useCallback((filename, content) => {
+        setEditorFilename(filename);
+        setEditorContent(content || '');
+        setEditorOpen(true);
+    }, []);
 
     const timerRef = useRef(null);
     const stateRef = useRef(state);
@@ -360,28 +386,35 @@ export default function GitSim() {
             setState(prev => addFile(prev, step.filename, step.content));
             setScenarioStep(stepIndex + 1);
         } else {
-            setState(prev => {
-                const { state: newState, output, explanation } = dispatch(prev, step.command, step.args || {});
-                const argsStr = Object.entries(step.args || {}).filter(([, v]) => v !== '' && v !== false && v !== null).map(([k, v]) => v === true ? `-${k}` : v).join(' ');
-                const entry = { command: step.command, args: step.args, argsStr, output };
-                setCommandLog(log => [...log, entry]);
-                setLastCommand(entry);
-                setLastExplanation(explanation);
+            const currentState = stateRef.current;
+            const { state: newState, output, explanation } = dispatch(currentState, step.command, step.args || {});
+            const argsStr = Object.entries(step.args || {}).filter(([, v]) => v !== '' && v !== false && v !== null).map(([k, v]) => v === true ? `-${k}` : v).join(' ');
+            const entry = { command: step.command, args: step.args, argsStr, output };
+            setCommandLog(log => [...log, entry]);
+            setLastCommand(entry);
+            setLastExplanation(explanation);
+            setState(newState);
 
-                const rebaseDone = newState.events?.find(e => e.type === 'REBASE_DONE');
-                if (rebaseDone) {
-                    setOrphanedHashes(rebaseDone.oldHashes || []);
-                    setTimeout(() => setOrphanedHashes([]), 2500);
-                }
-                return newState;
-            });
+            const rebaseDone = newState.events?.find(e => e.type === 'REBASE_DONE');
+            if (rebaseDone) {
+                setOrphanedHashes(rebaseDone.oldHashes || []);
+                setTimeout(() => setOrphanedHashes([]), 2500);
+            }
+
+            const commitEvt = newState.events?.find(e => e.type === 'COMMIT' || e.type === 'MERGE_3WAY');
+            const commitHash = commitEvt?.hash || commitEvt?.mergeHash;
+            if (commitHash) {
+                setHighlightHash(commitHash);
+                clearTimeout(highlightTimerRef.current);
+                highlightTimerRef.current = setTimeout(() => setHighlightHash(null), 2500);
+            }
+
             setScenarioStep(stepIndex + 1);
         }
     }
 
     // Auto-play loop
     useEffect(() => {
-        if (!isActive) return;
         if (!isRunning || isPaused || isFinished) return;
         if (scenarioStep >= totalSteps) {
             setIsRunning(false);
@@ -395,27 +428,14 @@ export default function GitSim() {
             }
         }, scenarioStep === 0 ? 300 : speed);
         return () => clearTimeout(timerRef.current);
-    }, [isActive, isRunning, isPaused, isFinished, scenarioStep, speed]);
-
-    function handleLaunch(key, name) {
-        setScenarioKey(key);
-        setRepoName(name);
-        setState(createInitialState());
-        setCommandLog([]);
-        setLastCommand(null);
-        setLastExplanation(null);
-        setOrphanedHashes([]);
-        setScenarioStep(0);
-        setIsRunning(false);
-        setIsPaused(false);
-        setIsFinished(false);
-        setCurrentNarration('Press ▶ START to begin the guided scenario, or run commands manually below.');
-        setIsActive(true);
-    }
+    }, [isRunning, isPaused, isFinished, scenarioStep, speed]);
 
     function handleStart() {
+        // Reset state and start the selected scenario
+        const s = createInitialState();
+        setState(s);
+        stateRef.current = s;
         setScenarioStep(0);
-        setState(createInitialState());
         setCommandLog([]);
         setLastCommand(null);
         setOrphanedHashes([]);
@@ -436,121 +456,80 @@ export default function GitSim() {
     }
     function handleReset() {
         clearTimeout(timerRef.current);
-        setIsActive(false);
-        setState(createInitialState());
-        setCommandLog([]);
-        setScenarioStep(0);
-        setIsRunning(false);
-        setIsPaused(false);
-        setIsFinished(false);
-        setCurrentNarration('');
-        setOrphanedHashes([]);
-    }
-
-    // Build narration text for a manual command
-    function buildManualNarration(cmd, events, explanation, conceptMode) {
-        // Use the engine explanation first
-        const base = conceptMode ? explanation?.beginner : explanation?.advanced;
-        if (base) return base;
-        // Fallback per command
-        const map = {
-            'git init': '🎉 .git folder created. HEAD → unborn main branch. Object store ready.',
-            'git add': '📦 Files moved from Working Directory → Staging Area (Index). Blob objects created.',
-            'git commit': '📸 Snapshot created: blob → tree → commit object. Branch pointer advances.',
-            'git status': '🔍 Comparing Working Dir vs Index vs HEAD commit.',
-            'git log': '📖 Traversing DAG backward via parentHashes from HEAD.',
-            'git branch': '🏷️ New branch = 41-byte ref file pointing to current commit. Free and instant.',
-            'git checkout': '🚪 HEAD moves. Working directory restored to target commit snapshot.',
-            'git switch': '🚪 HEAD moves to new branch.',
-            'git merge': '🔀 Git finds common ancestor. Combines changes. May create merge commit (2 parents).',
-            'git rebase': '♻️ Commits replayed on new base with NEW hashes. History becomes linear.',
-            'git reset': '⏮️ Branch pointer moved. Working dir / staging may be affected by mode.',
-            'git stash': '🗄️ WD + staging saved to stash stack. Working dir becomes clean.',
-            'git push': '🚀 New objects sent to remote. Remote branch pointer advances.',
-            'git pull': '⬇️🔀 fetch + merge. Remote commits integrated into local branch.',
-            'git fetch': '⬇️ Remote objects downloaded. Local branches NOT changed.',
-            'git clone': '📋 Full copy of remote repo. origin/* remote-tracking refs set up.',
-            'git diff': '🔎 Shows unstaged changes between Working Dir and Index.',
-            'git restore': '↩️ File reverted to committed state.',
-            'git tag': '🔖 Lightweight tag = fixed pointer to a commit (doesn\'t move).',
-        };
-        return map[cmd] || `Executed ${cmd}.`;
+        navigate('/git');
     }
 
     // Manual command runner (from terminal)
     const handleCommand = useCallback((cmd, args) => {
-        // Capture result outside setState so we can use it for side effects
-        let captured = null;
+        const currentState = stateRef.current;
+        const result = dispatch(currentState, cmd, args);
+        const { state: newState, output, explanation } = result;
+        const events = newState.events || [];
 
-        setState(prev => {
-            const result = dispatch(prev, cmd, args);
-            captured = result; // capture before React may re-run updater
-            return result.state;
-        });
+        setState(newState);
 
-        // Schedule side effects AFTER setState (microtask ensures capture is set)
-        Promise.resolve().then(() => {
-            if (!captured) return;
-            const { output, explanation } = captured;
-            const events = captured.state?.events || [];
+        const argsStr = Object.entries(args || {})
+            .filter(([, v]) => v !== '' && v !== false && v !== null && v !== undefined)
+            .map(([k, v]) => v === true ? `-${k}` : v).join(' ');
 
-            const argsStr = Object.entries(args || {})
-                .filter(([, v]) => v !== '' && v !== false && v !== null && v !== undefined)
-                .map(([k, v]) => v === true ? `-${k}` : v).join(' ');
+        const entry = { command: cmd, args, argsStr, output };
+        setCommandLog(log => [...log, entry]);
+        setLastCommand(entry);
+        setLastExplanation(explanation);
 
-            const entry = { command: cmd, args, argsStr, output };
-            setCommandLog(log => [...log, entry]);
-            setLastCommand(entry);
-            setLastExplanation(explanation);
+        // Build narration: show actual output + explanation + next step hint
+        const explText = explanation?.beginner || '';
 
-            // Narration
-            const base = explanation?.beginner;
-            const fallbackMap = {
-                'git init': '🎉 .git folder created. HEAD → unborn main branch. Object store ready.',
-                'git add': '📦 Files moved from Working Directory → Staging Area. Blob objects created.',
-                'git commit': '📸 Snapshot: blob → tree → commit. Branch pointer advances to new commit.',
-                'git status': '🔍 Comparing Working Dir vs Index vs HEAD commit snapshot.',
-                'git log': '📖 Traversing DAG backward via parentHashes from HEAD.',
-                'git branch': '🏷️ Branch = 41-byte ref file → current commit. Free + instant.',
-                'git checkout': '🚪 HEAD moves. Working directory restored to that commit snapshot.',
-                'git switch': '🚪 HEAD moves to new branch. Files update to match commit.',
-                'git merge': '🔀 Common ancestor found. Changes combined. Merge commit may have 2 parents.',
-                'git rebase': '♻️ Commits replayed on new base with NEW hashes. History becomes linear.',
-                'git reset': '⏮️ Branch pointer moved. WD/staging change based on mode (soft/mixed/hard).',
-                'git stash': '🗄️ WD + staging saved to stash stack. Working dir becomes clean.',
-                'git push': '🚀 New objects sent to remote. Remote branch pointer advances.',
-                'git pull': '⬇️🔀 fetch + merge. Remote commits integrated into local branch.',
-                'git fetch': '⬇️ Remote objects downloaded. Local branches NOT changed.',
-                'git clone': '📋 Full copy of remote repo. origin/* remote-tracking refs created.',
-                'git diff': '🔎 Shows unstaged changes between Working Dir and Index.',
-                'git restore': '↩️ File reverted to last committed state.',
-                'git tag': '🔖 Fixed pointer to a commit (doesn\'t move like a branch).',
-            };
-            setCurrentNarration(base || fallbackMap[cmd] || `Ran ${cmd}.`);
-            setIsManualNarration(true);
+        const isNoOp = output.includes('Nothing to commit') || output.includes('Nothing to add')
+            || output.includes('No local changes') || output.includes('not found')
+            || output.includes('error:') || output.includes('Already up to date')
+            || output.includes('No differences') || output.includes('Specify a');
 
-            // Highlight newly created commit
-            clearTimeout(highlightTimerRef.current);
-            const commitEvt = events.find(e => e.type === 'COMMIT' || e.type === 'MERGE_COMMIT');
-            if (commitEvt?.hash) {
-                setHighlightHash(commitEvt.hash);
-                highlightTimerRef.current = setTimeout(() => setHighlightHash(null), 2500);
-            } else {
-                setHighlightHash(null);
+        const nextStepHints = {
+            'git init': '→ Next: Click "+ File" (top right) to create a file, then use git add and git commit.',
+            'git clone': '→ Next: Edit files with "+ File", then git add → git commit → git push.',
+            'git add': '→ Next: Run git commit to save a snapshot of your staged files.',
+            'git commit': '→ Next: Keep building! Create more files, branches, or try git log.',
+        };
+        const hint = !isNoOp ? (nextStepHints[cmd] || '') : '';
+
+        let narration;
+        if (isNoOp) {
+            narration = `⚠️ ${output}`;
+            if (output.includes('Nothing to commit')) {
+                narration += ' → Create a file with "+ File" button, then run git add first.';
+            } else if (output.includes('Nothing to add')) {
+                narration += ' → Create a file first using the "+ File" button (top right of command panel).';
             }
+        } else {
+            narration = `${output}${hint ? ` ${hint}` : ''}`;
+        }
 
-            // Rebase orphan animation
-            const rebaseDone = events.find(e => e.type === 'REBASE_DONE');
-            if (rebaseDone) {
-                setOrphanedHashes(rebaseDone.oldHashes || []);
-                setTimeout(() => setOrphanedHashes([]), 2500);
-            }
-        });
+        setCurrentNarration(narration);
+        setIsManualNarration(true);
+
+        // Highlight newly created commit
+        clearTimeout(highlightTimerRef.current);
+        const commitEvt = events.find(e => e.type === 'COMMIT' || e.type === 'MERGE_COMMIT' || e.type === 'MERGE_3WAY');
+        const commitHash = commitEvt?.hash || commitEvt?.mergeHash;
+        if (commitHash) {
+            setHighlightHash(commitHash);
+            highlightTimerRef.current = setTimeout(() => setHighlightHash(null), 2500);
+        } else {
+            setHighlightHash(null);
+        }
+
+        // Rebase orphan animation
+        const rebaseDone = events.find(e => e.type === 'REBASE_DONE');
+        if (rebaseDone) {
+            setOrphanedHashes(rebaseDone.oldHashes || []);
+            setTimeout(() => setOrphanedHashes([]), 2500);
+        }
     }, []);
 
 
-    const handleAddFile = useCallback((filename, content) => setState(prev => addFile(prev, filename, content)), []);
-    const handleEditFile = useCallback((filename, content) => setState(prev => editFile(prev, filename, content)), []);
+    const handleAddFile = useCallback((filename, content) => setState(addFile(stateRef.current, filename, content)), []);
+    const handleEditFile = useCallback((filename, content) => setState(editFile(stateRef.current, filename, content)), []);
 
     // Resizable split handler
     function handleDividerDrag(clientY) {
@@ -561,30 +540,18 @@ export default function GitSim() {
         setDagHeightPx(Math.max(min, Math.min(max, relY)));
     }
 
-    const timelineItems = commandLog.slice(-12).map((entry, i, arr) => ({
-        id: i, label: entry.command.replace('git ', ''), done: true, active: i === arr.length - 1,
-    }));
-
     const scenarioColor = GUIDED_SCENARIOS[scenarioKey]?.color || '#fffbea';
 
     // ── Center Content ──────────────────────────────────────────────────────
     const centerContent = (
         <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
 
-            {/* Narration Banner */}
-            <NarrationBanner
-                text={currentNarration}
-                stepNum={scenarioStep}
-                totalSteps={totalSteps}
-                color={isManualNarration ? '#e8f5e9' : scenarioColor}
-                isManual={isManualNarration}
-            />
-
             {/* DAG Area */}
             <div style={{
                 flexShrink: 0,
                 height: dagHeightPx ? `${dagHeightPx}px` : '55%',
                 display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                position: 'relative',
             }}>
                 <div style={{
                     padding: '0.4rem 0.75rem', background: '#f0fff4', borderBottom: '2px solid var(--border)',
@@ -594,6 +561,17 @@ export default function GitSim() {
                     <span>🌳 Commit DAG — {repoName}</span>
                     <span style={{ opacity: 0.5 }}>{Object.keys(state.commits).length} commit{Object.keys(state.commits).length !== 1 ? 's' : ''} · {Object.keys(state.branches).length} branch{Object.keys(state.branches).length !== 1 ? 'es' : ''}</span>
                 </div>
+
+                {/* HUD Overlays */}
+                <GitQuestLog state={state} />
+                <FloatingNarration
+                    text={currentNarration}
+                    stepNum={scenarioStep}
+                    totalSteps={totalSteps}
+                    color={isManualNarration ? '#e8f5e9' : scenarioColor}
+                    isManual={isManualNarration}
+                />
+
                 <div style={{ flex: 1, overflow: 'auto' }}>
                     <CommitGraph
                         commits={state.commits}
@@ -616,8 +594,18 @@ export default function GitSim() {
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
                     fontSize: '0.7rem', fontWeight: 800, color: '#66d9ef',
                 }}>
-                    <span>⌨️ Manual Command Panel{isRunning && !isPaused ? ' (scenario running…)' : ''}</span>
-                    <FileEditorBar state={state} onAddFile={handleAddFile} onEditFile={handleEditFile} />
+                    <span>⌨️ Command Panel{isRunning && !isPaused ? ' (scenario running…)' : ''}</span>
+                    <FileEditorBar 
+                        state={state} 
+                        onAddFile={handleAddFile} 
+                        onEditFile={handleEditFile}
+                        filename={editorFilename}
+                        setFilename={setEditorFilename}
+                        content={editorContent}
+                        setContent={setEditorContent}
+                        open={editorOpen}
+                        setOpen={setEditorOpen}
+                    />
                 </div>
                 <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                     <GitTerminal onCommand={handleCommand} commandLog={commandLog} disabled={false} />
@@ -626,12 +614,39 @@ export default function GitSim() {
         </div>
     );
 
+    // ── Scenario Picker (inline in top bar area) ────────────────────────────
+    const scenarioPicker = (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginRight: '0.5rem' }}>
+            <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.5, textTransform: 'uppercase' }}>Guided:</span>
+            <select
+                value={scenarioKey}
+                onChange={e => {
+                    setScenarioKey(e.target.value);
+                    setScenarioStep(0);
+                    setIsRunning(false);
+                    setIsPaused(false);
+                    setIsFinished(false);
+                }}
+                style={{
+                    fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.4rem',
+                    border: '2px solid var(--border)', borderRadius: 4,
+                    background: GUIDED_SCENARIOS[scenarioKey]?.color || '#fff',
+                    cursor: 'pointer',
+                }}
+            >
+                {Object.entries(GUIDED_SCENARIOS).map(([key, sc]) => (
+                    <option key={key} value={key}>{sc.label}</option>
+                ))}
+            </select>
+        </div>
+    );
+
     return (
         <ImmersiveLayout
-            isActive={isActive}
+            isActive={true}
             title="Git Internals Simulator"
             icon="🌿"
-            moduleLabel={`Module 5 · ${GUIDED_SCENARIOS[scenarioKey]?.label || 'Git & GitHub'}`}
+            moduleLabel={`Module 5 · Git & GitHub`}
             isRunning={isRunning}
             isPaused={isPaused}
             isFinished={isFinished}
@@ -648,17 +663,17 @@ export default function GitSim() {
                 isFinished ? '✅ Scenario complete' :
                     isRunning && !isPaused ? `Running step ${scenarioStep + 1}/${totalSteps}…` :
                         isPaused ? `Paused at step ${scenarioStep}/${totalSteps}` :
-                            'Press ▶ START to auto-play, or run commands manually'
+                            'Run commands below or ▶ START a guided scenario'
             }
             centerContent={centerContent}
-            leftContent={<GitStatePanel state={state} conceptMode={conceptMode} />}
+            leftContent={<GitStatePanel state={state} conceptMode={conceptMode} onFileClick={triggerEditFile} />}
             rightContent={<GitExplainPanel lastCommand={lastCommand} explanation={lastExplanation} conceptMode={conceptMode} state={state} />}
-            timelineItems={timelineItems}
+            hideFooter={true}
+            timelineItems={[]}
             legend={[]}
             conceptMode={conceptMode}
             onConceptModeToggle={() => setConceptMode(m => !m)}
-        >
-            <ConfigPanel onLaunch={handleLaunch} />
-        </ImmersiveLayout>
+            scenarioPicker={scenarioPicker}
+        />
     );
 }

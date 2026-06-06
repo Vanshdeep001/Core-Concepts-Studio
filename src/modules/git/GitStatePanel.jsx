@@ -6,20 +6,25 @@ const STATUS_STYLES = {
     modified: { bg: '#d4edda', color: '#155724', label: 'MOD' },
     deleted: { bg: '#f8d7da', color: '#721c24', label: 'DEL' },
     staged: { bg: '#d1ecf1', color: '#0c5460', label: 'STG' },
+    committed: { bg: '#f3f4f6', color: '#4b5563', label: 'COM' },
 };
 
-function FileRow({ filename, status, content }) {
+function FileRow({ filename, status, content, onFileClick }) {
     const style = STATUS_STYLES[status] || STATUS_STYLES.modified;
     return (
         <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 10 }}
+            whileHover={{ scale: 1.02, borderColor: '#000' }}
+            onClick={() => onFileClick && onFileClick(filename, content)}
             style={{
                 display: 'flex', alignItems: 'center', gap: '0.4rem',
                 padding: '0.35rem 0.5rem', marginBottom: '0.3rem',
                 border: '1.5px solid var(--border)', borderRadius: 6,
                 background: style.bg, fontSize: '0.78rem',
+                cursor: 'pointer', userSelect: 'none',
+                transition: 'border-color 0.15s, background-color 0.15s',
             }}
         >
             <span style={{
@@ -29,6 +34,7 @@ function FileRow({ filename, status, content }) {
             <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {filename}
             </span>
+            {status !== 'deleted' && <span style={{ fontSize: '0.65rem', opacity: 0.4 }}>✏️</span>}
         </motion.div>
     );
 }
@@ -57,7 +63,7 @@ function Section({ title, color, icon, children, count }) {
     );
 }
 
-export default function GitStatePanel({ state, conceptMode }) {
+export default function GitStatePanel({ state, conceptMode, onFileClick }) {
     if (!state.initialized) {
         return (
             <div style={{ opacity: 0.4, textAlign: 'center', paddingTop: '2rem', fontSize: '0.85rem' }}>
@@ -139,7 +145,7 @@ export default function GitStatePanel({ state, conceptMode }) {
                         </div>
                     ) : (
                         Object.entries(workingDirectory).map(([f, v]) => (
-                            <FileRow key={f} filename={f} status={v.status} content={v.content} />
+                            <FileRow key={f} filename={f} status={v.status} content={v.content} onFileClick={onFileClick} />
                         ))
                     )}
                 </AnimatePresence>
@@ -159,7 +165,7 @@ export default function GitStatePanel({ state, conceptMode }) {
                         </div>
                     ) : (
                         Object.entries(stagingArea).map(([f, v]) => (
-                            <FileRow key={f} filename={f} status={v.status || 'staged'} />
+                            <FileRow key={f} filename={f} status={v.status || 'staged'} content={v.content} onFileClick={onFileClick} />
                         ))
                     )}
                 </AnimatePresence>
@@ -167,20 +173,15 @@ export default function GitStatePanel({ state, conceptMode }) {
 
             {/* Current Files (committed snapshot) */}
             <Section title="Committed Snapshot" color="#e8d5f5" icon="📸" count={currentFiles.length}>
-                {currentFiles.length === 0 ? (
-                    <div style={{ opacity: 0.4, fontSize: '0.75rem', fontStyle: 'italic', paddingLeft: '0.25rem' }}>No committed files</div>
-                ) : (
-                    currentFiles.map(f => (
-                        <div key={f} style={{
-                            padding: '0.25rem 0.5rem', marginBottom: '0.25rem',
-                            border: '1.5px solid var(--border)', borderRadius: 5,
-                            fontFamily: 'var(--font-mono)', fontSize: '0.75rem',
-                            background: 'var(--white)',
-                        }}>
-                            📄 {f}
-                        </div>
-                    ))
-                )}
+                <AnimatePresence>
+                    {currentFiles.length === 0 ? (
+                        <div style={{ opacity: 0.4, fontSize: '0.75rem', fontStyle: 'italic', paddingLeft: '0.25rem' }}>No committed files</div>
+                    ) : (
+                        Object.entries(state.currentFiles || {}).map(([f, content]) => (
+                            <FileRow key={f} filename={f} status="committed" content={content} onFileClick={onFileClick} />
+                        ))
+                    )}
+                </AnimatePresence>
             </Section>
 
             {/* Remote */}
