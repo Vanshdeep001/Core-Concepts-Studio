@@ -8,7 +8,7 @@ import {
     CircleShape, SquareShape, RectShape, TriangleShape, PentagonShape, HexagonShape,
     GearIcon, LaptopIcon, ClockIcon, FoodIcon, CoffeeIcon, SleepIcon,
     ClipboardIcon, HandshakeIcon, BlockIcon, CpuIcon, EmailIcon, PhoneIcon,
-    BellIcon, TargetIcon, DiamondIcon, PillarIcon, BuildIcon
+    BellIcon, TargetIcon, DiamondIcon, PillarIcon, BuildIcon, LightbulbIcon
 } from '../../components/Icons';
 
 /* ── PRINCIPLES DATA ── */
@@ -1021,6 +1021,7 @@ export default function SolidPrinciplesSim() {
 
     return (
         <ImmersiveLayout isActive={true} title="SOLID Principles" icon={<BuildIcon />} moduleLabel="OOP MODULE"
+            hideControls={true}
             isRunning={false} isPaused={false} isFinished={false} speed={speed} onSpeedChange={setSpeed}
             onStart={() => {}} onPause={() => {}} onResume={() => {}} onStep={() => {}}
             onReset={() => setActivePrinciple('srp')}

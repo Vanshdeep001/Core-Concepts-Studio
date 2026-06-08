@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MonitorIcon, DatabaseIcon, GlobeIcon, CubeIcon, GitBranchIcon } from '../components/Icons';
+import { MonitorIcon, DatabaseIcon, GlobeIcon, CubeIcon, GitBranchIcon, LayersIcon } from '../components/Icons';
 
 const MODULES = [
     {
@@ -38,6 +38,15 @@ const MODULES = [
         description: 'Four Pillars · Inheritance · Abstract vs Interface · Design Patterns · SOLID · UML',
         sims: ['4 Pillars', 'MRO', 'Patterns', 'SOLID', 'UML', 'Contracts'],
         path: '/oops',
+    },
+    {
+        id: 'systemdesign',
+        label: 'System Design',
+        icon: LayersIcon,
+        color: '#b5e2fa',
+        description: 'Load Balancing · Caching · DB Scaling · Message Queues · API Lifecycle · Microservices',
+        sims: ['LB', 'Cache', 'Scaling', 'MQ', 'API Flow', 'Services'],
+        path: '/systemdesign',
     },
     {
         id: 'git',
@@ -184,22 +193,6 @@ export default function LandingPage() {
                             </div>
                         </Link>
                     </motion.div>
-                ))}
-            </div>
-
-            {/* Stats row */}
-            <div className="stat-cards" style={{ marginBottom: '2rem' }}>
-                {[
-                    { label: 'Modules', value: '5', unit: 'topics', color: 'yellow' },
-                    { label: 'Simulators', value: '14+', unit: 'interactive', color: 'cyan' },
-                    { label: 'Algorithms', value: '30+', unit: 'visualized', color: 'pink' },
-                    { label: 'Real-time', value: '∞', unit: 'step-by-step', color: 'green' },
-                ].map((s) => (
-                    <div key={s.label} className={`stat-card ${s.color}`}>
-                        <div className="stat-card-label">{s.label}</div>
-                        <div className="stat-card-value">{s.value}</div>
-                        <div className="stat-card-unit">{s.unit}</div>
-                    </div>
                 ))}
             </div>
         </div>

@@ -1279,6 +1279,7 @@ export default function AbstractInterfaceSim() {
             title="Abstract Class vs Interface"
             icon={<BlueprintIcon size={22} />}
             moduleLabel="OOP MODULE"
+            hideControls={true}
             isRunning={false}
             isPaused={false}
             isFinished={false}

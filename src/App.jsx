@@ -45,6 +45,15 @@ import UmlDiagramsSim from './modules/oops/UmlDiagramsSim';
 import GitLanding from './modules/git/GitLanding';
 import GitSim from './modules/git/GitSim';
 
+// System Design Module
+import SystemDesignLanding from './modules/systemdesign/SystemDesignLanding';
+import LoadBalancerSim from './modules/systemdesign/LoadBalancerSim';
+import CacheRedisSim from './modules/systemdesign/CacheRedisSim';
+import DbScalingSim from './modules/systemdesign/DbScalingSim';
+import MessageQueueSim from './modules/systemdesign/MessageQueueSim';
+import ApiLifecycleSim from './modules/systemdesign/ApiLifecycleSim';
+import MicroservicesSim from './modules/systemdesign/MicroservicesSim';
+
 const MODULE_LABELS = {
   '/os': 'OS',
   '/dbms': 'DBMS',
@@ -121,6 +130,15 @@ function AppContent() {
           {/* Git Module */}
           <Route path="/git" element={<GitLanding />} />
           <Route path="/git/sim" element={<GitSim />} />
+
+          {/* System Design Module */}
+          <Route path="/systemdesign" element={<SystemDesignLanding />} />
+          <Route path="/systemdesign/load-balancer" element={<LoadBalancerSim />} />
+          <Route path="/systemdesign/cache-redis" element={<CacheRedisSim />} />
+          <Route path="/systemdesign/db-scaling" element={<DbScalingSim />} />
+          <Route path="/systemdesign/message-queue" element={<MessageQueueSim />} />
+          <Route path="/systemdesign/api-lifecycle" element={<ApiLifecycleSim />} />
+          <Route path="/systemdesign/microservices" element={<MicroservicesSim />} />
 
           {/* Fallback */}
           <Route path="*" element={<LandingPage />} />

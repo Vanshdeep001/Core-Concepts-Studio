@@ -1763,6 +1763,7 @@ export default function DesignPatternsSim() {
 
     return (
         <ImmersiveLayout isActive={true} title="Design Patterns" icon={<PuzzleIcon size={22} />} moduleLabel="OOP MODULE"
+            hideControls={true}
             isRunning={false} isPaused={false} isFinished={false} speed={speed} onSpeedChange={setSpeed}
             onStart={() => { }} onPause={() => { }} onResume={() => { }} onStep={() => { }}
             onReset={() => setActivePattern('singleton')}

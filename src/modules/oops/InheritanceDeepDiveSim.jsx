@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import {
     PillarIcon, TerminalIcon, SaveIcon, GearIcon, ShuffleIcon, PlayIcon,
-    InfoIcon, ShieldIcon, LightbulbIcon, ZapIcon, AlertIcon, TreeIcon, WrenchIcon, TargetIcon
+    InfoIcon, ShieldIcon, LightbulbIcon, ZapIcon, AlertIcon, TreeIcon, WrenchIcon, TargetIcon,
+    ActivityIcon
 } from '../../components/Icons';
 
 /* ══════════════════════════════════════════════════════════════════

@@ -1054,6 +1054,7 @@ export default function FourPillarsSim() {
 
     return (
         <ImmersiveLayout isActive={true} title="Four Pillars of OOP" icon={<PillarIcon size={22} />} moduleLabel="OOP MODULE"
+            hideControls={true}
             isRunning={false} isPaused={false} isFinished={false} speed={speed} onSpeedChange={setSpeed}
             onStart={() => {}} onPause={() => {}} onResume={() => {}} onReset={reset}
             onStep={() => { const i = PILLARS.indexOf(activePillar); if (i < 3) changePillar(PILLARS[i + 1]); }}

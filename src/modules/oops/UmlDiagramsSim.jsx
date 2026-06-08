@@ -334,6 +334,7 @@ public class Course {
 
     return (
         <ImmersiveLayout isActive={true} title="UML Diagrams" icon={<ChartIcon size={22} />} moduleLabel="OOP MODULE"
+            hideControls={true}
             isRunning={false} isPaused={false} isFinished={false} speed={speed} onSpeedChange={setSpeed}
             onStart={() => {}} onPause={() => {}} onResume={() => {}} onStep={() => {}}
             onReset={() => { setActiveTab('class'); loadPrebuilt(0); }}
