@@ -59,6 +59,200 @@ const TEMPLATES = [
     }
 ];
 
+// ─── SQL Syntax Tokenizer ───
+// Splits a SQL line into tokens with type info for coloring
+const SQL_KEYWORDS = new Set(['SELECT','FROM','WHERE','JOIN','INNER','LEFT','RIGHT','ON','INSERT','INTO','VALUES','UPDATE','SET','DELETE','GROUP','BY','AS','AND','OR','NOT','IN','COUNT','AVG','SUM','MIN','MAX','ORDER','HAVING','LIMIT','DISTINCT']);
+const SQL_OPERATORS = new Set(['=','>=','<=','>','<','!=','<>','*']);
+
+function tokenizeSqlLine(line) {
+    const tokens = [];
+    // Match words, quoted strings, operators, parens, commas, semicolons, dots, numbers
+    const regex = /('[^']*'|"[^"]*"|\b\w+\b|>=|<=|<>|!=|[=><*(),;.])/g;
+    let m;
+    while ((m = regex.exec(line)) !== null) {
+        const raw = m[0];
+        const upper = raw.toUpperCase();
+        let type = 'ident';
+        if (SQL_KEYWORDS.has(upper)) type = 'keyword';
+        else if (SQL_OPERATORS.has(raw)) type = 'operator';
+        else if (/^['"]/.test(raw)) type = 'string';
+        else if (/^\d+$/.test(raw)) type = 'number';
+        else if (/^[(),;.]$/.test(raw)) type = 'punct';
+        tokens.push({ text: raw, type });
+    }
+    return tokens;
+}
+
+const TOKEN_COLORS = {
+    keyword: '#ff79c6',   // pink
+    ident: '#8be9fd',     // cyan
+    string: '#f1fa8c',    // yellow
+    number: '#bd93f9',    // purple
+    operator: '#ff5555',  // red
+    punct: '#6272a4',     // grey
+};
+
+function RenderSqlTokens({ line }) {
+    const tokens = tokenizeSqlLine(line);
+    return (
+        <span>
+            {tokens.map((tok, i) => (
+                <span key={i} style={{ color: TOKEN_COLORS[tok.type] || '#f8f8f2', marginRight: tok.type === 'punct' ? 0 : 2 }}>
+                    {tok.text}
+                </span>
+            ))}
+        </span>
+    );
+}
+
+// ─── Parse query into logical clause lines ───
+function splitQueryIntoClauses(query) {
+    const q = query.replace(/;$/, '').trim();
+    const upper = q.toUpperCase();
+
+    if (upper.startsWith('SELECT')) {
+        const lines = [];
+        // Break at keywords: SELECT, FROM, JOIN, ON, WHERE, GROUP BY
+        const clauseRegex = /\b(SELECT|FROM|JOIN|INNER\s+JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|ON|WHERE|GROUP\s+BY|ORDER\s+BY|HAVING)\b/gi;
+        let lastIdx = 0;
+        const splits = [];
+        let match;
+        while ((match = clauseRegex.exec(q)) !== null) {
+            if (match.index > lastIdx) {
+                // Attach trailing text to previous split
+                if (splits.length > 0) {
+                    splits[splits.length - 1].text += q.substring(lastIdx, match.index);
+                }
+            }
+            splits.push({ keyword: match[0].toUpperCase().replace(/\s+/g, ' '), text: '', startIdx: match.index });
+            lastIdx = match.index + match[0].length;
+        }
+        if (splits.length > 0) {
+            splits[splits.length - 1].text += q.substring(lastIdx);
+        }
+
+        splits.forEach(s => {
+            const fullLine = (s.keyword === splits[0].keyword ? '' : '  ') + q.substring(s.startIdx, s.startIdx + s.keyword.length) + s.text;
+            let clauseType = 'select';
+            const kw = s.keyword;
+            if (kw === 'SELECT') clauseType = 'select';
+            else if (kw === 'FROM') clauseType = 'from';
+            else if (kw.includes('JOIN')) clauseType = 'join';
+            else if (kw === 'ON') clauseType = 'on';
+            else if (kw === 'WHERE') clauseType = 'where';
+            else if (kw.includes('GROUP')) clauseType = 'groupby';
+            else if (kw.includes('ORDER')) clauseType = 'orderby';
+            else if (kw === 'HAVING') clauseType = 'having';
+            lines.push({ text: fullLine.trimEnd(), clauseType });
+        });
+
+        return lines.length > 0 ? lines : [{ text: q, clauseType: 'select' }];
+    }
+    else if (upper.startsWith('INSERT')) {
+        const parts = [];
+        const intoMatch = q.match(/^(INSERT\s+INTO\s+\w+)/i);
+        if (intoMatch) {
+            parts.push({ text: intoMatch[1], clauseType: 'insert' });
+            const rest = q.substring(intoMatch[0].length).trim();
+            if (rest) parts.push({ text: '  ' + rest, clauseType: 'values' });
+        } else {
+            parts.push({ text: q, clauseType: 'insert' });
+        }
+        return parts;
+    }
+    else if (upper.startsWith('UPDATE')) {
+        const parts = [];
+        const updateMatch = q.match(/^(UPDATE\s+\w+)/i);
+        if (updateMatch) {
+            parts.push({ text: updateMatch[1], clauseType: 'update' });
+            const rest = q.substring(updateMatch[0].length).trim();
+            const setIdx = rest.toUpperCase().indexOf('SET');
+            const whereIdx = rest.toUpperCase().indexOf('WHERE');
+            if (setIdx !== -1 && whereIdx !== -1) {
+                parts.push({ text: '  ' + rest.substring(setIdx, whereIdx).trim(), clauseType: 'set' });
+                parts.push({ text: '  ' + rest.substring(whereIdx).trim(), clauseType: 'where' });
+            } else if (setIdx !== -1) {
+                parts.push({ text: '  ' + rest.substring(setIdx).trim(), clauseType: 'set' });
+            } else {
+                parts.push({ text: '  ' + rest, clauseType: 'set' });
+            }
+        } else {
+            parts.push({ text: q, clauseType: 'update' });
+        }
+        return parts;
+    }
+    else if (upper.startsWith('DELETE')) {
+        const parts = [];
+        const delMatch = q.match(/^(DELETE\s+FROM\s+\w+)/i);
+        if (delMatch) {
+            parts.push({ text: delMatch[1], clauseType: 'delete' });
+            const rest = q.substring(delMatch[0].length).trim();
+            if (rest) parts.push({ text: '  ' + rest, clauseType: 'where' });
+        } else {
+            parts.push({ text: q, clauseType: 'delete' });
+        }
+        return parts;
+    }
+    return [{ text: q, clauseType: 'unknown' }];
+}
+
+// Map step types to their active clause
+function getActiveLineIndex(stepObj, clauses) {
+    if (!stepObj || stepObj.type === 'idle') return -1;
+    const t = stepObj.type;
+    // Find index by clauseType
+    const findClause = (type) => clauses.findIndex(c => c.clauseType === type);
+
+    if (t === 'init') {
+        // Highlight FROM or the table clause
+        const fromIdx = findClause('from');
+        if (fromIdx !== -1) return fromIdx;
+        const insertIdx = findClause('insert');
+        if (insertIdx !== -1) return insertIdx;
+        const updateIdx = findClause('update');
+        if (updateIdx !== -1) return updateIdx;
+        const deleteIdx = findClause('delete');
+        if (deleteIdx !== -1) return deleteIdx;
+        return 0;
+    }
+    if (t === 'eval_filter' || t === 'update_row' || t === 'delete_row') {
+        const whereIdx = findClause('where');
+        return whereIdx !== -1 ? whereIdx : 0;
+    }
+    if (t === 'emit_row' || t === 'emit_join') {
+        return findClause('select') !== -1 ? findClause('select') : 0;
+    }
+    if (t === 'left_scan') {
+        return findClause('from') !== -1 ? findClause('from') : 0;
+    }
+    if (t === 'join_check') {
+        const onIdx = findClause('on');
+        if (onIdx !== -1) return onIdx;
+        const joinIdx = findClause('join');
+        return joinIdx !== -1 ? joinIdx : 0;
+    }
+    if (t === 'bucket') {
+        return findClause('groupby') !== -1 ? findClause('groupby') : 0;
+    }
+    if (t === 'aggregate') {
+        return findClause('select') !== -1 ? findClause('select') : 0;
+    }
+    if (t === 'insert_row') {
+        const valIdx = findClause('values');
+        return valIdx !== -1 ? valIdx : 0;
+    }
+    return 0;
+}
+
+// ─── Status badge color helper ───
+function getStatusStyle(status) {
+    if (status === 'PASS' || status === 'EMITTING') return { bg: '#50fa7b', color: '#1a1a2e' };
+    if (status === 'FAIL') return { bg: '#ff5555', color: '#fff' };
+    if (status === 'SCANNING' || status === 'BUCKET') return { bg: '#f1fa8c', color: '#1a1a2e' };
+    return { bg: '#6272a4', color: '#fff' };
+}
+
+
 export default function SqlQueryVisualizerSim() {
     const [query, setQuery] = useState(TEMPLATES[0].query);
     const [speed, setSpeed] = useState(1000);
@@ -69,8 +263,10 @@ export default function SqlQueryVisualizerSim() {
     const [conceptMode, setConceptMode] = useState(false);
 
     // Database Tables State (can mutate)
-    const [users, setUsers] = useState(INITIAL_USERS);
-    const [orders, setOrders] = useState(INITIAL_ORDERS);
+    const [tables, setTables] = useState({
+        users: INITIAL_USERS,
+        orders: INITIAL_ORDERS
+    });
 
     // Compiler output & Steps
     const [error, setError] = useState(null);
@@ -78,13 +274,16 @@ export default function SqlQueryVisualizerSim() {
     const [resultColumns, setResultColumns] = useState([]);
     const [queryPlan, setQueryPlan] = useState(null);
 
+    // Parsed query clauses for visual display
+    const clauses = useMemo(() => splitQueryIntoClauses(query), [query]);
+
     // Helper to evaluate simple filter conditions
     const evalCondition = (row, field, op, val) => {
         let rowVal = row[field.toLowerCase()] ?? row[field];
         if (rowVal === undefined) return false;
 
         // Clean values
-        let checkVal = val.replace(/['";]/g, '').trim();
+        let checkVal = val.replace(/['\";]/g, '').trim();
         let currentVal = String(rowVal).trim();
 
         // Numeric comparison
@@ -129,19 +328,19 @@ export default function SqlQueryVisualizerSim() {
             }
 
             const selectColsStr = match[1].trim();
-            const primaryTable = match[2].trim();
-            const joinTable = match[3] ? match[3].trim() : null;
+            const primaryTable = match[2].trim().toLowerCase();
+            const joinTable = match[3] ? match[3].trim().toLowerCase() : null;
             const joinKeyL = match[4] ? match[4].trim() : null;
             const joinKeyR = match[5] ? match[5].trim() : null;
             const whereClause = match[6] ? match[6].trim() : null;
             const groupByCol = match[7] ? match[7].trim() : null;
 
             // Validate tables
-            if (primaryTable.toLowerCase() !== 'users' && primaryTable.toLowerCase() !== 'orders') {
+            if (!tables[primaryTable]) {
                 setError(`SQL Compiler Error: Table '${primaryTable}' does not exist.`);
                 return;
             }
-            if (joinTable && joinTable.toLowerCase() !== 'users' && joinTable.toLowerCase() !== 'orders') {
+            if (joinTable && !tables[joinTable]) {
                 setError(`SQL Compiler Error: Table '${joinTable}' does not exist.`);
                 return;
             }
@@ -162,11 +361,19 @@ export default function SqlQueryVisualizerSim() {
 
             // Case A: Inner Join query
             if (joinTable) {
-                const isUsersPrimary = primaryTable.toLowerCase() === 'users';
-                const leftTable = isUsersPrimary ? users : orders;
-                const rightTable = isUsersPrimary ? orders : users;
+                const leftTable = tables[primaryTable];
+                const rightTable = tables[joinTable];
                 
-                setResultColumns(selectCols.map(c => c.replace(/^\w+\./, '')));
+                // If SELECT *, project all columns from both tables
+                let finalResultCols = [];
+                if (selectColsStr === '*') {
+                    const leftCols = Object.keys(leftTable[0] || {});
+                    const rightCols = Object.keys(rightTable[0] || {});
+                    finalResultCols = [...leftCols, ...rightCols];
+                } else {
+                    finalResultCols = selectCols.map(c => c.replace(/^\w+\./, ''));
+                }
+                setResultColumns(finalResultCols);
 
                 animSteps.push({
                     desc: `Initializing Nested Loop Join: Scanning ${primaryTable} & joining with ${joinTable}...`,
@@ -174,70 +381,95 @@ export default function SqlQueryVisualizerSim() {
                     activeTable: 'both',
                     activeRowData: null,
                     opDetails: { label: 'Nested Loop Join', status: 'INIT' },
-                    currentResults: []
+                    currentResults: [],
+                    isUsersPrimary: primaryTable === 'users'
                 });
+
+                const cleanL = joinKeyL.includes('.') ? joinKeyL.split('.')[1] : joinKeyL;
+                const cleanR = joinKeyR.includes('.') ? joinKeyR.split('.')[1] : joinKeyR;
 
                 // Nested Loop evaluation
                 leftTable.forEach((leftRow, lIdx) => {
+                    const leftId = leftRow.id || leftRow.order_id || Object.values(leftRow)[0];
                     animSteps.push({
-                        desc: `Scanning primary table: evaluating row ${lIdx + 1} (${leftRow.name || leftRow.order_id})...`,
+                        desc: `Scanning primary table ${primaryTable}: evaluating row ${lIdx + 1}...`,
                         type: 'left_scan',
                         activeTable: 'both',
-                        highlightedUsers: isUsersPrimary ? [leftRow.id] : [],
-                        highlightedOrders: isUsersPrimary ? [] : [leftRow.order_id],
+                        highlightedUsers: primaryTable === 'users' ? [leftId] : [],
+                        highlightedOrders: primaryTable === 'orders' ? [leftId] : [],
+                        activeTableHighlights: {
+                            [primaryTable]: [leftId]
+                        },
                         activeRowData: leftRow,
                         opDetails: { label: `Scan Left Row`, status: 'SCANNING' },
-                        currentResults: [...currentResults]
+                        currentResults: [...currentResults],
+                        isUsersPrimary: primaryTable === 'users'
                     });
 
                     rightTable.forEach((rightRow, rIdx) => {
-                        const leftJoinKeyVal = isUsersPrimary ? leftRow.id : leftRow.user_id;
-                        const rightJoinKeyVal = isUsersPrimary ? rightRow.user_id : rightRow.id;
-                        const isMatch = leftJoinKeyVal === rightJoinKeyVal;
+                        const rightId = rightRow.id || rightRow.order_id || Object.values(rightRow)[0];
+                        const leftJoinKeyVal = leftRow[cleanL] ?? leftRow[cleanL.toLowerCase()];
+                        const rightJoinKeyVal = rightRow[cleanR] ?? rightRow[cleanR.toLowerCase()];
+                        const isMatch = String(leftJoinKeyVal).trim().toLowerCase() === String(rightJoinKeyVal).trim().toLowerCase();
 
                         const activeCompareData = {
-                            left_id: leftJoinKeyVal,
-                            right_user_id: rightJoinKeyVal,
-                            left_info: leftRow.name || leftRow.product,
-                            right_info: rightRow.product || rightRow.name
+                            left_key: leftJoinKeyVal,
+                            right_key: rightJoinKeyVal,
+                            comparison: `${leftJoinKeyVal} == ${rightJoinKeyVal}`
                         };
 
                         animSteps.push({
-                            desc: `Comparing keys: Left (${leftJoinKeyVal}) == Right (${rightJoinKeyVal})? ${isMatch ? 'MATCH ✅' : 'NO MATCH ❌'}`,
+                            desc: `Comparing keys: Left (${leftJoinKeyVal}) == Right (${rightJoinKeyVal})? ${isMatch ? 'MATCH' : 'NO MATCH'}`,
                             type: 'join_check',
                             activeTable: 'both',
-                            highlightedUsers: [isUsersPrimary ? leftRow.id : rightRow.id],
-                            highlightedOrders: [isUsersPrimary ? rightRow.order_id : leftRow.order_id],
+                            highlightedUsers: [],
+                            highlightedOrders: [],
+                            activeTableHighlights: {
+                                [primaryTable]: [leftId],
+                                [joinTable]: [rightId]
+                            },
                             isMatch,
-                            bezierLine: isMatch ? [{ userId: isUsersPrimary ? leftRow.id : rightRow.id, orderId: isUsersPrimary ? rightRow.order_id : leftRow.order_id }] : [],
                             activeRowData: activeCompareData,
                             opDetails: {
                                 label: `Join Match: ${leftJoinKeyVal} == ${rightJoinKeyVal}`,
                                 status: isMatch ? 'PASS' : 'FAIL'
                             },
-                            currentResults: [...currentResults]
+                            currentResults: [...currentResults],
+                            isUsersPrimary: primaryTable === 'users',
+                            joinKeyL: cleanL,
+                            joinKeyR: cleanR
                         });
 
                         if (isMatch) {
                             // Create Joined row
                             const joined = {};
-                            selectCols.forEach(col => {
-                                const cleanCol = col.replace(/^\w+\./, '');
-                                if (leftRow[cleanCol] !== undefined) joined[cleanCol] = leftRow[cleanCol];
-                                else if (rightRow[cleanCol] !== undefined) joined[cleanCol] = rightRow[cleanCol];
-                            });
+                            if (selectColsStr === '*') {
+                                Object.assign(joined, leftRow, rightRow);
+                            } else {
+                                selectCols.forEach(col => {
+                                    const cleanCol = col.replace(/^\w+\./, '');
+                                    if (leftRow[cleanCol] !== undefined) joined[cleanCol] = leftRow[cleanCol];
+                                    else if (rightRow[cleanCol] !== undefined) joined[cleanCol] = rightRow[cleanCol];
+                                });
+                            }
 
                             currentResults.push(joined);
                             animSteps.push({
                                 desc: `Match confirmed: Emitting joined row to result table!`,
                                 type: 'emit_join',
                                 activeTable: 'both',
-                                highlightedUsers: [isUsersPrimary ? leftRow.id : rightRow.id],
-                                highlightedOrders: [isUsersPrimary ? rightRow.order_id : leftRow.order_id],
-                                bezierLine: [{ userId: isUsersPrimary ? leftRow.id : rightRow.id, orderId: isUsersPrimary ? rightRow.order_id : leftRow.order_id }],
+                                highlightedUsers: [],
+                                highlightedOrders: [],
+                                activeTableHighlights: {
+                                    [primaryTable]: [leftId],
+                                    [joinTable]: [rightId]
+                                },
                                 activeRowData: joined,
                                 opDetails: { label: 'Emit Joined Row', status: 'EMITTING' },
-                                currentResults: [...currentResults]
+                                currentResults: [...currentResults],
+                                isUsersPrimary: primaryTable === 'users',
+                                joinKeyL: cleanL,
+                                joinKeyR: cleanR
                             });
                         }
                     });
@@ -245,7 +477,7 @@ export default function SqlQueryVisualizerSim() {
             } 
             // Case B: Group By Aggregation
             else if (groupByCol) {
-                const targetTable = primaryTable.toLowerCase() === 'users' ? users : orders;
+                const targetTable = tables[primaryTable];
                 const grpCol = groupByCol.toLowerCase();
 
                 // Setup columns based on SELECT clause
@@ -258,7 +490,7 @@ export default function SqlQueryVisualizerSim() {
                 animSteps.push({
                     desc: `Initializing GROUP BY on column '${groupByCol}'...`,
                     type: 'init',
-                    activeTable: primaryTable.toLowerCase(),
+                    activeTable: primaryTable,
                     activeRowData: null,
                     opDetails: { label: 'Group By init', status: 'INIT' },
                     currentResults: []
@@ -267,23 +499,28 @@ export default function SqlQueryVisualizerSim() {
                 const buckets = {};
                 
                 targetTable.forEach((row, idx) => {
-                    const keyVal = String(row[grpCol] ?? row[groupByCol]);
+                    const rowId = row.id || row.order_id || Object.values(row)[0];
+                    const keyVal = String(row[grpCol] ?? row[groupByCol] ?? '');
                     if (!buckets[keyVal]) buckets[keyVal] = [];
                     buckets[keyVal].push(row);
 
                     animSteps.push({
                         desc: `Scanning row ${idx + 1}: Value of ${groupByCol} is '${keyVal}'. Assigning to bucket...`,
                         type: 'bucket',
-                        activeTable: primaryTable.toLowerCase(),
-                        highlightedUsers: primaryTable.toLowerCase() === 'users' ? [row.id] : [],
-                        highlightedOrders: primaryTable.toLowerCase() === 'orders' ? [row.order_id] : [],
+                        activeTable: primaryTable,
+                        highlightedUsers: [],
+                        highlightedOrders: [],
+                        activeTableHighlights: {
+                            [primaryTable]: [rowId]
+                        },
                         buckets: JSON.parse(JSON.stringify(buckets)),
                         activeRowData: row,
                         opDetails: {
                             label: `Group key (${groupByCol}) = '${keyVal}'`,
                             status: 'BUCKET'
                         },
-                        currentResults: []
+                        currentResults: [],
+                        filterField: groupByCol
                     });
                 });
 
@@ -292,8 +529,13 @@ export default function SqlQueryVisualizerSim() {
                 keys.forEach((key, kIdx) => {
                     const groupRows = buckets[key];
                     const count = groupRows.length;
-                    const sumAge = groupRows.reduce((sum, r) => sum + (r.age || 0), 0);
-                    const avgAge = count > 0 ? (sumAge / count).toFixed(1) : 0;
+                    
+                    let sumVal = 0;
+                    let hasAge = groupRows.some(r => r.age !== undefined);
+                    if (hasAge) {
+                        sumVal = groupRows.reduce((sum, r) => sum + (Number(r.age) || 0), 0);
+                    }
+                    const avgAge = count > 0 ? (sumVal / count).toFixed(1) : 0;
 
                     const aggRow = {};
                     selectCols.forEach(c => {
@@ -305,10 +547,17 @@ export default function SqlQueryVisualizerSim() {
 
                     currentResults.push(aggRow);
 
+                    const groupRowIds = groupRows.map(r => r.id || r.order_id || Object.values(r)[0]);
+
                     animSteps.push({
-                        desc: `Computing aggregate for group '${key}': count=${count}, avg_age=${avgAge}...`,
+                        desc: `Computing aggregate for group '${key}': count=${count}${hasAge ? `, avg_age=${avgAge}` : ''}...`,
                         type: 'aggregate',
-                        activeTable: primaryTable.toLowerCase(),
+                        activeTable: primaryTable,
+                        highlightedUsers: [],
+                        highlightedOrders: [],
+                        activeTableHighlights: {
+                            [primaryTable]: groupRowIds
+                        },
                         buckets: JSON.parse(JSON.stringify(buckets)),
                         activeRowData: aggRow,
                         opDetails: {
@@ -321,11 +570,12 @@ export default function SqlQueryVisualizerSim() {
             } 
             // Case C: Standard Select / Filter
             else {
-                const targetTable = primaryTable.toLowerCase() === 'users' ? users : orders;
-                const isUsers = primaryTable.toLowerCase() === 'users';
-
+                const targetTable = tables[primaryTable];
+                const isUsers = primaryTable === 'users';
+                
                 if (selectColsStr === '*') {
-                    setResultColumns(isUsers ? ['id', 'name', 'age', 'city'] : ['order_id', 'user_id', 'product', 'amount']);
+                    const firstRow = targetTable[0] || {};
+                    setResultColumns(Object.keys(firstRow));
                 } else {
                     setResultColumns(selectCols);
                 }
@@ -333,9 +583,9 @@ export default function SqlQueryVisualizerSim() {
                 animSteps.push({
                     desc: `Initializing Sequential Scan on table '${primaryTable}'...`,
                     type: 'init',
-                    activeTable: primaryTable.toLowerCase(),
+                    activeTable: primaryTable,
                     activeRowData: null,
-                    opDetails: { label: 'Seq Scan Scan', status: 'INIT' },
+                    opDetails: { label: 'Seq Scan', status: 'INIT' },
                     currentResults: []
                 });
 
@@ -355,24 +605,31 @@ export default function SqlQueryVisualizerSim() {
                 }
 
                 targetTable.forEach((row, idx) => {
+                    const rowId = row.id || row.order_id || Object.values(row)[0];
                     let isMatch = true;
                     if (whereClause) {
                         isMatch = evalCondition(row, filterField, filterOp, filterVal);
                     }
 
                     animSteps.push({
-                        desc: `Evaluating Row ${idx + 1}: ${whereClause ? `${filterField} (${row[filterField]}) ${filterOp} ${filterVal}?` : 'No predicate.'} -> ${isMatch ? 'PASS ✅' : 'FAIL ❌'}`,
+                        desc: `Evaluating Row ${idx + 1}: ${whereClause ? `${filterField} (${row[filterField]}) ${filterOp} ${filterVal}?` : 'No predicate.'} -> ${isMatch ? 'PASS' : 'FAIL'}`,
                         type: 'eval_filter',
-                        activeTable: primaryTable.toLowerCase(),
-                        highlightedUsers: isUsers ? [row.id] : [],
-                        highlightedOrders: isUsers ? [] : [row.order_id],
+                        activeTable: primaryTable,
+                        highlightedUsers: isUsers ? [rowId] : [],
+                        highlightedOrders: isUsers ? [] : [rowId],
+                        activeTableHighlights: {
+                            [primaryTable]: [rowId]
+                        },
                         isMatch,
                         activeRowData: row,
                         opDetails: {
                             label: whereClause ? `${filterField} (${row[filterField]}) ${filterOp} ${filterVal}` : 'Select All',
                             status: isMatch ? 'PASS' : 'FAIL'
                         },
-                        currentResults: [...currentResults]
+                        currentResults: [...currentResults],
+                        filterField,
+                        filterOp,
+                        filterVal
                     });
 
                     if (isMatch) {
@@ -389,12 +646,18 @@ export default function SqlQueryVisualizerSim() {
                         animSteps.push({
                             desc: `Projecting row into results.`,
                             type: 'emit_row',
-                            activeTable: primaryTable.toLowerCase(),
-                            highlightedUsers: isUsers ? [row.id] : [],
-                            highlightedOrders: isUsers ? [] : [row.order_id],
+                            activeTable: primaryTable,
+                            highlightedUsers: isUsers ? [rowId] : [],
+                            highlightedOrders: isUsers ? [] : [rowId],
+                            activeTableHighlights: {
+                                [primaryTable]: [rowId]
+                            },
                             activeRowData: projected,
                             opDetails: { label: 'Emit Output', status: 'EMITTING' },
-                            currentResults: [...currentResults]
+                            currentResults: [...currentResults],
+                            filterField,
+                            filterOp,
+                            filterVal
                         });
                     }
                 });
@@ -419,36 +682,32 @@ export default function SqlQueryVisualizerSim() {
             const colsStr = match[2] ? match[2].trim() : null;
             const valsStr = match[3].trim();
 
-            if (table !== 'users') {
-                setError("SQL Engine: Mutation is only permitted on 'Users' table in this simulator.");
+            if (!tables[table]) {
+                setError(`SQL Engine: Table '${table}' does not exist.`);
                 return;
             }
 
             const values = valsStr.split(',').map(v => v.replace(/['"]/g, '').trim());
+            const targetTableData = tables[table];
+            const firstRow = targetTableData[0] || {};
+            const columns = Object.keys(firstRow);
 
-            if (values.length !== 4) {
-                setError("SQL Engine Error: Insert expects exactly 4 values (id, name, age, city).");
+            if (values.length !== columns.length) {
+                setError(`SQL Engine Error: Insert expects exactly ${columns.length} values (${columns.join(', ')}).`);
                 return;
             }
 
             const newId = parseInt(values[0]);
-            const newName = values[1];
-            const newAge = parseInt(values[2]);
-            const newCity = values[3];
+            const pkField = columns[0];
 
-            if (isNaN(newId) || isNaN(newAge)) {
-                setError("SQL Engine Error: Invalid datatype. ID and Age must be integers.");
-                return;
-            }
-
-            if (users.some(u => u.id === newId)) {
-                setError(`SQL Engine Error: Primary key constraint violation. User ID ${newId} already exists.`);
+            if (targetTableData.some(u => parseInt(u[pkField]) === newId)) {
+                setError(`SQL Engine Error: Primary key constraint violation. Value ${newId} already exists in ${pkField}.`);
                 return;
             }
 
             setQueryPlan({
                 type: 'INSERT',
-                tables: ['Users'],
+                tables: [table],
                 cost: 'O(1) - Row Append',
                 index: 'None',
                 stages: ['Parse SQL', 'Primary Key Check', 'Append Row']
@@ -456,24 +715,39 @@ export default function SqlQueryVisualizerSim() {
 
             setResultColumns(['Status']);
 
-            const newRow = { id: newId, name: newName, age: newAge, city: newCity };
+            const newRow = {};
+            columns.forEach((col, cidx) => {
+                const isNum = typeof firstRow[col] === 'number';
+                newRow[col] = isNum ? Number(values[cidx]) : values[cidx];
+            });
+
             const animSteps = [
                 {
                     desc: "Checking primary key constraint... Success.",
                     type: 'init',
-                    activeTable: 'users',
+                    activeTable: table,
                     activeRowData: newRow,
                     opDetails: { label: 'Constraint Check', status: 'PASS' },
-                    currentResults: []
+                    currentResults: [],
+                    highlightedUsers: table === 'users' ? [newId] : [],
+                    highlightedOrders: table === 'orders' ? [newId] : [],
+                    activeTableHighlights: {
+                        [table]: [newId]
+                    }
                 },
                 {
-                    desc: `Inserting values: (${newId}, '${newName}', ${newAge}, '${newCity}') into Users table...`,
+                    desc: `Inserting values: (${values.join(', ')}) into ${table} table...`,
                     type: 'insert_row',
-                    activeTable: 'users',
+                    activeTable: table,
                     newRow,
                     activeRowData: newRow,
                     opDetails: { label: 'Insert Record', status: 'PASS' },
-                    currentResults: [{ Status: '1 row inserted successfully.' }]
+                    currentResults: [{ Status: '1 row inserted successfully.' }],
+                    highlightedUsers: table === 'users' ? [newId] : [],
+                    highlightedOrders: table === 'orders' ? [newId] : [],
+                    activeTableHighlights: {
+                        [table]: [newId]
+                    }
                 }
             ];
 
@@ -496,8 +770,8 @@ export default function SqlQueryVisualizerSim() {
             const setClause = match[2].trim();
             const whereClause = match[3] ? match[3].trim() : null;
 
-            if (table !== 'users') {
-                setError("SQL Engine: Mutation is only permitted on 'Users' table in this simulator.");
+            if (!tables[table]) {
+                setError(`SQL Engine: Table '${table}' does not exist.`);
                 return;
             }
 
@@ -527,7 +801,7 @@ export default function SqlQueryVisualizerSim() {
 
             setQueryPlan({
                 type: 'UPDATE',
-                tables: ['Users'],
+                tables: [table],
                 cost: 'O(N) - Table Scan',
                 index: 'None',
                 stages: ['Parse SQL', 'Locate Row', 'In-Place Mutation']
@@ -537,9 +811,9 @@ export default function SqlQueryVisualizerSim() {
 
             const animSteps = [
                 {
-                    desc: "Scanning Users table to match predicate...",
+                    desc: `Scanning ${table} table to match predicate...`,
                     type: 'init',
-                    activeTable: 'users',
+                    activeTable: table,
                     activeRowData: null,
                     opDetails: { label: 'Init Update Scan', status: 'INIT' },
                     currentResults: []
@@ -547,9 +821,10 @@ export default function SqlQueryVisualizerSim() {
             ];
 
             let updateCount = 0;
-            const mutatedUsersList = JSON.parse(JSON.stringify(users));
+            const mutatedList = JSON.parse(JSON.stringify(tables[table]));
 
-            mutatedUsersList.forEach((row, idx) => {
+            mutatedList.forEach((row, idx) => {
+                const rowId = row.id || row.order_id || Object.values(row)[0];
                 let isMatch = true;
                 if (whereClause) {
                     isMatch = evalCondition(row, filterField, filterOp, filterVal);
@@ -561,32 +836,43 @@ export default function SqlQueryVisualizerSim() {
                     updateCount++;
 
                     animSteps.push({
-                        desc: `Matching Row found (ID: ${row.id}). Mutating cell: updating ${updateField} from '${oldRow[updateField]}' to '${row[updateField]}'...`,
+                        desc: `Matching Row found. Mutating cell: updating ${updateField} from '${oldRow[updateField]}' to '${row[updateField]}'...`,
                         type: 'update_row',
-                        activeTable: 'users',
-                        highlightedUsers: [row.id],
+                        activeTable: table,
+                        highlightedUsers: table === 'users' ? [rowId] : [],
+                        highlightedOrders: table === 'orders' ? [rowId] : [],
+                        activeTableHighlights: {
+                            [table]: [rowId]
+                        },
                         isMatch: true,
-                        mutatedUsers: JSON.parse(JSON.stringify(mutatedUsersList)),
+                        mutatedUsers: JSON.parse(JSON.stringify(mutatedList)),
                         activeRowData: row,
                         opDetails: {
                             label: `Update ${updateField} = ${updateVal}`,
                             status: 'PASS'
                         },
-                        currentResults: [{ Status: `Updated ${updateCount} row(s) successfully.` }]
+                        currentResults: [{ Status: `Updated ${updateCount} row(s) successfully.` }],
+                        filterField,
+                        updateField
                     });
                 } else {
                     animSteps.push({
-                        desc: `Evaluating Row (ID: ${row.id}): Predicate failed. Skipping row.`,
+                        desc: `Evaluating Row: Predicate failed. Skipping row.`,
                         type: 'update_row',
-                        activeTable: 'users',
-                        highlightedUsers: [row.id],
+                        activeTable: table,
+                        highlightedUsers: table === 'users' ? [rowId] : [],
+                        highlightedOrders: table === 'orders' ? [rowId] : [],
+                        activeTableHighlights: {
+                            [table]: [rowId]
+                        },
                         isMatch: false,
                         activeRowData: row,
                         opDetails: {
                             label: `Match WHERE condition`,
                             status: 'FAIL'
                         },
-                        currentResults: []
+                        currentResults: [],
+                        filterField
                     });
                 }
             });
@@ -609,8 +895,8 @@ export default function SqlQueryVisualizerSim() {
             const table = match[1].trim().toLowerCase();
             const whereClause = match[2] ? match[2].trim() : null;
 
-            if (table !== 'users') {
-                setError("SQL Engine: Mutation is only permitted on 'Users' table in this simulator.");
+            if (!tables[table]) {
+                setError(`SQL Engine: Table '${table}' does not exist.`);
                 return;
             }
 
@@ -630,7 +916,7 @@ export default function SqlQueryVisualizerSim() {
 
             setQueryPlan({
                 type: 'DELETE',
-                tables: ['Users'],
+                tables: [table],
                 cost: 'O(N) - Table Scan',
                 index: 'None',
                 stages: ['Parse SQL', 'Locate Match', 'Deallocate Row']
@@ -640,19 +926,21 @@ export default function SqlQueryVisualizerSim() {
 
             const animSteps = [
                 {
-                    desc: "Scanning Users table for target rows...",
+                    desc: `Scanning ${table} table for target rows...`,
                     type: 'init',
-                    activeTable: 'users',
+                    activeTable: table,
                     activeRowData: null,
                     opDetails: { label: 'Init Delete Scan', status: 'INIT' },
                     currentResults: []
                 }
             ];
 
-            let mutatedUsersList = JSON.parse(JSON.stringify(users));
+            let mutatedList = JSON.parse(JSON.stringify(tables[table]));
             let deleteCount = 0;
+            const targetTableData = tables[table];
 
-            users.forEach((row, idx) => {
+            targetTableData.forEach((row, idx) => {
+                const rowId = row.id || row.order_id || Object.values(row)[0];
                 let isMatch = true;
                 if (whereClause) {
                     isMatch = evalCondition(row, filterField, filterOp, filterVal);
@@ -661,35 +949,46 @@ export default function SqlQueryVisualizerSim() {
                 if (isMatch) {
                     deleteCount++;
                     // Remove from list
-                    mutatedUsersList = mutatedUsersList.filter(u => u.id !== row.id);
+                    const pkField = Object.keys(row)[0];
+                    mutatedList = mutatedList.filter(u => u[pkField] !== row[pkField]);
 
                     animSteps.push({
-                        desc: `Matching Row found (ID: ${row.id}). Discarding from grid...`,
+                        desc: `Matching Row found. Discarding from grid...`,
                         type: 'delete_row',
-                        activeTable: 'users',
-                        highlightedUsers: [row.id],
+                        activeTable: table,
+                        highlightedUsers: table === 'users' ? [rowId] : [],
+                        highlightedOrders: table === 'orders' ? [rowId] : [],
+                        activeTableHighlights: {
+                            [table]: [rowId]
+                        },
                         isMatch: true,
-                        mutatedUsers: JSON.parse(JSON.stringify(mutatedUsersList)),
+                        mutatedUsers: JSON.parse(JSON.stringify(mutatedList)),
                         activeRowData: row,
                         opDetails: {
                             label: 'Match condition. Delete!',
                             status: 'PASS'
                         },
-                        currentResults: [{ Status: `Deleted ${deleteCount} row(s) successfully.` }]
+                        currentResults: [{ Status: `Deleted ${deleteCount} row(s) successfully.` }],
+                        filterField
                     });
                 } else {
                     animSteps.push({
-                        desc: `Evaluating Row (ID: ${row.id}): Predicate failed. Keeping row.`,
+                        desc: `Evaluating Row: Predicate failed. Keeping row.`,
                         type: 'delete_row',
-                        activeTable: 'users',
-                        highlightedUsers: [row.id],
+                        activeTable: table,
+                        highlightedUsers: table === 'users' ? [rowId] : [],
+                        highlightedOrders: table === 'orders' ? [rowId] : [],
+                        activeTableHighlights: {
+                            [table]: [rowId]
+                        },
                         isMatch: false,
                         activeRowData: row,
                         opDetails: {
                             label: 'Match WHERE condition',
                             status: 'FAIL'
                         },
-                        currentResults: []
+                        currentResults: [],
+                        filterField
                     });
                 }
             });
@@ -718,13 +1017,22 @@ export default function SqlQueryVisualizerSim() {
                     // Commit mutations to tables when they execute in steps
                     const stepObj = steps[nextStep];
                     if (stepObj.type === 'insert_row' && stepObj.newRow) {
-                        setUsers(prev => [...prev, stepObj.newRow]);
+                        setTables(prev => ({
+                            ...prev,
+                            [stepObj.activeTable]: [...prev[stepObj.activeTable], stepObj.newRow]
+                        }));
                     }
                     if (stepObj.type === 'update_row' && stepObj.mutatedUsers && stepObj.isMatch) {
-                        setUsers(stepObj.mutatedUsers);
+                        setTables(prev => ({
+                            ...prev,
+                            [stepObj.activeTable]: stepObj.mutatedUsers
+                        }));
                     }
                     if (stepObj.type === 'delete_row' && stepObj.mutatedUsers && stepObj.isMatch) {
-                        setUsers(stepObj.mutatedUsers);
+                        setTables(prev => ({
+                            ...prev,
+                            [stepObj.activeTable]: stepObj.mutatedUsers
+                        }));
                     }
                 } else {
                     setIsFinished(true);
@@ -746,8 +1054,10 @@ export default function SqlQueryVisualizerSim() {
     };
 
     const handleReset = () => {
-        setUsers(INITIAL_USERS);
-        setOrders(INITIAL_ORDERS);
+        setTables({
+            users: INITIAL_USERS,
+            orders: INITIAL_ORDERS
+        });
         setSteps([]);
         setCurrentStep(0);
         setIsRunning(false);
@@ -768,18 +1078,361 @@ export default function SqlQueryVisualizerSim() {
             // Apply mutations
             const stepObj = steps[nextStep];
             if (stepObj.type === 'insert_row' && stepObj.newRow) {
-                setUsers(prev => [...prev, stepObj.newRow]);
+                setTables(prev => ({
+                    ...prev,
+                    [stepObj.activeTable]: [...prev[stepObj.activeTable], stepObj.newRow]
+                }));
             }
             if (stepObj.type === 'update_row' && stepObj.mutatedUsers && stepObj.isMatch) {
-                setUsers(stepObj.mutatedUsers);
+                setTables(prev => ({
+                    ...prev,
+                    [stepObj.activeTable]: stepObj.mutatedUsers
+                }));
             }
             if (stepObj.type === 'delete_row' && stepObj.mutatedUsers && stepObj.isMatch) {
-                setUsers(stepObj.mutatedUsers);
+                setTables(prev => ({
+                    ...prev,
+                    [stepObj.activeTable]: stepObj.mutatedUsers
+                }));
             }
         } else {
             setIsFinished(true);
             setIsRunning(false);
         }
+    };
+
+    // ─── Dynamic Table Schema & Editing Handlers ───
+    const handleEditCell = (tableName, rowIndex, field, value) => {
+        setTables(prev => {
+            const tableData = [...prev[tableName]];
+            const row = { ...tableData[rowIndex] };
+            
+            // Cast numeric fields if applicable
+            row[field] = (field.toLowerCase().includes('id') || field.toLowerCase() === 'age' || field.toLowerCase() === 'amount')
+                ? (isNaN(Number(value)) ? value : Number(value))
+                : value;
+                
+            tableData[rowIndex] = row;
+            return { ...prev, [tableName]: tableData };
+        });
+    };
+
+    const handleAddRow = (tableName) => {
+        setTables(prev => {
+            const tableData = [...prev[tableName]];
+            const firstRow = tableData[0] || {};
+            const newRow = {};
+            
+            Object.keys(firstRow).forEach(col => {
+                if (col.toLowerCase().includes('id')) {
+                    const maxVal = tableData.length > 0 
+                        ? Math.max(...tableData.map(r => Number(r[col]) || 0)) 
+                        : 0;
+                    newRow[col] = maxVal + 1;
+                } else if (typeof firstRow[col] === 'number') {
+                    newRow[col] = 0;
+                } else {
+                    newRow[col] = '';
+                }
+            });
+            
+            if (Object.keys(firstRow).length === 0) {
+                newRow['id'] = 1;
+            }
+            
+            return { ...prev, [tableName]: [...tableData, newRow] };
+        });
+    };
+
+    const handleRemoveRow = (tableName, rowIndex) => {
+        setTables(prev => ({
+            ...prev,
+            [tableName]: prev[tableName].filter((_, i) => i !== rowIndex)
+        }));
+    };
+
+    const handleAddColumn = (tableName, colName) => {
+        if (!colName) return;
+        const cleanCol = colName.trim().toLowerCase().replace(/\s+/g, '_');
+        setTables(prev => {
+            const tableData = prev[tableName].map(row => ({
+                ...row,
+                [cleanCol]: ''
+            }));
+            return { ...prev, [tableName]: tableData };
+        });
+    };
+
+    const handleRemoveColumn = (tableName, colName) => {
+        setTables(prev => {
+            const tableData = prev[tableName].map(row => {
+                const newRow = { ...row };
+                delete newRow[colName];
+                return newRow;
+            });
+            return { ...prev, [tableName]: tableData };
+        });
+    };
+
+    const handleAddTable = (tableName) => {
+        if (!tableName) return;
+        const cleanName = tableName.trim().toLowerCase().replace(/\s+/g, '_');
+        if (tables[cleanName]) {
+            setError(`Table '${cleanName}' already exists.`);
+            return;
+        }
+        setTables(prev => ({
+            ...prev,
+            [cleanName]: [
+                { id: 1, name: '' }
+            ]
+        }));
+    };
+
+    const handleRemoveTable = (tableName) => {
+        setTables(prev => {
+            const next = { ...prev };
+            delete next[tableName];
+            return next;
+        });
+    };
+
+    // Helper to calculate row background color during simulation
+    const getRowHighlightStyle = (tableName, rowId) => {
+        if (!isSimActive) return { bg: 'transparent' };
+        
+        const highlights = activeStepObj.activeTableHighlights?.[tableName] || [];
+        const isHlg = highlights.includes(rowId) ||
+            (tableName === 'users' && activeStepObj.highlightedUsers?.includes(rowId)) ||
+            (tableName === 'orders' && activeStepObj.highlightedOrders?.includes(rowId));
+            
+        if (!isHlg) return { bg: 'transparent' };
+        
+        const type = activeStepObj.type;
+        const isMatch = activeStepObj.isMatch;
+        
+        // Green tints for pass/matches
+        if (
+            (type === 'eval_filter' && isMatch) ||
+            (type === 'join_check' && isMatch) ||
+            (type === 'emit_row') ||
+            (type === 'emit_join') ||
+            (type === 'insert_row') ||
+            (type === 'update_row' && isMatch)
+        ) {
+            return { bg: 'rgba(168,230,207,0.45)' };
+        }
+        
+        // Red/Pink tints for fail/discards
+        if (
+            (type === 'eval_filter' && !isMatch) ||
+            (type === 'join_check' && !isMatch) ||
+            (type === 'update_row' && !isMatch) ||
+            (type === 'delete_row' && isMatch)
+        ) {
+            return { bg: 'rgba(255,107,157,0.25)' };
+        }
+        
+        // Blue/Purple for bucketing / grouping
+        if (type === 'bucket' || type === 'aggregate') {
+            return { bg: 'rgba(189,147,249,0.25)' };
+        }
+        
+        // Yellow/orange for scanning or general highlights
+        return { bg: 'rgba(255,217,61,0.25)' };
+    };
+
+    // Helper to style specific cell values during active simulation stages
+    const getCellHighlightStyle = (tableName, rowId, field) => {
+        if (!isSimActive) return {};
+        
+        const highlights = activeStepObj.activeTableHighlights?.[tableName] || [];
+        const isHlg = highlights.includes(rowId) ||
+            (tableName === 'users' && activeStepObj.highlightedUsers?.includes(rowId)) ||
+            (tableName === 'orders' && activeStepObj.highlightedOrders?.includes(rowId));
+            
+        if (!isHlg) return {};
+        
+        const type = activeStepObj.type;
+        
+        // 1. Highlight target filtering column
+        if (activeStepObj.filterField && activeStepObj.filterField.toLowerCase() === field.toLowerCase()) {
+            if (type === 'eval_filter' || type === 'update_row' || type === 'delete_row' || type === 'bucket') {
+                return {
+                    outline: '2.5px solid var(--text)',
+                    outlineOffset: '-2.5px',
+                    fontWeight: 900,
+                    background: 'rgba(255,255,255,0.7)',
+                };
+            }
+        }
+        
+        // 2. Highlight target join column
+        if (type === 'join_check' || type === 'emit_join') {
+            const cleanL = activeStepObj.joinKeyL;
+            const cleanR = activeStepObj.joinKeyR;
+            if (cleanL && cleanL.toLowerCase() === field.toLowerCase()) {
+                return {
+                    outline: '2.5px solid var(--text)',
+                    outlineOffset: '-2.5px',
+                    fontWeight: 900,
+                    background: 'rgba(255,255,255,0.7)',
+                };
+            }
+            if (cleanR && cleanR.toLowerCase() === field.toLowerCase()) {
+                return {
+                    outline: '2.5px solid var(--text)',
+                    outlineOffset: '-2.5px',
+                    fontWeight: 900,
+                    background: 'rgba(255,255,255,0.7)',
+                };
+            }
+        }
+        
+        // 3. Highlight updated field during update mutations
+        if (type === 'update_row' && activeStepObj.isMatch && activeStepObj.updateField && activeStepObj.updateField.toLowerCase() === field.toLowerCase()) {
+            return {
+                fontWeight: 900,
+                background: 'var(--purple)',
+                color: 'var(--white)',
+            };
+        }
+        
+        return {};
+    };
+
+    const getColumnHeaderStyle = (tableName, columnName) => {
+        if (!isSimActive) return {};
+        
+        const currentClause = clauses[activeLineIdx];
+        if (!currentClause) return {};
+        
+        const type = activeStepObj.type;
+        const clauseType = currentClause.clauseType;
+        
+        let isAffected = false;
+        
+        // 1. WHERE filter column
+        if (clauseType === 'where' && activeStepObj.filterField) {
+            if (activeStepObj.filterField.toLowerCase() === columnName.toLowerCase()) {
+                isAffected = true;
+            }
+        }
+        
+        // 2. JOIN ON keys
+        if ((clauseType === 'on' || clauseType === 'join') && (type === 'join_check' || type === 'emit_join')) {
+            const cleanL = activeStepObj.joinKeyL;
+            const cleanR = activeStepObj.joinKeyR;
+            if (cleanL && cleanL.toLowerCase() === columnName.toLowerCase()) {
+                isAffected = true;
+            }
+            if (cleanR && cleanR.toLowerCase() === columnName.toLowerCase()) {
+                isAffected = true;
+            }
+        }
+        
+        // 3. SET columns during UPDATE
+        if (clauseType === 'set' && activeStepObj.updateField) {
+            if (activeStepObj.updateField.toLowerCase() === columnName.toLowerCase()) {
+                isAffected = true;
+            }
+        }
+        
+        // 4. SELECT / projection columns
+        if (clauseType === 'select') {
+            const textUpper = currentClause.text.toUpperCase();
+            if (textUpper.includes('*')) {
+                if (tableName === activeStepObj.activeTable || activeStepObj.activeTable === 'both') {
+                    isAffected = true;
+                }
+            } else {
+                const colPattern = new RegExp(`\\b(${tableName}\\.)?${columnName}\\b`, 'i');
+                if (colPattern.test(currentClause.text)) {
+                    isAffected = true;
+                }
+            }
+        }
+        
+        // 5. GROUP BY columns
+        if (clauseType === 'groupby') {
+            const colPattern = new RegExp(`\\b(${tableName}\\.)?${columnName}\\b`, 'i');
+            if (colPattern.test(currentClause.text)) {
+                isAffected = true;
+            }
+        }
+
+        // 6. INSERT columns
+        if (clauseType === 'insert' || clauseType === 'values') {
+            if (tableName === activeStepObj.activeTable) {
+                isAffected = true;
+            }
+        }
+        
+        if (isAffected) {
+            return {
+                background: 'rgba(255, 217, 61, 0.45)',
+                color: '#000',
+                fontWeight: 900,
+                boxShadow: 'inset 0 -3px 0 var(--border)',
+                transition: 'all 0.15s ease'
+            };
+        }
+        return {};
+    };
+
+    const getRowStatusIndicator = (type, isMatch) => {
+        let color = '#f1fa8c'; // default scanning yellow
+        let label = 'SCAN';
+        
+        if (type === 'left_scan' || type === 'init') {
+            color = '#f1fa8c'; // yellow
+            label = 'SCAN';
+        } else if (type === 'eval_filter' || type === 'join_check' || type === 'update_row' || type === 'delete_row') {
+            if (isMatch) {
+                color = '#50fa7b'; // green
+                label = 'PASS';
+            } else {
+                color = '#ff5555'; // red
+                label = 'SKIP';
+            }
+        } else if (type === 'emit_row' || type === 'emit_join' || type === 'insert_row') {
+            color = '#50fa7b'; // green
+            label = 'EMIT';
+        } else if (type === 'bucket') {
+            color = '#bd93f9'; // purple
+            label = 'BCKT';
+        } else if (type === 'aggregate') {
+            color = '#bd93f9'; // purple
+            label = 'AGG';
+        }
+
+        return (
+            <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                background: 'rgba(30, 30, 46, 0.95)',
+                border: `1.5px solid ${color}`,
+                borderRadius: '4px',
+                padding: '1px 4px',
+                fontSize: '0.52rem',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 900,
+                color: color,
+                boxShadow: `0 0 8px rgba(${color === '#50fa7b' ? '80,250,123' : color === '#ff5555' ? '255,85,85' : color === '#bd93f9' ? '189,147,249' : '241,250,140'}, 0.4)`,
+                userSelect: 'none',
+                verticalAlign: 'middle',
+                marginRight: '6px',
+            }}>
+                <span className="pulse-dot" style={{
+                    width: '4px',
+                    height: '4px',
+                    borderRadius: '50%',
+                    backgroundColor: color,
+                }} />
+                {label}
+            </span>
+        );
     };
 
     const activeStepObj = steps[currentStep] || {
@@ -795,6 +1448,8 @@ export default function SqlQueryVisualizerSim() {
 
     const activeRowData = activeStepObj.activeRowData;
     const opDetails = activeStepObj.opDetails || { label: 'Waiting', status: 'IDLE' };
+    const isSimActive = isRunning || isPaused || isFinished;
+    const activeLineIdx = isSimActive ? getActiveLineIndex(activeStepObj, clauses) : -1;
 
     return (
         <ImmersiveLayout
@@ -816,26 +1471,46 @@ export default function SqlQueryVisualizerSim() {
             totalSteps={steps.length}
             phaseName={error ? "Syntax Error" : isFinished ? "Query completed" : isRunning ? "Evaluating Query Plan..." : "Idle"}
             centerContent={
-                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '0.8rem', background: 'var(--white)', padding: '1rem', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--white)', padding: '0', overflowY: 'auto' }}>
+                    <style>{`
+                        .no-scrollbar::-webkit-scrollbar {
+                            display: none;
+                        }
+                        .no-scrollbar {
+                            -ms-overflow-style: none;
+                            scrollbar-width: none;
+                        }
+                        @keyframes statusPulse {
+                            0% { transform: scale(0.8); opacity: 0.6; }
+                            100% { transform: scale(1.25); opacity: 1; }
+                        }
+                        .pulse-dot {
+                            animation: statusPulse 1s infinite alternate ease-in-out;
+                        }
+                    `}</style>
                     
                     {/* Error Overlay Console */}
                     {error && (
-                        <div style={{ border: '3px solid var(--pink)', background: 'rgba(255, 107, 157, 0.15)', color: 'var(--pink)', padding: '0.6rem', fontWeight: 700, fontSize: '0.78rem', fontFamily: 'var(--font-mono)' }}>
-                            ⚠️ {error}
+                        <div style={{ border: '2px solid var(--pink)', borderLeft: '5px solid var(--pink)', background: 'rgba(255,107,157,0.08)', color: 'var(--pink)', padding: '0.6rem 0.8rem', fontWeight: 700, fontSize: '0.78rem', fontFamily: 'var(--font-mono)', margin: '0.5rem' }}>
+                            <span style={{ marginRight: '6px', fontWeight: 900 }}>[!]</span> {error}
                         </div>
                     )}
 
-                    {/* Pre-made Templates */}
-                    <div style={{ flexShrink: 0 }}>
-                        <div style={{ fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.25rem' }}>Templates / Quick Queries</div>
-                        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                    {/* ─── Template Pills ─── */}
+                    <div style={{ padding: '0.6rem 0.8rem', borderBottom: '2px solid var(--border)', flexShrink: 0 }}>
+                        <div style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', opacity: 0.4, marginBottom: '0.35rem' }}>Templates</div>
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                             {TEMPLATES.map((t, idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => { setQuery(t.query); handleReset(); }}
                                     style={{
-                                        border: '2px solid var(--border)', background: query === t.query ? 'var(--cyan)' : 'var(--white)',
-                                        color: '#000', padding: '0.2rem 0.5rem', fontWeight: 700, fontSize: '0.68rem', cursor: 'pointer',
+                                        border: '2px solid var(--border)',
+                                        background: query === t.query ? 'var(--cyan)' : 'var(--white)',
+                                        color: 'var(--text)',
+                                        padding: '0.2rem 0.5rem', fontWeight: 700, fontSize: '0.62rem', cursor: 'pointer',
+                                        boxShadow: query === t.query ? '2px 2px 0 var(--border)' : 'none',
+                                        transition: 'all 0.15s',
                                     }}
                                     title={t.desc}
                                 >
@@ -845,237 +1520,355 @@ export default function SqlQueryVisualizerSim() {
                         </div>
                     </div>
 
-                    {/* SQL Editor Area */}
-                    <div className="panel" style={{ flexShrink: 0 }}>
-                        <div className="panel-header" style={{ background: 'var(--orange)', fontSize: '0.75rem', padding: '4px 8px' }}>
-                            Interactive SQL Editor
-                        </div>
-                        <div style={{ padding: '0.5rem', background: 'var(--white)' }}>
-                            <textarea
-                                value={query}
-                                onChange={e => { setQuery(e.target.value); if (steps.length) handleReset(); }}
-                                style={{
-                                    width: '100%', height: '80px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem',
-                                    background: '#222', color: '#66d9ef', border: '2px solid var(--border)', padding: '0.4rem',
-                                    resize: 'none', outline: 'none'
-                                }}
-                                placeholder="SELECT * FROM Users WHERE age > 25;"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Simulation Console Screen */}
-                    <div className="panel" style={{ flexShrink: 0 }}>
-                        <div className="panel-header" style={{ background: 'var(--yellow)', fontSize: '0.72rem', padding: '4px 8px' }}>
-                            DBMS Execution Console Logs
-                        </div>
-                        <div style={{ padding: '0.5rem 0.8rem', background: '#111', color: '#a8e6cf', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-                            🚀 {activeStepObj.desc}
-                        </div>
-                    </div>
-
-                    {/* Live Visual Pipeline Processor (New Creative Animation Node) */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '3.5px dashed var(--border)', padding: '1rem', background: 'var(--white)', borderRadius: '4px', flexShrink: 0, minHeight: '130px', position: 'relative' }}>
-                        <div style={{ position: 'absolute', top: 5, left: 10, fontSize: '0.55rem', fontFamily: 'var(--font-mono)', fontWeight: 900, opacity: 0.35 }}>
-                            SQL_PIPELINE_ENGINE
-                        </div>
+                    {/* ─── UNIFIED SQL CONSOLE ─── */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '320px' }}>
                         
-                        <div style={{ display: 'flex', width: '100%', justifyContent: 'space-around', alignItems: 'center', gap: '1rem', marginTop: '0.4rem' }}>
-                            
-                            {/* Input Row Card */}
-                            <div style={{ minWidth: '130px' }}>
-                                <div style={{ fontSize: '0.55rem', fontWeight: 900, opacity: 0.5, textAlign: 'center', marginBottom: '2px' }}>SCANNED RECORD</div>
-                                <AnimatePresence mode="wait">
-                                    {activeRowData ? (
-                                        <motion.div
-                                            key={JSON.stringify(activeRowData)}
-                                            initial={{ opacity: 0, x: -30, scale: 0.9 }}
-                                            animate={{ opacity: 1, x: 0, scale: 1 }}
-                                            exit={{ opacity: 0, x: 30, scale: 0.9 }}
-                                            style={{
-                                                background: 'var(--white)', border: '2px solid var(--border)', padding: '0.4rem',
-                                                boxShadow: '3px 3px 0 var(--border)', fontSize: '0.62rem', fontFamily: 'var(--font-mono)'
-                                            }}
-                                        >
-                                            {Object.entries(activeRowData).map(([key, val]) => (
-                                                <div key={key}>
-                                                    <span style={{ opacity: 0.6 }}>{key}:</span> {String(val)}
+                        {/* Mode A: Editable textarea when idle */}
+                        {!isSimActive && (
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0' }}>
+                                <div style={{ padding: '0.35rem 0.8rem', borderBottom: '2px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--orange)' }}>
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>Interactive SQL Editor</span>
+                                    <div style={{ flex: 1 }} />
+                                    <span style={{ fontSize: '0.55rem', opacity: 0.5, fontFamily: 'var(--font-mono)' }}>Press START to simulate</span>
+                                </div>
+                                <textarea
+                                    value={query}
+                                    onChange={e => { setQuery(e.target.value); if (steps.length) handleReset(); }}
+                                    style={{
+                                        flex: 1, width: '100%', minHeight: '180px', fontFamily: 'var(--font-mono)', fontSize: '0.82rem',
+                                        background: '#1e1e2e', color: '#cdd6f4', border: 'none', padding: '0.6rem 0.8rem',
+                                        resize: 'none', outline: 'none', lineHeight: 1.7,
+                                    }}
+                                    placeholder="SELECT * FROM Users WHERE age > 25;"
+                                    spellCheck={false}
+                                />
+                            </div>
+                        )}
+
+                        {/* Mode B: Syntax highlighted line-by-line player when simulating */}
+                        {isSimActive && (
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#1e1e2e', borderBottom: '2px solid var(--border)', overflowY: 'auto' }}>
+                                <div style={{ padding: '0.3rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+                                    <span style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.35)' }}>Query Execution</span>
+                                    <div style={{ flex: 1 }} />
+                                    <span style={{ fontSize: '0.55rem', fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.25)' }}>
+                                        Step {currentStep + 1}/{steps.length}
+                                    </span>
+                                </div>
+                                <div style={{ padding: '0.3rem 0', flex: 1, overflowY: 'auto' }}>
+                                {clauses.map((clause, lineIdx) => {
+                                    const isActive = lineIdx === activeLineIdx;
+                                    const isPast = activeLineIdx > lineIdx;
+                                    return (
+                                        <div key={lineIdx}>
+                                            {/* The SQL line */}
+                                            <motion.div
+                                                animate={{
+                                                    backgroundColor: isActive ? 'rgba(255,255,255,0.06)' : 'transparent',
+                                                }}
+                                                transition={{ duration: 0.2 }}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', padding: '0', cursor: 'default',
+                                                    borderLeft: isActive ? '3px solid #a6e3a1' : isPast ? '3px solid rgba(166,227,161,0.2)' : '3px solid transparent',
+                                                    minHeight: '1.6rem',
+                                                }}
+                                            >
+                                                {/* Line number gutter */}
+                                                <div style={{
+                                                    width: 32, flexShrink: 0, textAlign: 'right', paddingRight: '0.4rem',
+                                                    fontFamily: 'var(--font-mono)', fontSize: '0.62rem',
+                                                    color: isActive ? '#a6e3a1' : 'rgba(255,255,255,0.15)',
+                                                    userSelect: 'none', fontWeight: isActive ? 800 : 400,
+                                                }}>
+                                                    {lineIdx + 1}
                                                 </div>
-                                            ))}
-                                        </motion.div>
-                                    ) : (
-                                        <div style={{ border: '2px dashed #ccc', height: '55px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: '0.62rem' }}>
-                                            [Waiting for Scan]
+
+                                                {/* Active indicator arrow */}
+                                                <div style={{
+                                                    width: 16, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontSize: '0.5rem', color: '#a6e3a1',
+                                                }}>
+                                                    {isActive && (
+                                                        <motion.span
+                                                            initial={{ opacity: 0, x: -3 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            style={{ fontWeight: 900, lineHeight: 1 }}
+                                                        >▶</motion.span>
+                                                    )}
+                                                </div>
+
+                                                {/* SQL Code */}
+                                                <div style={{
+                                                    flex: 1, padding: '0.15rem 0.4rem', fontFamily: 'var(--font-mono)', fontSize: '0.78rem',
+                                                    lineHeight: 1.5, opacity: isActive ? 1 : isPast ? 0.35 : 0.65,
+                                                    whiteSpace: 'pre-wrap', wordBreak: 'break-all',
+                                                }}>
+                                                    <RenderSqlTokens line={clause.text} />
+                                                </div>
+                                            </motion.div>
+
+                                            {/* ─── Inline Detail Drawer (only under active line) ─── */}
+                                            <AnimatePresence>
+                                                {isActive && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                        exit={{ height: 0, opacity: 0 }}
+                                                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                                                        style={{ overflow: 'hidden', marginLeft: 51, marginRight: 8 }}
+                                                    >
+                                                        <div style={{
+                                                            background: 'rgba(255,255,255,0.04)', borderRadius: '4px',
+                                                            border: '1px solid rgba(255,255,255,0.08)', padding: '0.4rem 0.6rem',
+                                                            marginBottom: '0.25rem', marginTop: '0.1rem',
+                                                        }}>
+                                                            {/* Natural language log */}
+                                                            <div style={{
+                                                                fontSize: '0.68rem', color: '#a6e3a1', fontFamily: 'var(--font-mono)',
+                                                                lineHeight: 1.5, marginBottom: activeRowData ? '0.35rem' : 0,
+                                                            }}>
+                                                                {activeStepObj.desc}
+                                                            </div>
+
+                                                            {/* Active record data pills + status badge */}
+                                                            {activeRowData && (
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
+                                                                    {Object.entries(activeRowData).map(([key, val]) => (
+                                                                        <span key={key} style={{
+                                                                            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                                                                            borderRadius: '3px', padding: '0.1rem 0.3rem',
+                                                                            fontSize: '0.58rem', fontFamily: 'var(--font-mono)', color: '#cdd6f4',
+                                                                        }}>
+                                                                            <span style={{ color: '#6c7086' }}>{key}:</span> {String(val)}
+                                                                        </span>
+                                                                    ))}
+
+                                                                    {/* Status badge */}
+                                                                    <motion.span
+                                                                        key={opDetails.status + currentStep}
+                                                                        initial={{ scale: 0.8, opacity: 0 }}
+                                                                        animate={{ scale: 1, opacity: 1 }}
+                                                                        style={{
+                                                                            background: getStatusStyle(opDetails.status).bg,
+                                                                            color: getStatusStyle(opDetails.status).color,
+                                                                            fontSize: '0.55rem', fontWeight: 900, padding: '0.1rem 0.4rem',
+                                                                            borderRadius: '3px', textTransform: 'uppercase', letterSpacing: '0.05em',
+                                                                            marginLeft: 'auto',
+                                                                        }}
+                                                                    >
+                                                                        {opDetails.status}
+                                                                    </motion.span>
+                                                                </div>
+                                                            )}
+
+                                                            {!activeRowData && opDetails.status && (
+                                                                <div style={{ marginTop: '0.2rem' }}>
+                                                                    <motion.span
+                                                                        key={opDetails.status + currentStep}
+                                                                        initial={{ scale: 0.8 }}
+                                                                        animate={{ scale: 1 }}
+                                                                        style={{
+                                                                            background: getStatusStyle(opDetails.status).bg,
+                                                                            color: getStatusStyle(opDetails.status).color,
+                                                                            fontSize: '0.55rem', fontWeight: 900, padding: '0.1rem 0.4rem',
+                                                                            borderRadius: '3px', textTransform: 'uppercase',
+                                                                        }}
+                                                                    >
+                                                                        {opDetails.status}
+                                                                    </motion.span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                         </div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-
-                            {/* Operator Node */}
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', minWidth: '140px' }}>
-                                <div style={{
-                                    background: 'var(--yellow)', border: '2px solid var(--border)', padding: '0.4rem',
-                                    boxShadow: '3px 3px 0 var(--border)', width: '100%', textAlign: 'center'
-                                }}>
-                                    <div style={{ fontSize: '0.6rem', fontWeight: 900 }}>EVAL OPERATOR</div>
-                                    <div style={{ height: 2, background: 'var(--border)', margin: '4px 0' }} />
-                                    <div style={{ fontSize: '0.58rem', fontFamily: 'var(--font-mono)', wordBreak: 'break-all' }}>
-                                        {opDetails.label}
-                                    </div>
-                                </div>
-
-                                {opDetails.status && (
-                                    <motion.div
-                                        key={opDetails.status}
-                                        initial={{ scale: 0.8, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        style={{
-                                            background: opDetails.status === 'PASS' || opDetails.status === 'EMITTING' ? 'var(--green)' : opDetails.status === 'FAIL' ? 'var(--pink)' : 'var(--cyan)',
-                                            color: '#000', border: '1.5px solid var(--border)', fontSize: '0.58rem', fontWeight: 900, padding: '1px 5px', marginTop: '2px', textTransform: 'uppercase'
-                                        }}
-                                    >
-                                        {opDetails.status}
-                                    </motion.div>
-                                )}
-                            </div>
-
-                            {/* Routing arrows */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                    <motion.span
-                                        animate={(opDetails.status === 'PASS' || opDetails.status === 'EMITTING') ? { x: [0, 8, 0] } : {}}
-                                        transition={{ repeat: Infinity, duration: 0.8 }}
-                                        style={{ fontSize: '1rem', color: (opDetails.status === 'PASS' || opDetails.status === 'EMITTING') ? 'var(--green)' : '#ccc' }}
-                                    >
-                                        ➔
-                                    </motion.span>
-                                    <div style={{
-                                        background: (opDetails.status === 'PASS' || opDetails.status === 'EMITTING') ? 'rgba(168,230,207,0.3)' : 'transparent',
-                                        border: '2px solid ' + ((opDetails.status === 'PASS' || opDetails.status === 'EMITTING') ? 'var(--border)' : '#ccc'),
-                                        padding: '0.2rem 0.4rem', fontSize: '0.6rem', fontWeight: 700, fontFamily: 'var(--font-mono)'
-                                    }}>
-                                        EMIT RESULT
-                                    </div>
-                                </div>
-
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                    <motion.span
-                                        animate={opDetails.status === 'FAIL' ? { x: [0, 8, 0] } : {}}
-                                        transition={{ repeat: Infinity, duration: 0.8 }}
-                                        style={{ fontSize: '1rem', color: opDetails.status === 'FAIL' ? 'var(--pink)' : '#ccc' }}
-                                    >
-                                        ➔
-                                    </motion.span>
-                                    <div style={{
-                                        background: opDetails.status === 'FAIL' ? 'rgba(255,107,157,0.2)' : 'transparent',
-                                        border: '2px solid ' + (opDetails.status === 'FAIL' ? 'var(--border)' : '#ccc'),
-                                        padding: '0.2rem 0.4rem', fontSize: '0.6rem', fontWeight: 700, fontFamily: 'var(--font-mono)'
-                                    }}>
-                                        DISCARD 🗑️
-                                    </div>
+                                    );
+                                })}
                                 </div>
                             </div>
-
-                        </div>
+                        )}
                     </div>
 
-                    {/* Grid Databases Representation */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '1.25rem', flex: 1, position: 'relative' }}>
-                        
-                        {/* Users Table Card */}
-                        <div style={{ border: '3px solid var(--border)', background: 'var(--white)' }}>
-                            <div style={{ background: 'var(--cyan)', borderBottom: '3px solid var(--border)', padding: '4px 8px', fontSize: '0.72rem', fontWeight: 900, display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><DatabaseIcon size={12} /> Table: Users</span>
-                                <span style={{ fontSize: '0.55rem', opacity: 0.6 }}>Primary Key (id)</span>
-                            </div>
-                            <table className="neo-table" style={{ fontSize: '0.72rem' }}>
-                                <thead>
-                                    <tr>
-                                        <th>id</th>
-                                        <th>name</th>
-                                        <th>age</th>
-                                        <th>city</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {users.map((row) => {
-                                        const isHlg = activeStepObj.highlightedUsers?.includes(row.id);
-                                        const isFilterMatch = activeStepObj.type === 'eval_filter' && isHlg && activeStepObj.isMatch;
-                                        const isFilterFail = activeStepObj.type === 'eval_filter' && isHlg && !activeStepObj.isMatch;
-                                        let bg = 'transparent';
-                                        if (isFilterMatch) bg = 'rgba(168,230,207,0.4)'; // success glow
-                                        else if (isFilterFail) bg = 'rgba(255,107,157,0.3)'; // fail dim
-                                        else if (isHlg) bg = 'rgba(255,217,61,0.3)'; // active scan
-
-                                        return (
-                                            <motion.tr
-                                                key={row.id}
-                                                animate={{ background: bg }}
-                                                transition={{ duration: 0.15 }}
-                                            >
-                                                <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 800 }}>{row.id}</td>
-                                                <td>{row.name}</td>
-                                                <td style={{ fontFamily: 'var(--font-mono)' }}>{row.age}</td>
-                                                <td>{row.city}</td>
-                                            </motion.tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Orders Table Card */}
-                        <div style={{ border: '3px solid var(--border)', background: 'var(--white)' }}>
-                            <div style={{ background: 'var(--pink)', borderBottom: '3px solid var(--border)', padding: '4px 8px', fontSize: '0.72rem', fontWeight: 900, display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><DatabaseIcon size={12} /> Table: Orders</span>
-                                <span style={{ fontSize: '0.55rem', opacity: 0.6 }}>Foreign Key (user_id)</span>
-                            </div>
-                            <table className="neo-table" style={{ fontSize: '0.72rem' }}>
-                                <thead>
-                                    <tr>
-                                        <th>order_id</th>
-                                        <th>user_id</th>
-                                        <th>product</th>
-                                        <th>amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {orders.map((row) => {
-                                        const isHlg = activeStepObj.highlightedOrders?.includes(row.order_id);
-                                        let bg = isHlg ? 'rgba(255,217,61,0.3)' : 'transparent';
-                                        return (
-                                            <motion.tr
-                                                key={row.order_id}
-                                                animate={{ background: bg }}
-                                                transition={{ duration: 0.15 }}
-                                            >
-                                                <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 800 }}>{row.order_id}</td>
-                                                <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{row.user_id}</td>
-                                                <td>{row.product}</td>
-                                                <td style={{ fontFamily: 'var(--font-mono)' }}>${row.amount}</td>
-                                            </motion.tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                    {/* ─── Data Tables Toolbar ─── */}
+                    <div style={{ padding: '0.4rem 0.8rem', borderTop: '2px solid var(--border)', background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.7 }}>Database Tables</span>
+                        {!isSimActive && (
+                            <button
+                                onClick={() => {
+                                    const tName = prompt("Enter new table name:");
+                                    if (tName) handleAddTable(tName);
+                                }}
+                                style={{
+                                    border: '2px solid var(--border)',
+                                    background: 'var(--green)',
+                                    color: 'white',
+                                    padding: '0.15rem 0.4rem', fontWeight: 700, fontSize: '0.62rem', cursor: 'pointer',
+                                    boxShadow: '1.5px 1.5px 0 var(--border)',
+                                }}
+                            >
+                                + Add Custom Table
+                            </button>
+                        )}
                     </div>
 
-                    {/* Dynamic Aggregated Group By Buckets Visualizer */}
+                    {/* ─── Data Tables ─── */}
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: Object.keys(tables).length > 1 ? '1fr 1fr' : '1fr',
+                        gap: '0.8rem',
+                        padding: '0.8rem',
+                        flexShrink: 0,
+                    }}>
+                        {Object.entries(tables).map(([tableName, rows]) => {
+                            const firstRow = rows[0] || {};
+                            const columns = Object.keys(firstRow);
+                            const isUsers = tableName === 'users';
+                            const headerColor = isUsers ? 'var(--cyan)' : tableName === 'orders' ? 'var(--pink)' : 'var(--yellow)';
+                            
+                            return (
+                                <div key={tableName} style={{ border: '2px solid var(--border)', background: 'var(--white)' }}>
+                                    <div style={{
+                                        padding: '0.35rem 0.6rem', borderBottom: '2px solid var(--border)',
+                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                        background: headerColor,
+                                    }}>
+                                        <span style={{ fontSize: '0.7rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.3rem', textTransform: 'uppercase' }}>
+                                            <DatabaseIcon size={12} /> {tableName}
+                                        </span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                            {!isSimActive && (
+                                                <>
+                                                    <button onClick={() => {
+                                                        const colName = prompt(`Add column to table '${tableName}':`);
+                                                        if (colName) handleAddColumn(tableName, colName);
+                                                    }} style={{
+                                                        background: 'var(--white)', border: '1.5px solid var(--border)', cursor: 'pointer',
+                                                        fontWeight: 700, fontSize: '0.55rem', padding: '1px 4px',
+                                                    }} title="Add column">col+</button>
+                                                    <button onClick={() => handleAddRow(tableName)} style={{
+                                                        background: 'var(--white)', border: '1.5px solid var(--border)', cursor: 'pointer',
+                                                        fontWeight: 900, fontSize: '0.65rem', padding: '0px 5px', lineHeight: '1.3',
+                                                    }} title="Add row">+</button>
+                                                    {Object.keys(tables).length > 1 && (
+                                                        <button onClick={() => handleRemoveTable(tableName)} style={{
+                                                            background: 'none', border: 'none', cursor: 'pointer',
+                                                            color: 'var(--pink)', fontWeight: 900, fontSize: '0.82rem', padding: '0px 3px',
+                                                        }} title="Delete table">×</button>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="no-scrollbar" style={{ overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                                        <table className="neo-table" style={{ fontSize: '0.7rem' }}>
+                                            <thead>
+                                                <tr>
+                                                    {columns.map(col => {
+                                                        const headerStyle = getColumnHeaderStyle(tableName, col);
+                                                        return (
+                                                            <th key={col} style={{ position: 'relative', ...headerStyle }}>
+                                                                {col}
+                                                                {!isSimActive && columns.length > 1 && (
+                                                                    <span onClick={() => handleRemoveColumn(tableName, col)} style={{
+                                                                        marginLeft: '4px', color: 'var(--pink)', cursor: 'pointer', fontWeight: 900, fontSize: '0.6rem'
+                                                                    }} title="Remove column">×</span>
+                                                                )}
+                                                            </th>
+                                                        );
+                                                    })}
+                                                    {!isSimActive && <th style={{ width: 28 }}></th>}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {rows.map((row, rowIndex) => {
+                                                    const rowId = row.id || row.order_id || Object.values(row)[0];
+                                                    const style = getRowHighlightStyle(tableName, rowId);
+                                                    
+                                                    const highlights = activeStepObj.activeTableHighlights?.[tableName] || [];
+                                                    const isRowActive = isSimActive && (
+                                                        highlights.includes(rowId) ||
+                                                        (tableName === 'users' && activeStepObj.highlightedUsers?.includes(rowId)) ||
+                                                        (tableName === 'orders' && activeStepObj.highlightedOrders?.includes(rowId))
+                                                    );
+                                                    
+                                                    return (
+                                                        <motion.tr
+                                                            key={rowIndex}
+                                                            animate={{
+                                                                backgroundColor: style.bg,
+                                                                scale: isRowActive ? 1.025 : 1,
+                                                                boxShadow: isRowActive ? '0 4px 10px rgba(0,0,0,0.15)' : 'none',
+                                                            }}
+                                                            transition={{ duration: 0.15 }}
+                                                            style={{
+                                                                position: 'relative',
+                                                                zIndex: isRowActive ? 10 : 1,
+                                                            }}
+                                                        >
+                                                            {columns.map((field, colIdx) => {
+                                                                const cellStyle = getCellHighlightStyle(tableName, rowId, field);
+                                                                return (
+                                                                    <td key={field} style={{ 
+                                                                        fontFamily: field.toLowerCase().includes('id') || field.toLowerCase() === 'age' || field.toLowerCase() === 'amount' ? 'var(--font-mono)' : 'inherit',
+                                                                        fontWeight: field.toLowerCase().includes('id') ? 800 : 400,
+                                                                        ...cellStyle
+                                                                    }}>
+                                                                        {isSimActive && isRowActive && colIdx === 0 && (
+                                                                            getRowStatusIndicator(activeStepObj.type, activeStepObj.isMatch)
+                                                                        )}
+                                                                        {isSimActive ? (
+                                                                            String(row[field] ?? '')
+                                                                        ) : (
+                                                                            <input
+                                                                                value={String(row[field] ?? '')}
+                                                                                onChange={e => handleEditCell(tableName, rowIndex, field, e.target.value)}
+                                                                                style={{
+                                                                                    border: 'none', background: 'transparent', fontFamily: 'inherit',
+                                                                                    fontSize: 'inherit', fontWeight: 'inherit', color: 'var(--text)',
+                                                                                    width: '100%', padding: 0, outline: 'none',
+                                                                                }}
+                                                                            />
+                                                                        )}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                            {!isSimActive && (
+                                                                <td style={{ textAlign: 'center', padding: '0.15rem' }}>
+                                                                    <button onClick={() => handleRemoveRow(tableName, rowIndex)} style={{
+                                                                        background: 'none', border: 'none', cursor: 'pointer',
+                                                                        color: 'var(--pink)', fontWeight: 900, fontSize: '0.72rem', lineHeight: 1,
+                                                                    }} title="Remove row">×</button>
+                                                                </td>
+                                                            )}
+                                                        </motion.tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* ─── Group By Buckets (only shown during GROUP BY) ─── */}
                     {activeStepObj.buckets && (
-                        <div className="panel" style={{ flexShrink: 0 }}>
-                            <div className="panel-header" style={{ background: 'var(--purple)', fontSize: '0.7rem', padding: '4px' }}>
+                        <div style={{ padding: '0.5rem 0.8rem', flexShrink: 0 }}>
+                            <div className="panel-header" style={{ background: 'var(--purple)', fontSize: '0.68rem', padding: '4px 8px' }}>
                                 Intermediate Grouping Buckets
                             </div>
-                            <div style={{ padding: '0.5rem', display: 'flex', gap: '1rem', background: 'var(--white)' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem', border: '2px solid var(--border)', borderTop: 'none' }}>
                                 {Object.entries(activeStepObj.buckets).map(([key, rows]) => (
-                                    <div key={key} style={{ flex: 1, border: '2px solid var(--border)', padding: '0.35rem', background: '#fafafa' }}>
-                                        <div style={{ fontWeight: 900, fontSize: '0.65rem', borderBottom: '1.5px solid var(--border)', marginBottom: '4px', textTransform: 'uppercase' }}>
-                                            🔑 GROUP: {key}
+                                    <div key={key} style={{
+                                        flex: 1, border: '2px solid var(--border)', padding: '0.35rem', background: '#fafafa',
+                                    }}>
+                                        <div style={{ fontWeight: 900, fontSize: '0.62rem', borderBottom: '1.5px solid var(--border)', paddingBottom: '0.2rem', marginBottom: '0.25rem', textTransform: 'uppercase' }}>
+                                            GROUP: {key}
                                         </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                             {rows.map((r, ri) => (
-                                                <div key={ri} style={{ background: '#eee', padding: '2px 4px', fontSize: '0.58rem', fontFamily: 'var(--font-mono)' }}>
+                                                <div key={ri} style={{ fontSize: '0.58rem', fontFamily: 'var(--font-mono)', background: '#eee', padding: '2px 4px' }}>
                                                     {r.name || r.id} (Age: {r.age})
                                                 </div>
                                             ))}
@@ -1182,13 +1975,14 @@ export default function SqlQueryVisualizerSim() {
                 active: idx === currentStep
             }))}
             legend={[
-                { color: 'var(--cyan)', label: 'Users Grid' },
-                { color: 'var(--pink)', label: 'Orders Grid' },
-                { color: 'var(--yellow)', label: 'Row Scan Evaluation' },
-                { color: 'var(--green)', label: 'Emitted Output Buffer' }
+                { color: 'var(--cyan)', label: 'Users' },
+                { color: 'var(--pink)', label: 'Orders' },
+                { color: 'var(--green)', label: 'Pass / Emit' },
+                { color: 'var(--orange)', label: 'Fail / Discard' },
             ]}
             conceptMode={conceptMode}
             onConceptModeToggle={() => setConceptMode(prev => !prev)}
+            hideFooter={true}
         >
             <div className="main-content">
                 <Link to="/dbms">← Return to DBMS Landing</Link>
