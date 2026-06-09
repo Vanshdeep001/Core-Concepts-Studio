@@ -80,9 +80,9 @@ function buildSteps(octets, prefix) {
             totalHosts: getUsableHosts(effectiveP),
             explanation: `With /${effectiveP}, the first ${effectiveP} bits are the network portion. ${32 - effectiveP} bits remain for host addressing = ${getUsableHosts(effectiveP)} usable hosts.`,
             insight: effectiveP <= 8 ? 'Class A range: First octet is network. Huge address space for very large organizations.' :
-                     effectiveP <= 16 ? 'Class B range: First two octets are network. Medium-sized organizations.' :
-                     effectiveP <= 24 ? 'Class C range: First three octets are network. Small networks (up to 254 hosts).' :
-                     'Subnetting within a Class C: Borrowing host bits to create smaller subnets. Each additional bit halves the hosts.',
+                effectiveP <= 16 ? 'Class B range: First two octets are network. Medium-sized organizations.' :
+                    effectiveP <= 24 ? 'Class C range: First three octets are network. Small networks (up to 254 hosts).' :
+                        'Subnetting within a Class C: Borrowing host bits to create smaller subnets. Each additional bit halves the hosts.',
         });
     }
     const net = getNetworkAddr(ipIntVal, prefix);
@@ -112,6 +112,14 @@ export default function SubnettingSim() {
     const [quizResult, setQuizResult] = useState(null);
     const [speed, setSpeed] = useState(700);
     const [activeTab, setActiveTab] = useState('grid'); // 'grid' | 'routing' | 'tree'
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Routing simulator states
     const [routingIpStr, setRoutingIpStr] = useState('192.168.1.75');
@@ -229,7 +237,7 @@ export default function SubnettingSim() {
         setMatchingSubnetIdx(-1);
         const logs = [];
         logs.push(`[ROUTER] Packet received. Destination IP: ${routingIpStr}`);
-        
+
         let routedIpInt = 0;
         try {
             const parts = routingIpStr.split('.').map(Number);
@@ -252,13 +260,13 @@ export default function SubnettingSim() {
             const s = subnets[i];
             const subMask = maskFromPrefix(s.prefix);
             const andResult = (routedIpInt & subMask) >>> 0;
-            
+
             logs.push(`--------------------------------------`);
             logs.push(`Testing Route #${i + 1}: ${intToIpStr(s.start)}/${s.prefix}`);
             logs.push(`IP   : ${bitsToBinaryStr(routedIpInt, 32)}`);
             logs.push(`MASK : ${bitsToBinaryStr(subMask, 32)}`);
             logs.push(`AND  : ${bitsToBinaryStr(andResult, 32)} (${intToIpStr(andResult)})`);
-            
+
             if (andResult === s.start) {
                 logs.push(`MATCH! Forwarding packet to Port #${i + 1} (${intToIpStr(s.start)}/${s.prefix})`);
                 setMatchingSubnetIdx(i);
@@ -287,7 +295,7 @@ export default function SubnettingSim() {
         const effectivePrefix = curStep ? curStep.prefix : prefix;
 
         return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', background: 'var(--white)', padding: '0.75rem', border: '3px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', background: 'var(--white)', padding: isMobile ? '0.5rem' : '0.75rem', border: '3px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
                 {/* Dotted decimal */}
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                     {octets.map((o, i) => (
@@ -300,20 +308,27 @@ export default function SubnettingSim() {
                                 alignItems: 'center',
                                 background: 'var(--yellow)',
                                 border: '2.5px solid var(--border)',
-                                padding: '2px 8px',
+                                padding: isMobile ? '2px 4px' : '2px 8px',
                                 boxShadow: 'var(--shadow-sm)'
                             }}
                         >
-                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '1.2rem' }}>{o}</span>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: isMobile ? '1rem' : '1.2rem' }}>{o}</span>
                             {i < 3 && <span style={{ fontWeight: 800, marginLeft: '0.3rem', opacity: 0.6 }}>.</span>}
                         </motion.div>
                     ))}
-                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 900, fontSize: '1.2rem', color: 'var(--pink)', marginLeft: '0.5rem' }}>/{effectivePrefix}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 900, fontSize: isMobile ? '1rem' : '1.2rem', color: 'var(--pink)', marginLeft: '0.5rem' }}>/{effectivePrefix}</span>
                 </div>
 
                 {/* IP bit row */}
                 <div style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4 }}>Interactive Bit Panel (Click to flip)</div>
-                <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div className="no-mobile-stack" style={{
+                    display: isMobile ? 'grid' : 'flex',
+                    gridTemplateColumns: isMobile ? 'repeat(16, 1fr)' : undefined,
+                    gap: '2px',
+                    flexWrap: isMobile ? undefined : 'wrap',
+                    justifyContent: 'center',
+                    width: '100%'
+                }}>
                     {ipBits.split('').map((bit, i) => {
                         const isNetwork = i < effectivePrefix;
                         return (
@@ -322,8 +337,9 @@ export default function SubnettingSim() {
                                 onClick={() => flipBit(i)}
                                 whileHover={{ scale: 1.15 }}
                                 style={{
-                                    width: '24px',
-                                    height: '24px',
+                                    width: isMobile ? '100%' : '24px',
+                                    height: isMobile ? 'auto' : '24px',
+                                    aspectRatio: isMobile ? '1' : undefined,
                                     border: '2px solid var(--border)',
                                     background: isNetwork ? 'var(--orange)' : 'var(--cyan)',
                                     display: 'flex',
@@ -331,7 +347,7 @@ export default function SubnettingSim() {
                                     justifyContent: 'center',
                                     fontFamily: 'var(--font-mono)',
                                     fontWeight: 800,
-                                    fontSize: '0.72rem',
+                                    fontSize: isMobile ? '0.55rem' : '0.72rem',
                                     cursor: 'pointer',
                                     position: 'relative',
                                     boxShadow: 'var(--shadow-sm)',
@@ -358,18 +374,26 @@ export default function SubnettingSim() {
 
                 {/* Subnet mask row */}
                 <div style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4, marginTop: '0.2rem' }}>Subnet Mask Bits</div>
-                <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div className="no-mobile-stack" style={{
+                    display: isMobile ? 'grid' : 'flex',
+                    gridTemplateColumns: isMobile ? 'repeat(16, 1fr)' : undefined,
+                    gap: '2px',
+                    flexWrap: isMobile ? undefined : 'wrap',
+                    justifyContent: 'center',
+                    width: '100%'
+                }}>
                     {maskBits.split('').map((bit, i) => (
                         <div key={`mask-${i}`} style={{
-                            width: '24px',
-                            height: '24px',
+                            width: isMobile ? '100%' : '24px',
+                            height: isMobile ? 'auto' : '24px',
+                            aspectRatio: isMobile ? '1' : undefined,
                             border: '2.5px solid var(--border)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontFamily: 'var(--font-mono)',
                             fontWeight: 800,
-                            fontSize: '0.72rem',
+                            fontSize: isMobile ? '0.55rem' : '0.72rem',
                             background: bit === '1' ? 'var(--orange)' : '#e0e0e0',
                             opacity: 0.8,
                             borderRight: (i + 1) % 8 === 0 && i < 31 ? '3.5px solid var(--border)' : '2.5px solid var(--border)'
@@ -400,14 +424,21 @@ export default function SubnettingSim() {
     const renderSubnetGrid = () => {
         const totalRange = broadcast - networkAddr + 1;
         const sliceSize = Math.max(1, totalRange / 256);
-        
+
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'stretch' : 'center',
+                    justifyContent: 'space-between',
+                    gap: isMobile ? '6px' : '0.4rem'
+                }}>
                     <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.5 }}>Subnet grid map (256 segments)</span>
-                    <div style={{ display: 'flex', gap: '3px' }}>
+                    <div style={{ display: 'flex', gap: '3px', width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-start' }}>
                         {[26, 27, 28].map(p => (
                             <button key={p} onClick={() => addSubnet(p)} style={{
+                                flex: isMobile ? 1 : 'none',
                                 fontSize: '0.6rem', fontWeight: 800, padding: '0.2rem 0.5rem',
                                 border: '2px solid var(--border)', background: 'var(--white)',
                                 cursor: 'pointer', fontFamily: 'var(--font-mono)',
@@ -415,6 +446,7 @@ export default function SubnettingSim() {
                             }}>+/{p}</button>
                         ))}
                         <button onClick={clearSubnets} style={{
+                            flex: isMobile ? 1 : 'none',
                             fontSize: '0.6rem', fontWeight: 800, padding: '0.2rem 0.5rem',
                             border: '2px solid var(--border)', background: 'var(--pink)',
                             cursor: 'pointer',
@@ -424,14 +456,16 @@ export default function SubnettingSim() {
                 </div>
 
                 {/* The 16x16 interactive grid */}
-                <div style={{
+                <div className="no-mobile-stack" style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(16, 1fr)',
                     gap: '2px',
                     border: '3px solid var(--border)',
                     background: 'var(--border)',
                     padding: '2px',
-                    boxShadow: 'var(--shadow-sm)'
+                    boxShadow: 'var(--shadow-sm)',
+                    aspectRatio: '1',
+                    width: '100%'
                 }}>
                     {Array.from({ length: 256 }).map((_, cellIdx) => {
                         const cellIpInt = (networkAddr + cellIdx * sliceSize) >>> 0;
@@ -456,7 +490,8 @@ export default function SubnettingSim() {
                             <div
                                 key={cellIdx}
                                 style={{
-                                    aspectRatio: '1',
+                                    width: '100%',
+                                    height: '100%',
                                     background: matchedSubnet ? matchedSubnet.color : '#eaeaea',
                                     border: matchingSubnetIdx === matchedSubnetIdxVal && matchingSubnetIdx !== -1 ? '2px solid red' : 'none',
                                     display: 'flex',
@@ -494,7 +529,7 @@ export default function SubnettingSim() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%' }}>
                 <div style={{ border: '3px solid var(--border)', background: 'var(--white)', padding: '0.75rem', boxShadow: 'var(--shadow-sm)' }}>
                     <div style={{ fontWeight: 800, fontSize: '0.8rem', marginBottom: '0.4rem' }}>⚙ Test Packet Router</div>
-                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.4rem' }}>
                         <input
                             type="text"
                             className="form-input"
@@ -503,7 +538,7 @@ export default function SubnettingSim() {
                             placeholder="Enter target IP (e.g. 192.168.1.75)"
                             style={{ fontFamily: 'var(--font-mono)', flex: 1 }}
                         />
-                        <button className="btn btn-yellow btn-sm" onClick={runRoutingSim}>Route Packet</button>
+                        <button className="btn btn-yellow btn-sm" onClick={runRoutingSim} style={{ justifyContent: 'center' }}>Route Packet</button>
                     </div>
                 </div>
 
@@ -525,7 +560,7 @@ export default function SubnettingSim() {
                             if (log.includes('MATCH!')) color = 'var(--green)';
                             else if (log.includes('MISMATCH') || log.includes('Invalid')) color = 'var(--pink)';
                             else if (log.includes('Testing Route')) color = 'var(--cyan)';
-                            
+
                             return (
                                 <div key={idx} style={{ color, marginBottom: '0.2rem' }}>
                                     {log}
@@ -549,7 +584,7 @@ export default function SubnettingSim() {
         // Recursive renderer for binary tree depth
         const renderTreeNode = (start, end, depth, prefixLen) => {
             const range = end - start + 1;
-            
+
             // Check if matches exactly any created subnet
             let matchedSubnet = null;
             let partial = false;
@@ -582,11 +617,11 @@ export default function SubnettingSim() {
                     <span style={{ fontSize: '0.5rem', opacity: 0.6 }}>({range.toLocaleString()} IPs)</span>
                     {matchedSubnet && <span style={{ fontSize: '0.5rem', fontWeight: 900, color: 'green' }}>ALLOCATED</span>}
                     {partial && <span style={{ fontSize: '0.5rem', fontWeight: 900, color: '#f57c00' }}>PARTIAL</span>}
-                    
+
                     {!matchedSubnet && range > 1 && (
                         <div style={{ display: 'flex', width: '100%', marginTop: '4px', borderTop: '1px solid var(--border)' }}>
-                            {renderTreeNode(start, (start + range/2 - 1) >>> 0, depth + 1, prefixLen + 1)}
-                            {renderTreeNode(((start + range/2)) >>> 0, end, depth + 1, prefixLen + 1)}
+                            {renderTreeNode(start, (start + range / 2 - 1) >>> 0, depth + 1, prefixLen + 1)}
+                            {renderTreeNode(((start + range / 2)) >>> 0, end, depth + 1, prefixLen + 1)}
                         </div>
                     )}
                 </div>
@@ -609,7 +644,7 @@ export default function SubnettingSim() {
     const renderIPv6 = () => (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', padding: '1rem', border: '3px solid var(--border)', background: 'var(--white)', boxShadow: 'var(--shadow)' }}>
             <div style={{ fontWeight: 900, fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>IPv6 — 128-bit Address Space</div>
-            
+
             {/* Hexadecimal display */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px', justifyContent: 'center' }}>
                 {Array.from({ length: 8 }, (_, g) => (
@@ -622,7 +657,7 @@ export default function SubnettingSim() {
                     </div>
                 ))}
             </div>
-            
+
             <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 10, height: 10, background: 'var(--orange)' }} /> Network Routing bits (64)</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 10, height: 10, background: 'var(--cyan)' }} /> Interface Identifier bits (64)</div>
@@ -668,11 +703,11 @@ export default function SubnettingSim() {
                     {renderBitGrid()}
 
                     {/* Subnet Workspace Tab bar */}
-                    <div style={{ display: 'flex', gap: '3px', background: 'var(--border)', padding: '3px', border: '3px solid var(--border)', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', gap: '3px', background: 'var(--border)', padding: '3px', border: '3px solid var(--border)', flexShrink: 0 }}>
                         {[
-                            { id: 'grid', label: '🎛️ Address Grid Map' },
-                            { id: 'routing', label: 'AND Routing Simulator' },
-                            { id: 'tree', label: 'Binary Tree Explorer' }
+                            { id: 'grid', label: isMobile ? 'Grid Map' : '🎛️ Address Grid Map' },
+                            { id: 'routing', label: isMobile ? 'AND Router' : 'AND Routing Simulator' },
+                            { id: 'tree', label: isMobile ? 'Binary Tree' : 'Binary Tree Explorer' }
                         ].map(tab => (
                             <button
                                 key={tab.id}
@@ -704,9 +739,9 @@ export default function SubnettingSim() {
                             style={{ border: '3px solid var(--border)', background: 'var(--yellow)', padding: '0.6rem', boxShadow: 'var(--shadow-sm)', flexShrink: 0 }}>
                             <div style={{ fontWeight: 900, fontSize: '0.8rem', marginBottom: '0.2rem' }}>Network Architect Challenge</div>
                             <div style={{ fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.5rem' }}>{QUIZ_SCENARIOS[quizIdx].prompt}</div>
-                            
+
                             {/* Department cards inside Quiz */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.4rem', marginBottom: '0.5rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.4rem', marginBottom: '0.5rem' }}>
                                 {QUIZ_SCENARIOS[quizIdx].departments.map((dept, dIdx) => {
                                     const matchingSubnet = subnets[dIdx];
                                     const isCorrectSize = matchingSubnet && (matchingSubnet.end - matchingSubnet.start + 1 === Math.pow(2, 32 - QUIZ_SCENARIOS[quizIdx].expectedPrefix));
@@ -738,14 +773,15 @@ export default function SubnettingSim() {
                                 })}
                             </div>
 
-                            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                                <button className="btn btn-green btn-sm" onClick={checkQuiz}>Submit Layout</button>
+                            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.4rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                                <button className="btn btn-green btn-sm" onClick={checkQuiz} style={{ justifyContent: 'center' }}>Submit Layout</button>
                                 {quizResult && (
                                     <span style={{
                                         padding: '0.2rem 0.5rem', fontWeight: 900, fontSize: '0.75rem',
                                         background: quizResult === 'correct' ? 'var(--green)' : 'var(--pink)',
                                         border: '2px solid var(--border)',
-                                        boxShadow: 'var(--shadow-sm)'
+                                        boxShadow: 'var(--shadow-sm)',
+                                        textAlign: 'center'
                                     }}>{quizResult === 'correct' ? 'Success! Subnets allocated correctly!' : 'Try again — check subnet count and allocations'}</span>
                                 )}
                             </div>
@@ -822,7 +858,7 @@ export default function SubnettingSim() {
             <div style={{ border: '2px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
                 <div style={{ background: 'var(--cyan)', padding: '0.4rem 0.6rem', borderBottom: '2px solid var(--border)', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>Quick Reference</div>
                 <div style={{ padding: '0.4rem', fontSize: '0.65rem', fontFamily: 'var(--font-mono)' }}>
-                    {[{p:'/24',h:'254'},{p:'/25',h:'126'},{p:'/26',h:'62'},{p:'/27',h:'30'},{p:'/28',h:'14'},{p:'/29',h:'6'},{p:'/30',h:'2'}].map(r => (
+                    {[{ p: '/24', h: '254' }, { p: '/25', h: '126' }, { p: '/26', h: '62' }, { p: '/27', h: '30' }, { p: '/28', h: '14' }, { p: '/29', h: '6' }, { p: '/30', h: '2' }].map(r => (
                         <div key={r.p} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.1rem 0.3rem', borderBottom: '1px solid var(--border)' }}>
                             <span style={{ fontWeight: 700 }}>{r.p}</span>
                             <span>{r.h} hosts</span>
@@ -864,7 +900,7 @@ export default function SubnettingSim() {
                     <h1 style={{ fontSize: '1.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}><NetworkIcon size={28} /> IP Addressing & Subnetting</h1>
                     <p style={{ opacity: 0.6, fontSize: '0.9rem', marginTop: '0.3rem' }}>Interactive 32-bit grid, CIDR slider, VLSM address-space bar, subnetting quiz, and IPv4 ↔ IPv6 toggle.</p>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
                     <div className="panel">
                         <div className="panel-header" style={{ background: 'var(--orange)' }}>⚙ Configuration</div>
                         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -890,7 +926,7 @@ export default function SubnettingSim() {
                         <div className="panel-header" style={{ background: 'var(--orange)' }}>🏷 Concepts Covered</div>
                         <div style={{ padding: '1rem' }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginBottom: '0.75rem' }}>
-                                {['Network bits','Host bits','CIDR','VLSM','Broadcast','Subnetting'].map(t => (
+                                {['Network bits', 'Host bits', 'CIDR', 'VLSM', 'Broadcast', 'Subnetting'].map(t => (
                                     <span key={t} style={{
                                         fontSize: '0.72rem', fontWeight: 700, fontFamily: 'var(--font-mono)',
                                         padding: '0.2rem 0.5rem', border: '2px solid var(--border)', background: 'var(--orange)',
@@ -901,9 +937,9 @@ export default function SubnettingSim() {
                         </div>
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button className="btn btn-lg" style={{ background: 'var(--orange)' }} onClick={handleStart}>▶ Simulate</button>
-                    <button className="btn btn-sm" style={{ marginTop: '0.15rem' }} onClick={handleStep}>⏭ Step Through</button>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.75rem' }}>
+                    <button className="btn btn-lg" style={{ background: 'var(--orange)', justifyContent: 'center' }} onClick={handleStart}>▶ Simulate</button>
+                    <button className="btn btn-sm" style={{ marginTop: isMobile ? '0' : '0.15rem', justifyContent: 'center' }} onClick={handleStep}>⏭ Step Through</button>
                 </div>
             </div>
         </ImmersiveLayout>

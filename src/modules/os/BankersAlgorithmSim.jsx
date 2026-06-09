@@ -83,31 +83,31 @@ export default function BankersAlgorithmSim() {
         [2, 2, 2],
         [4, 3, 3],
     ]);
-    const [available, setAvailable]   = useState([3, 3, 2]);
-    const [speed, setSpeed]           = useState(900);
+    const [available, setAvailable] = useState([3, 3, 2]);
+    const [speed, setSpeed] = useState(900);
 
     /* ── add / remove process helpers ── */
     const addProcess = () => {
         setAllocation(prev => [...prev, Array(m).fill(0)]);
-        setMax(prev        => [...prev, Array(m).fill(0)]);
+        setMax(prev => [...prev, Array(m).fill(0)]);
         setN(prev => prev + 1);
     };
     const removeProcess = () => {
         if (n <= 2) return;          // keep at least 2
         setAllocation(prev => prev.slice(0, -1));
-        setMax(prev        => prev.slice(0, -1));
+        setMax(prev => prev.slice(0, -1));
         setN(prev => prev - 1);
     };
 
-    const [steps, setSteps]               = useState([]);
-    const [currentStep, setCurrentStep]   = useState(-1);
-    const [isRunning, setIsRunning]       = useState(false);
-    const [isPaused, setIsPaused]         = useState(false);
-    const [isFinished, setIsFinished]     = useState(false);
-    const [isSimMode, setIsSimMode]       = useState(false);
+    const [steps, setSteps] = useState([]);
+    const [currentStep, setCurrentStep] = useState(-1);
+    const [isRunning, setIsRunning] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
+    const [isFinished, setIsFinished] = useState(false);
+    const [isSimMode, setIsSimMode] = useState(false);
 
     const timerRef = useRef(null);
-    const stepRef  = useRef(-1);
+    const stepRef = useRef(-1);
     const stepsRef = useRef([]);
 
     const advanceStep = useCallback((stepsArr, idx) => {
@@ -127,12 +127,12 @@ export default function BankersAlgorithmSim() {
         clearInterval(timerRef.current);
         timerRef.current = setInterval(() => advanceStep(stepsRef.current, stepRef.current), speed);
     };
-    const handlePause  = () => { setIsRunning(false); setIsPaused(true); clearInterval(timerRef.current); };
+    const handlePause = () => { setIsRunning(false); setIsPaused(true); clearInterval(timerRef.current); };
     const handleResume = () => {
         setIsRunning(true); setIsPaused(false);
         timerRef.current = setInterval(() => advanceStep(stepsRef.current, stepRef.current), speed);
     };
-    const handleReset  = () => {
+    const handleReset = () => {
         clearInterval(timerRef.current); setSteps([]); stepsRef.current = [];
         setCurrentStep(-1); stepRef.current = -1;
         setIsRunning(false); setIsPaused(false); setIsFinished(false); setIsSimMode(false);
@@ -146,12 +146,12 @@ export default function BankersAlgorithmSim() {
         advanceStep(stepsRef.current, stepRef.current);
     };
 
-    const curStep       = currentStep >= 0 ? steps[currentStep] : null;
-    const need          = allocation.map((row, i) => row.map((val, j) => (max[i]?.[j] ?? 0) - val));
-    const displayWork   = curStep?.work   ?? available;
-    const displayNeed   = curStep?.need   ?? need;
+    const curStep = currentStep >= 0 ? steps[currentStep] : null;
+    const need = allocation.map((row, i) => row.map((val, j) => (max[i]?.[j] ?? 0) - val));
+    const displayWork = curStep?.work ?? available;
+    const displayNeed = curStep?.need ?? need;
     const displayFinish = curStep?.finish ?? new Array(n).fill(false);
-    const maxResource   = Math.max(...displayWork, ...available, 1);
+    const maxResource = Math.max(...displayWork, ...available, 1);
 
     /* process status helper */
     const procStatus = (i) => {
@@ -161,10 +161,10 @@ export default function BankersAlgorithmSim() {
         return 'waiting';
     };
     const STATUS_STYLE = {
-        done:     { bg: 'var(--green)',  label: 'Done',     border: 'var(--border)' },
+        done: { bg: 'var(--green)', label: 'Done', border: 'var(--border)' },
         granting: { bg: 'var(--yellow)', label: 'Granting', border: 'var(--border)' },
-        ready:    { bg: 'var(--cyan)',   label: 'Ready',    border: 'var(--border)' },
-        waiting:  { bg: 'var(--white)',  label: 'Waiting',  border: 'var(--border)' },
+        ready: { bg: 'var(--cyan)', label: 'Ready', border: 'var(--border)' },
+        waiting: { bg: 'var(--white)', label: 'Waiting', border: 'var(--border)' },
     };
 
     /* ══════════════════════════════════════════
@@ -233,9 +233,9 @@ export default function BankersAlgorithmSim() {
                 {Array.from({ length: n }, (_, i) => {
                     const status = procStatus(i);
                     const st = STATUS_STYLE[status];
-                    const pNeed  = displayNeed[i]  ?? need[i];
-                    const pAlloc = allocation[i]   ?? [];
-                    const pMax   = max[i]           ?? [];
+                    const pNeed = displayNeed[i] ?? need[i];
+                    const pAlloc = allocation[i] ?? [];
+                    const pMax = max[i] ?? [];
 
                     return (
                         <motion.div
@@ -345,15 +345,15 @@ export default function BankersAlgorithmSim() {
                                     borderLeft: '2px solid rgba(0,0,0,0.08)',
                                     background: status === 'done' ? 'rgba(168,230,207,0.15)'
                                         : status === 'granting' ? 'rgba(255,217,61,0.15)'
-                                        : status === 'ready' ? 'rgba(102,217,239,0.12)'
-                                        : 'transparent',
+                                            : status === 'ready' ? 'rgba(102,217,239,0.12)'
+                                                : 'transparent',
                                 }}>
                                     <div style={{
                                         fontSize: '1.2rem', fontWeight: 900,
                                         color: status === 'done' ? 'var(--green)'
                                             : status === 'granting' ? 'var(--text)'
-                                            : status === 'ready' ? 'var(--cyan)'
-                                            : 'rgba(0,0,0,0.2)',
+                                                : status === 'ready' ? 'var(--cyan)'
+                                                    : 'rgba(0,0,0,0.2)',
                                     }}>
                                         {status === 'done' ? '✓' : status === 'granting' ? '►' : status === 'ready' ? '○' : '…'}
                                     </div>
@@ -534,10 +534,10 @@ export default function BankersAlgorithmSim() {
             centerContent={CENTER} leftContent={LEFT} rightContent={RIGHT}
             timelineItems={TL}
             legend={[
-                { color: 'var(--green)',  label: 'Done / Can Grant' },
+                { color: 'var(--green)', label: 'Done / Can Grant' },
                 { color: 'var(--yellow)', label: 'Granting' },
-                { color: 'var(--cyan)',   label: 'Ready' },
-                { color: 'var(--pink)',   label: 'Blocked' },
+                { color: 'var(--cyan)', label: 'Ready' },
+                { color: 'var(--pink)', label: 'Blocked' },
             ]}
         >
             <div className="main-content">

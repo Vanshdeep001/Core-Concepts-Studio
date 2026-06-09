@@ -273,6 +273,15 @@ ${required.map(m => {
 };
 
 export default function AbstractInterfaceSim() {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     // Dynamic Class Configurator State
     const [selectedBaseClass, setSelectedBaseClass] = useState('Shape');
     const [selectedInterfaces, setSelectedInterfaces] = useState(['Flyable']);
@@ -443,7 +452,16 @@ export default function AbstractInterfaceSim() {
     const CENTER = (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
             {/* Top View Selector Bar */}
-            <div style={{ display: 'flex', borderBottom: '4px solid var(--border)', flexShrink: 0, background: 'var(--white)' }}>
+            <div style={{
+                display: 'flex',
+                borderBottom: '4px solid var(--border)',
+                flexShrink: 0,
+                background: 'var(--white)',
+                overflowX: isMobile ? 'auto' : 'visible',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+            }}>
                 {[
                     ['blueprint', 'Class Blueprint', 'var(--yellow)'],
                     ['multi', 'Combine Rules', 'var(--cyan)'],
@@ -451,7 +469,12 @@ export default function AbstractInterfaceSim() {
                     ['flowchart', 'Decision Guide', 'var(--pink)']
                 ].map(([k, l, color]) => (
                     <button key={k} onClick={() => setView(k)} style={{
-                        flex: 1, padding: '0.8rem 0.4rem', fontWeight: 900, fontSize: '0.75rem', cursor: 'pointer',
+                        flex: isMobile ? '1 0 auto' : 1,
+                        minWidth: isMobile ? '110px' : 'auto',
+                        padding: isMobile ? '0.5rem 0.4rem' : '0.8rem 0.4rem',
+                        fontWeight: 900,
+                        fontSize: isMobile ? '0.62rem' : '0.75rem',
+                        cursor: 'pointer',
                         background: view === k ? color : 'var(--white)', border: 'none',
                         borderRight: '4px solid var(--border)', fontFamily: 'var(--font-main)', color: 'var(--text)',
                         textTransform: 'uppercase', transition: 'all 0.15s',
@@ -529,7 +552,7 @@ export default function AbstractInterfaceSim() {
                         </div>
 
                         {/* ─── VISUAL FLOW: Sources → Arrow → Your Class ─── */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1.4fr', gap: '0', alignItems: 'stretch', minHeight: 300 }}>
+                        <div className="no-mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1.4fr', gap: '0', alignItems: 'stretch', minHeight: 300 }}>
                             
                             {/* LEFT COLUMN: Source blocks (parent + interfaces) */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -724,7 +747,7 @@ export default function AbstractInterfaceSim() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 640 }}>
 
                         {/* 3-column visual grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.8fr 1fr', gap: '1.2rem', alignItems: 'start', minHeight: 380 }}>
+                        <div className="no-mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1.8fr 1fr', gap: '1.2rem', alignItems: 'start', minHeight: 380 }}>
 
                             {/* LEFT: Parent Class Chassis Selection */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>

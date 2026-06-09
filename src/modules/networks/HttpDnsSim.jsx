@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
-import { GlobeIcon, LaptopIcon, SyncIcon, ClipboardIcon, CheckIcon, OutboxIcon, InboxIcon, KeyIcon, LockIcon, AlertIcon, SaveIcon, ChartIcon } from '../../components/Icons';
+import { GlobeIcon, LaptopIcon, SyncIcon, ClipboardIcon, CheckIcon, OutboxIcon, InboxIcon, KeyIcon, LockIcon, AlertIcon, SaveIcon, ChartIcon, BoxIcon, ClockIcon } from '../../components/Icons';
 
 /* ════════════════════════════════════════
    DATA — DNS chain, TLS panels, status codes
@@ -90,9 +90,9 @@ function buildSteps(url, isHttps, cacheHitAt, failure) {
             phase: 'dns', dnsNode: i, dnsHit: false, timings: { ...timings },
             explanation: `Querying ${node.label}... ${i < dnsSteps - 1 ? 'Cache miss — forwarding to next level.' : 'Authoritative answer received: ' + parsedUrl.domain + ' → 93.184.216.34'}`,
             insight: i === 3 ? 'ROOT NAMESERVERS: 13 root server clusters worldwide. They direct queries to the correct TLD server.' :
-                     i === 4 ? 'TLD NAMESERVER: Manages all domains under a TLD (e.g., .com, .org). Points to the authoritative NS.' :
-                     i === 5 ? 'AUTHORITATIVE NS: The final answer! This server holds the actual DNS records for the domain.' :
-                     `DNS lookup traverses the hierarchy from local caches to authoritative nameservers.`,
+                i === 4 ? 'TLD NAMESERVER: Manages all domains under a TLD (e.g., .com, .org). Points to the authoritative NS.' :
+                    i === 5 ? 'AUTHORITATIVE NS: The final answer! This server holds the actual DNS records for the domain.' :
+                        `DNS lookup traverses the hierarchy from local caches to authoritative nameservers.`,
         });
     }
 
@@ -125,8 +125,8 @@ function buildSteps(url, isHttps, cacheHitAt, failure) {
                     phase: 'tls', tlsPanel: i, failed: false, timings: { ...timings },
                     explanation: `TLS Step ${i + 1}: ${TLS_PANELS[i].title} — ${TLS_PANELS[i].desc}`,
                     insight: i === 2 ? 'KEY EXCHANGE: Diffie-Hellman allows both parties to derive the same secret key without ever transmitting it. Even if someone intercepts all traffic, they can\'t derive the key.' :
-                             i === 4 ? 'HTTPS COMPLETE: All data is now encrypted. The padlock icon indicates a secure connection.' :
-                             `TLS provides encryption (confidentiality), integrity (tampering detection), and authentication (server identity verification).`,
+                        i === 4 ? 'HTTPS COMPLETE: All data is now encrypted. The padlock icon indicates a secure connection.' :
+                            `TLS provides encryption (confidentiality), integrity (tampering detection), and authentication (server identity verification).`,
                 });
             }
         }
@@ -303,10 +303,10 @@ function BrowserMockup({ curStep, url, activeFailure, timingTotal }) {
                             <div style={{ fontSize: '1.1rem', animation: 'spin 2s linear infinite', display: 'flex', justifyContent: 'center' }}><SyncIcon size={24} /></div>
                             <div style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.5rem', marginTop: '3px' }}>
                                 {curStep.phase === 'dns' ? 'DNS Lookup' :
-                                 curStep.phase === 'tcp' ? 'TCP handshake' :
-                                 curStep.phase === 'tls' ? 'TLS Cipher Spec' :
-                                 curStep.phase === 'request' ? 'Sending Request' :
-                                 curStep.phase === 'response' ? 'Waiting Response' : curStep.phase}
+                                    curStep.phase === 'tcp' ? 'TCP handshake' :
+                                        curStep.phase === 'tls' ? 'TLS Cipher Spec' :
+                                            curStep.phase === 'request' ? 'Sending Request' :
+                                                curStep.phase === 'response' ? 'Waiting Response' : curStep.phase}
                             </div>
                         </motion.div>
                     )}
@@ -349,6 +349,15 @@ function getFailureIcon(id) {
 
 
 export default function HttpDnsSim() {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const [url, setUrl] = useState('https://www.example.com/page?q=hello');
     const [isHttps, setIsHttps] = useState(true);
     const [cacheHitAt, setCacheHitAt] = useState(null);
@@ -621,9 +630,9 @@ export default function HttpDnsSim() {
             {/* View selectors */}
             <div style={{ display: 'flex', gap: '3px', background: 'var(--border)', padding: '3px', border: '3px solid var(--border)', marginBottom: '0.5rem', flexShrink: 0 }}>
                 {[
-                    { id: 'map', label: 'Interactive Journey Map' },
-                    { id: 'console', label: 'HTTP Header Console' },
-                    { id: 'waterfall', label: 'DevTools Waterfall' }
+                    { id: 'map', label: isMobile ? 'Journey Map' : 'Interactive Journey Map' },
+                    { id: 'console', label: isMobile ? 'HTTP Console' : 'HTTP Header Console' },
+                    { id: 'waterfall', label: isMobile ? 'Waterfall' : 'DevTools Waterfall' }
                 ].map(tab => (
                     <button
                         key={tab.id}
@@ -644,9 +653,9 @@ export default function HttpDnsSim() {
                 ))}
             </div>
 
-            <div style={{ flex: 1, background: 'var(--white)', border: '3px solid var(--border)', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ flex: 1, background: 'var(--white)', border: '3px solid var(--border)', overflow: isMobile && activeTab === 'map' ? 'auto' : 'hidden', position: 'relative' }}>
                 {activeTab === 'map' && (
-                    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '480px', overflow: 'hidden' }}>
+                    <div style={{ position: 'relative', width: isMobile ? '720px' : '100%', height: '100%', minHeight: '480px', overflow: 'hidden' }}>
                         {/* Map Grid Lines SVG */}
                         <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
                             {/* Client to Cache */}
@@ -664,10 +673,10 @@ export default function HttpDnsSim() {
                                 <motion.line
                                     x1="16%" y1="16%" x2="16%" y2="75%"
                                     stroke={isHttps && curStep.phase !== 'tls-error' ? '#27c93f' : '#ff3b30'}
-                                    strokeWidth={isHttps && ['request','response','render','done'].includes(curStep.phase) ? "5" : "3"}
-                                    animate={isHttps && ['request','response','render','done'].includes(curStep.phase) ? { strokeDashoffset: [0, -20] } : {}}
+                                    strokeWidth={isHttps && ['request', 'response', 'render', 'done'].includes(curStep.phase) ? "5" : "3"}
+                                    animate={isHttps && ['request', 'response', 'render', 'done'].includes(curStep.phase) ? { strokeDashoffset: [0, -20] } : {}}
                                     transition={{ ease: "linear", duration: 1, repeat: Infinity }}
-                                    strokeDasharray={isHttps && ['request','response','render','done'].includes(curStep.phase) ? "8 4" : "5 5"}
+                                    strokeDasharray={isHttps && ['request', 'response', 'render', 'done'].includes(curStep.phase) ? "8 4" : "5 5"}
                                 />
                             ) : (
                                 <line x1="16%" y1="16%" x2="16%" y2="75%" stroke="var(--border)" strokeWidth="2" strokeDasharray="8 8" opacity="0.25" />
@@ -786,7 +795,7 @@ export default function HttpDnsSim() {
                                 transition={{ repeat: Infinity, duration: 0.15 }}
                                 style={{
                                     border: '3px solid var(--border)',
-                                    background: curStep && ['tcp','tls','request','response','render','done'].includes(curStep.phase) ? '#a8e6cf' : '#e0e0e0',
+                                    background: curStep && ['tcp', 'tls', 'request', 'response', 'render', 'done'].includes(curStep.phase) ? '#a8e6cf' : '#e0e0e0',
                                     padding: '8px 12px',
                                     fontWeight: 800,
                                     fontSize: '0.65rem',
@@ -809,8 +818,8 @@ export default function HttpDnsSim() {
                                 </span>
                                 <span style={{ fontFamily: 'var(--font-mono)' }}>93.184.216.34</span>
                                 <span style={{ fontSize: '0.52rem', opacity: 0.7 }}>Web Server (Port {isHttps ? '443' : '80'})</span>
-                                
-                                {isHttps && curStep && ['request','response','render','done'].includes(curStep.phase) && curStep.phase !== 'tls-error' && (
+
+                                {isHttps && curStep && ['request', 'response', 'render', 'done'].includes(curStep.phase) && curStep.phase !== 'tls-error' && (
                                     <span style={{ color: '#1b5e20', fontWeight: 900, fontSize: '0.5rem', background: '#c8e6c9', border: '1px solid #1b5e20', padding: '1px 4px', marginTop: '3px' }}>
                                         SECURED (TLS 1.3)
                                     </span>
@@ -844,7 +853,7 @@ export default function HttpDnsSim() {
                         )}
 
                         {/* TLS SECURE PIPE GLOW SHIELD */}
-                        {isHttps && curStep && ['request','response','render','done'].includes(curStep.phase) && (
+                        {isHttps && curStep && ['request', 'response', 'render', 'done'].includes(curStep.phase) && (
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -940,7 +949,7 @@ export default function HttpDnsSim() {
                                 else if (log.includes('[SYSTEM]')) c = 'var(--yellow)';
                                 else if (log.includes('[HTTP REQUEST]')) c = '#a5d6a7';
                                 else if (log.includes('[TLS]')) c = '#b39ddb';
-                                
+
                                 return (
                                     <div key={idx} style={{ color: c, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.15rem' }}>
                                         <span style={{ opacity: 0.35, marginRight: '0.5rem' }}>&gt;</span>
@@ -999,7 +1008,7 @@ export default function HttpDnsSim() {
                                                 const width = (bar.time / maxTime) * 100;
                                                 const offset = accumulatedPercent;
                                                 accumulatedPercent += width;
-                                                
+
                                                 // For assets secondary to main doc, offset them to start after TTFB of doc
                                                 const renderWidth = rIdx === 0 ? width : (bIdx === 4 ? width : 0);
                                                 const renderOffset = rIdx === 0 ? offset : (bIdx === 4 ? 65 : 0);
@@ -1031,7 +1040,7 @@ export default function HttpDnsSim() {
                                 Awaiting simulation steps to draw the timeline waterfall...
                             </div>
                         )}
-                        
+
                         {curStep && curStep.timings && (
                             <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem', borderTop: '2px solid #333', paddingTop: '8px' }}>
                                 <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}><div style={{ width: 8, height: 8, background: '#b39ddb' }} /> DNS: {curStep.timings.dns}ms</div>
@@ -1132,8 +1141,8 @@ export default function HttpDnsSim() {
     const TL = steps.map((s, i) => ({
         id: i,
         label: s.phase === 'dns' ? `DNS:${DNS_CHAIN[s.dnsNode]?.label?.split(' ')[0] || ''}` :
-               s.phase === 'tls' ? `TLS:${s.tlsPanel + 1}` :
-               s.phase,
+            s.phase === 'tls' ? `TLS:${s.tlsPanel + 1}` :
+                s.phase,
         done: i < currentStep, active: i === currentStep,
     }));
 
@@ -1165,7 +1174,7 @@ export default function HttpDnsSim() {
                     <h1 style={{ fontSize: '1.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}><GlobeIcon size={28} /> HTTP/HTTPS & DNS</h1>
                     <p style={{ opacity: 0.6, fontSize: '0.9rem', marginTop: '0.3rem' }}>Type a URL and watch the full journey: DNS resolution, TLS handshake, HTTP request/response, waterfall timeline, and failure injection.</p>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
                     <div className="panel">
                         <div className="panel-header" style={{ background: 'var(--pink)' }}>⚙ Configuration</div>
                         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -1213,9 +1222,9 @@ export default function HttpDnsSim() {
                         </div>
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button className="btn btn-lg btn-pink" onClick={handleStart}>▶ Simulate</button>
-                    <button className="btn btn-sm" style={{ marginTop: '0.15rem' }} onClick={handleStep}>⏭ Step Through</button>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.75rem' }}>
+                    <button className="btn btn-lg btn-pink" style={{ justifyContent: 'center' }} onClick={handleStart}>▶ Simulate</button>
+                    <button className="btn btn-sm" style={{ marginTop: isMobile ? '0' : '0.15rem', justifyContent: 'center' }} onClick={handleStep}>⏭ Step Through</button>
                 </div>
             </div>
         </ImmersiveLayout>

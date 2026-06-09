@@ -402,9 +402,9 @@ export default function NormalizationSim() {
        ══════════════════════════════════════════ */
     const centerContent = (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem', background: 'var(--white)', padding: '1rem', overflowY: 'hidden' }}>
-            
+
             {/* Steps button navigation */}
-            <div style={{ display: 'flex', border: '3px solid var(--border)', boxShadow: '3px 3px 0 var(--border)', background: 'var(--white)', flexShrink: 0 }}>
+            <div className="normalization-tab-bar" style={{ display: 'flex', border: '3px solid var(--border)', boxShadow: '3px 3px 0 var(--border)', background: 'var(--white)', flexShrink: 0 }}>
                 {['UNF', '1NF', '2NF', '3NF', 'BCNF'].map((nf, idx) => (
                     <button
                         key={nf}
@@ -439,9 +439,9 @@ export default function NormalizationSim() {
             </div>
 
             {/* Anomaly sandbox injector panel */}
-            <div style={{ border: '3px solid var(--border)', background: '#fafafa', padding: '0.6rem 0.8rem', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0 }}>
+            <div className="anomaly-injector-card" style={{ border: '3px solid var(--border)', background: '#fafafa', padding: '0.6rem 0.8rem', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0 }}>
                 <div style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.35rem' }}>Anomaly Sandbox Injector</div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div className="anomaly-injector-actions" style={{ display: 'flex', gap: '0.5rem' }}>
                     <button className="btn btn-sm btn-pink" style={{ flex: 1 }} onClick={() => triggerAnomaly('insert')}>Inject Insert Anomaly</button>
                     <button className="btn btn-sm btn-yellow" style={{ flex: 1 }} onClick={() => triggerAnomaly('delete')}>Inject Delete Anomaly</button>
                     <button className="btn btn-sm btn-cyan" style={{ flex: 1 }} onClick={() => triggerAnomaly('update')}>Inject Update Anomaly</button>
@@ -475,7 +475,7 @@ export default function NormalizationSim() {
     const leftContent = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
             <div style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.45 }}>System State</div>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                 <div style={{ border: '2px solid var(--border)', padding: '0.35rem 0.5rem', background: 'var(--yellow)', display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', fontWeight: 800, boxShadow: '2px 2px 0 var(--border)' }}>
                     <span>Current Schema State:</span>
@@ -499,9 +499,9 @@ export default function NormalizationSim() {
 
             <div style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.45 }}>FD Dependency Canvas</div>
             <div style={{ border: '2px solid var(--border)', background: '#222', color: '#00ff00', padding: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.62rem', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div style={{ color: step >= 2 ? 'var(--green)' : 'red' }}>RollNo → Name {step >= 2 ? '✓ [RESOLVED]' : '⚠️ [PARTIAL]' }</div>
-                <div style={{ color: step >= 3 ? 'var(--green)' : 'red' }}>Course → Teacher {step >= 3 ? '✓ [RESOLVED]' : '⚠️ [TRANSITIVE]' }</div>
-                <div style={{ color: step >= 4 ? 'var(--green)' : 'red' }}>Teacher → TeacherPhone {step >= 4 ? '✓ [RESOLVED]' : '⚠️ [BCNF]' }</div>
+                <div style={{ color: step >= 2 ? 'var(--green)' : 'red' }}>RollNo → Name {step >= 2 ? '✓ [RESOLVED]' : '⚠️ [PARTIAL]'}</div>
+                <div style={{ color: step >= 3 ? 'var(--green)' : 'red' }}>Course → Teacher {step >= 3 ? '✓ [RESOLVED]' : '⚠️ [TRANSITIVE]'}</div>
+                <div style={{ color: step >= 4 ? 'var(--green)' : 'red' }}>Teacher → TeacherPhone {step >= 4 ? '✓ [RESOLVED]' : '⚠️ [BCNF]'}</div>
             </div>
         </div>
     );
@@ -510,10 +510,10 @@ export default function NormalizationSim() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
             {conceptMode && (
                 <div style={{ background: 'var(--purple)', border: '2px solid var(--border)', padding: '0.5rem 0.75rem', fontSize: '0.72rem', fontWeight: 800, boxShadow: '2px 2px 0 var(--border)' }}>
-                    <LightbulbIcon size={14} color="var(--yellow)" /> CONCEPT RADAR:<br/>
-                    1NF = Atomic values.<br/>
-                    2NF = 1NF + No Partial dependency.<br/>
-                    3NF = 2NF + No Transitive dependency.<br/>
+                    <LightbulbIcon size={14} color="var(--yellow)" /> CONCEPT RADAR:<br />
+                    1NF = Atomic values.<br />
+                    2NF = 1NF + No Partial dependency.<br />
+                    3NF = 2NF + No Transitive dependency.<br />
                     BCNF = For every X→Y, X is Superkey.
                 </div>
             )}

@@ -5,6 +5,12 @@ import { SignalIcon } from '../../components/Icons';
 
 export default function ApiLifecycleSim() {
     const [scenario, setScenario] = useState('cache-hit'); // cache-hit, cache-miss, rate-limit
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const h = () => setIsMobile(window.innerWidth < 768);
+        h(); window.addEventListener('resize', h);
+        return () => window.removeEventListener('resize', h);
+    }, []);
     const [step, setStep] = useState(-1); // -1: not started, 0-6: steps in path
     const [latency, setLatency] = useState(0);
     const [history, setHistory] = useState(['Select a scenario and click START to trace the API lifecycle.']);
@@ -1394,7 +1400,7 @@ export default function ApiLifecycleSim() {
                 </div>
             }
             centerContent={
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--white)', padding: '1rem', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--white)', padding: isMobile ? '0.5rem' : '1rem', position: 'relative', overflow: isMobile ? 'auto' : 'hidden', WebkitOverflowScrolling: 'touch' }}>
                     
                     {/* Visual Topology Map */}
                     <div 
@@ -1403,7 +1409,7 @@ export default function ApiLifecycleSim() {
                         onMouseUp={handleMouseUp}
                         onTouchMove={handleTouchMove}
                         onTouchEnd={handleMouseUp}
-                        style={{ flex: 1, position: 'relative', minHeight: '350px', cursor: draggingId ? 'grabbing' : 'default', userSelect: 'none' }}
+                        style={{ flex: 1, position: 'relative', minHeight: isMobile ? '300px' : '350px', cursor: draggingId ? 'grabbing' : 'default', userSelect: 'none' }}
                     >
                         
                         {/* Draw connection lines dynamically or statically */}

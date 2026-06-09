@@ -8,6 +8,12 @@ export default function CacheRedisSim() {
         { key: 'user:1', val: 'Alice', ttl: 15, initialTtl: 15, lastUsed: 1 },
         { key: 'user:2', val: 'Bob', ttl: 20, initialTtl: 20, lastUsed: 2 }
     ]);
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const h = () => setIsMobile(window.innerWidth < 768);
+        h(); window.addEventListener('resize', h);
+        return () => window.removeEventListener('resize', h);
+    }, []);
     const [db, setDb] = useState([
         { id: 1, name: 'Alice' },
         { id: 2, name: 'Bob' },
@@ -417,6 +423,15 @@ export default function CacheRedisSim() {
 
     // Packet coordinate solver
     const getPacketCoords = (p) => {
+        if (isMobile) {
+            if (p.status === 'client-to-redis') return { left: '50%', top: '15%' };
+            if (p.status === 'at-redis') return { left: '50%', top: '48%' };
+            if (p.status === 'redis-to-client') return { left: '50%', top: '15%' };
+            if (p.status === 'redis-to-db') return { left: '50%', top: '48%' };
+            if (p.status === 'db-to-redis') return { left: '50%', top: '48%' };
+            if (p.status === 'client-to-db') return { left: '50%', top: '15%' };
+            return { left: '50%', top: '15%' };
+        }
         if (p.status === 'client-to-redis') {
             return { left: '12%', top: '50%', x: '-50%', y: '-50%' };
         }
@@ -691,7 +706,7 @@ export default function CacheRedisSim() {
                 </div>
             }
             centerContent={
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fafafa', overflowY: 'auto', position: 'relative', scrollbarWidth: 'thin', padding: '0.75rem' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fafafa', overflowY: 'auto', position: 'relative', scrollbarWidth: 'thin', padding: isMobile ? '0.4rem' : '0.75rem' }}>
                     
                     <style>{`
                         @keyframes marching-ants {
@@ -762,13 +777,14 @@ export default function CacheRedisSim() {
                     )}
 
                     {/* Visualizer container */}
-                    <div style={{ flex: 1, position: 'relative', width: '100%', minHeight: 480 }}>
+                    <div style={{ flex: 1, position: 'relative', width: '100%', minHeight: isMobile ? 620 : 480, overflowX: isMobile ? 'auto' : 'hidden', WebkitOverflowScrolling: 'touch' }}>
                         
                         {/* Dotted schematic lines */}
                         <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
                             {/* Client -> Redis */}
                             <line 
-                                x1="12%" y1="50%" x2="52%" y2="30%" 
+                                x1={isMobile ? "50%" : "12%"} y1={isMobile ? "15%" : "50%"} 
+                                x2={isMobile ? "50%" : "52%"} y2={isMobile ? "48%" : "30%"} 
                                 stroke="var(--border)" 
                                 strokeWidth="2"
                                 strokeDasharray="4 4"
@@ -777,7 +793,8 @@ export default function CacheRedisSim() {
                             />
                             {isPathActive('client', 'redis') && (
                                 <line 
-                                    x1="12%" y1="50%" x2="52%" y2="30%" 
+                                    x1={isMobile ? "50%" : "12%"} y1={isMobile ? "15%" : "50%"} 
+                                    x2={isMobile ? "50%" : "52%"} y2={isMobile ? "48%" : "30%"} 
                                     stroke="var(--green)" 
                                     strokeWidth="3.5"
                                     strokeDasharray="6 4"
@@ -787,7 +804,8 @@ export default function CacheRedisSim() {
 
                             {/* Redis -> Database */}
                             <line 
-                                x1="52%" y1="30%" x2="85%" y2="70%" 
+                                x1={isMobile ? "50%" : "52%"} y1={isMobile ? "48%" : "30%"} 
+                                x2={isMobile ? "50%" : "85%"} y2={isMobile ? "82%" : "70%"} 
                                 stroke="var(--border)" 
                                 strokeWidth="2"
                                 strokeDasharray="4 4"
@@ -796,7 +814,8 @@ export default function CacheRedisSim() {
                             />
                             {isPathActive('redis', 'db') && (
                                 <line 
-                                    x1="52%" y1="30%" x2="85%" y2="70%" 
+                                    x1={isMobile ? "50%" : "52%"} y1={isMobile ? "48%" : "30%"} 
+                                    x2={isMobile ? "50%" : "85%"} y2={isMobile ? "82%" : "70%"} 
                                     stroke="var(--green)" 
                                     strokeWidth="3.5"
                                     strokeDasharray="6 4"
@@ -806,7 +825,8 @@ export default function CacheRedisSim() {
 
                             {/* Client -> Database (Write Path) */}
                             <line 
-                                x1="12%" y1="50%" x2="85%" y2="70%" 
+                                x1={isMobile ? "50%" : "12%"} y1={isMobile ? "15%" : "50%"} 
+                                x2={isMobile ? "50%" : "85%"} y2={isMobile ? "82%" : "70%"} 
                                 stroke="var(--border)" 
                                 strokeWidth="2"
                                 strokeDasharray="4 4"
@@ -815,7 +835,8 @@ export default function CacheRedisSim() {
                             />
                             {isPathActive('client', 'db') && (
                                 <line 
-                                    x1="12%" y1="50%" x2="85%" y2="70%" 
+                                    x1={isMobile ? "50%" : "12%"} y1={isMobile ? "15%" : "50%"} 
+                                    x2={isMobile ? "50%" : "85%"} y2={isMobile ? "82%" : "70%"} 
                                     stroke="var(--green)" 
                                     strokeWidth="3.5"
                                     strokeDasharray="6 4"
@@ -827,8 +848,8 @@ export default function CacheRedisSim() {
                         {/* CLIENT APP NODE */}
                         <div style={{
                             position: 'absolute',
-                            left: '12%',
-                            top: '50%',
+                            left: isMobile ? '50%' : '12%',
+                            top: isMobile ? '15%' : '50%',
                             transform: 'translate(-50%, -50%)',
                             zIndex: 3,
                             width: 170,
@@ -852,8 +873,8 @@ export default function CacheRedisSim() {
                         {/* REDIS IN-MEMORY CACHE STICK */}
                         <div style={{
                             position: 'absolute',
-                            left: '52%',
-                            top: '30%',
+                            left: isMobile ? '50%' : '52%',
+                            top: isMobile ? '48%' : '30%',
                             transform: 'translate(-50%, -50%)',
                             zIndex: 3,
                             width: 250,
@@ -907,7 +928,7 @@ export default function CacheRedisSim() {
                                                         <div style={{ width: `${ttlPct}%`, height: '100%', background: progressColor, transition: 'width 1s linear' }} />
                                                     </div>
                                                     <span style={{ fontSize: '0.52rem', fontFamily: 'var(--font-mono)', opacity: 0.7 }}>TTL:{item.ttl}s</span>
-                                                    <span style={{ fontSize: '0.5rem', opacity: 0.5, borderLeft: '1px solid #ccc', paddingLeft: '3px' }}>LRU:{item.lastUsed}</span>
+                                                    <span style={{ fontSize: '0.5.rem', opacity: 0.5, borderLeft: '1px solid #ccc', paddingLeft: '3px' }}>LRU:{item.lastUsed}</span>
                                                 </div>
                                             </div>
                                         );
@@ -919,8 +940,8 @@ export default function CacheRedisSim() {
                         {/* DISK DATABASE CYLINDER */}
                         <div style={{
                             position: 'absolute',
-                            left: '85%',
-                            top: '70%',
+                            left: isMobile ? '50%' : '85%',
+                            top: isMobile ? '82%' : '70%',
                             transform: 'translate(-50%, -50%)',
                             zIndex: 3,
                             width: 200,
@@ -973,7 +994,7 @@ export default function CacheRedisSim() {
                                 return (
                                     <motion.div
                                         key={p.id}
-                                        initial={{ left: '12%', top: '50%', x: '-50%', y: '-50%', scale: 0.6, opacity: 0 }}
+                                        initial={{ left: isMobile ? '50%' : '12%', top: isMobile ? '15%' : '50%', x: '-50%', y: '-50%', scale: 0.6, opacity: 0 }}
                                         animate={{
                                             left: coords.left,
                                             top: coords.top,

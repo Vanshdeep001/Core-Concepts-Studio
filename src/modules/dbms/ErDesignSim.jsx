@@ -540,7 +540,7 @@ export default function ErDesignSim() {
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '0.8rem', background: 'var(--white)', padding: '0.8rem', overflowY: 'hidden' }}>
                     
                     {/* Top Canvas Action Dashboard: Manual inputs */}
-                    <div style={{ 
+                    <div className="er-dashboard-actions" style={{ 
                         display: 'flex', 
                         flexWrap: 'wrap', 
                         justifyContent: 'space-between', 
@@ -562,9 +562,10 @@ export default function ErDesignSim() {
                         >
                             <FileIcon size={14} /> Add New Table
                         </button>
-
+ 
                         {/* Manual relationship connector form */}
                         <form 
+                            className="er-connect-form"
                             onSubmit={addCustomRelationship} 
                             style={{ 
                                 display: 'flex', 
@@ -606,7 +607,7 @@ export default function ErDesignSim() {
                                 <LinkIcon size={12} /> Link
                             </button>
                         </form>
-
+ 
                         {/* Reset button */}
                         <button 
                             className="btn btn-sm btn-pink" 

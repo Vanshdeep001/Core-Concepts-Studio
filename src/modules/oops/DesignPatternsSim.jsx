@@ -75,7 +75,7 @@ const DOT_BG = (id) => (
 /* ══════════════════════════════════════════════════════════════
    1. SINGLETON — One Instance
    ══════════════════════════════════════════════════════════════ */
-const SingletonSim = () => {
+const SingletonSim = ({ isMobile }) => {
     const [initMode, setInitMode] = useState('lazy'); // 'lazy' | 'eager'
     const [instance, setInstance] = useState(null); // null or { address: '@0xDB_LZY', color: '#ffb347' }
     const [clients, setClients] = useState([
@@ -156,13 +156,14 @@ const SingletonSim = () => {
     };
 
     return (
-        <div style={{ ...FULL, alignItems: 'stretch', padding: '1rem', gap: '0.8rem' }}>
+        <div style={{ ...FULL, alignItems: 'stretch', padding: isMobile ? '0.8rem' : '1rem', gap: '0.8rem' }}>
             {DOT_BG('singleGrid')}
 
             {/* Header Control Panel */}
             <div style={{ 
                 display: 'flex', 
-                alignItems: 'center', 
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'stretch' : 'center', 
                 justifyContent: 'space-between', 
                 gap: '0.6rem', 
                 flexShrink: 0, 
@@ -170,7 +171,7 @@ const SingletonSim = () => {
                 borderBottom: '2px solid var(--border)', 
                 paddingBottom: '0.6rem' 
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.6 }}>Mode:</span>
                     <div style={{ display: 'flex', border: '2px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
                         <button onClick={() => setInitMode('eager')} style={{ fontSize: '0.65rem', padding: '0.3rem 0.6rem', fontWeight: 800, background: initMode === 'eager' ? '#ffd93d' : 'var(--white)', border: 'none', borderRight: '2px solid var(--border)', cursor: 'pointer' }}>Eager</button>
@@ -183,7 +184,7 @@ const SingletonSim = () => {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignSelf: isMobile ? 'flex-end' : 'auto' }}>
                     <button className="btn btn-sm" style={{ background: '#ffd93d', color: '#000', fontSize: '0.65rem', padding: '0.3rem 0.6rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }} onClick={() => runRequest()} disabled={isSimulating}>
                         <ZapIcon size={12} /> Query getInstance() (All)
                     </button>
@@ -197,240 +198,245 @@ const SingletonSim = () => {
             </div>
 
             {/* Central Canvas */}
-            <div style={{ 
-                flex: 1, 
-                border: '2px solid var(--border)', 
-                borderRadius: '12px', 
-                background: '#f8fafc', 
-                position: 'relative', 
-                overflow: 'hidden', 
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
-            }}>
-                {/* SVG Connections */}
-                <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-                    {clients.map((c, idx) => {
-                        if (!c.ref) return null;
-                        return (
-                            <motion.line
-                                key={c.name}
-                                x1={c.x}
-                                y1={c.y}
-                                x2="50%"
-                                y2="50%"
-                                stroke={c.color}
-                                strokeWidth="3"
-                                strokeDasharray="6,4"
-                                initial={{ strokeDashoffset: 50, opacity: 0 }}
-                                animate={{ strokeDashoffset: 0, opacity: 0.7 }}
-                                transition={{ strokeDashoffset: { repeat: Infinity, duration: 3, ease: 'linear' }, opacity: { duration: 0.4 } }}
-                            />
-                        );
-                    })}
-                </svg>
-
-                {/* Flying Pulses */}
-                {pulseActive && clients.map((c) => (
-                    <motion.div
-                        key={`pulse-${c.name}`}
-                        initial={{ left: c.x, top: c.y, scale: 0.5, opacity: 1 }}
-                        animate={{ left: '50%', top: '50%', scale: 1.2, opacity: [1, 1, 0.8] }}
-                        transition={{ duration: 0.8, ease: 'easeInOut' }}
-                        style={{
-                            position: 'absolute',
-                            width: 14,
-                            height: 14,
-                            borderRadius: '50%',
-                            background: c.color,
-                            boxShadow: `0 0 10px ${c.color}`,
-                            transform: 'translate(-50%, -50%)',
-                            zIndex: 10,
-                        }}
-                    />
-                ))}
-
-                {/* Central Core (Singleton Instance) */}
+            <div style={{ overflowX: isMobile ? 'auto' : 'visible', width: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ 
-                    position: 'absolute', 
-                    left: '50%', 
-                    top: '50%', 
-                    transform: 'translate(-50%, -50%)', 
-                    zIndex: 5,
+                    flex: 1, 
+                    width: isMobile ? 650 : '100%',
+                    minHeight: isMobile ? 320 : 'auto',
+                    border: '2px solid var(--border)', 
+                    borderRadius: '12px', 
+                    background: '#f8fafc', 
+                    position: 'relative', 
+                    overflow: 'hidden', 
                     display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)',
+                    flexShrink: 0
                 }}>
-                    <AnimatePresence mode="wait">
-                        {instance ? (
-                            <motion.div
-                                key="active-core"
-                                initial={{ scale: 0.7, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.7, opacity: 0 }}
-                                transition={{ type: 'spring', damping: 15 }}
-                                style={{
-                                    width: 140,
-                                    height: 140,
-                                    borderRadius: '50%',
-                                    background: 'radial-gradient(circle at 30% 30%, #ffffff 0%, #a78bfa 50%, #4c1d95 100%)',
-                                    border: '4px solid var(--border)',
-                                    boxShadow: '0 10px 25px -5px rgba(124, 58, 237, 0.4), inset 0 2px 4px rgba(255,255,255,0.4)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    position: 'relative'
-                                }}
-                            >
-                                <span style={{ 
-                                    fontSize: '0.55rem', 
-                                    fontWeight: 900, 
-                                    background: '#000', 
-                                    color: '#fff', 
-                                    padding: '2px 6px', 
-                                    borderRadius: '4px', 
-                                    position: 'absolute', 
-                                    top: -10,
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                }}>
-                                    {instance.address}
-                                </span>
-                                <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
-                                    {className}
-                                </span>
-                                <span style={{ fontSize: '0.55rem', color: '#e9d5ff', marginTop: '0.2rem', fontWeight: 700 }}>
-                                    Active Instance
-                                </span>
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="inactive-core"
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.9, opacity: 0 }}
-                                style={{
-                                    width: 140,
-                                    height: 140,
-                                    borderRadius: '50%',
-                                    border: '3px dashed #cbd5e1',
-                                    background: 'rgba(241, 245, 249, 0.6)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#94a3b8'
-                                }}
-                            >
-                                <ClockIcon size={24} color="#94a3b8" style={{ marginBottom: '0.2rem' }} />
-                                <span style={{ fontSize: '0.65rem', fontWeight: 800 }}>null</span>
-                                <span style={{ fontSize: '0.55rem', opacity: 0.7 }}>Uninitialized</span>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    {/* SVG Connections */}
+                    <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+                        {clients.map((c, idx) => {
+                            if (!c.ref) return null;
+                            return (
+                                <motion.line
+                                    key={c.name}
+                                    x1={c.x}
+                                    y1={c.y}
+                                    x2="50%"
+                                    y2="50%"
+                                    stroke={c.color}
+                                    strokeWidth="3"
+                                    strokeDasharray="6,4"
+                                    initial={{ strokeDashoffset: 50, opacity: 0 }}
+                                    animate={{ strokeDashoffset: 0, opacity: 0.7 }}
+                                    transition={{ strokeDashoffset: { repeat: Infinity, duration: 3, ease: 'linear' }, opacity: { duration: 0.4 } }}
+                                />
+                            );
+                        })}
+                    </svg>
 
-                    {/* Private Constructor Forcefield Alert */}
-                    <AnimatePresence>
-                        {showConstructorError && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.8, y: 10 }}
-                                style={{
-                                    position: 'absolute',
-                                    top: 155,
-                                    width: 220,
-                                    background: '#fee2e2',
-                                    border: '2px solid #ef4444',
-                                    borderRadius: '8px',
-                                    padding: '0.5rem',
-                                    textAlign: 'center',
-                                    boxShadow: '0 10px 15px -3px rgba(239, 68, 68, 0.2)',
-                                    zIndex: 20
-                                }}
-                            >
-                                <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#991b1b', textTransform: 'uppercase', marginBottom: '0.1rem' }}>
-                                    Access Blocked
-                                </div>
-                                <div style={{ fontSize: '0.55rem', color: '#7f1d1d', fontFamily: 'var(--font-mono)' }}>
-                                    Constructor is private! Direct creation is forbidden.
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
+                    {/* Flying Pulses */}
+                    {pulseActive && clients.map((c) => (
+                        <motion.div
+                            key={`pulse-${c.name}`}
+                            initial={{ left: c.x, top: c.y, scale: 0.5, opacity: 1 }}
+                            animate={{ left: '50%', top: '50%', scale: 1.2, opacity: [1, 1, 0.8] }}
+                            transition={{ duration: 0.8, ease: 'easeInOut' }}
+                            style={{
+                                position: 'absolute',
+                                width: 14,
+                                height: 14,
+                                borderRadius: '50%',
+                                background: c.color,
+                                boxShadow: `0 0 10px ${c.color}`,
+                                transform: 'translate(-50%, -50%)',
+                                zIndex: 10,
+                            }}
+                        />
+                    ))}
 
-                {/* Clients layout */}
-                {clients.map((c, idx) => (
-                    <div
-                        key={c.name}
-                        style={{
-                            position: 'absolute',
-                            left: c.x,
-                            top: c.y,
-                            transform: 'translate(-50%, -50%)',
-                            zIndex: 6,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: '0.4rem'
-                        }}
-                    >
-                        <div style={{
-                            border: '2px solid var(--border)',
-                            borderRadius: '10px',
-                            padding: '0.5rem 0.6rem',
-                            background: '#fff',
-                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 3px 3px 0 var(--border)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            minWidth: 100
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.2rem' }}>
-                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.color }} />
-                                <span style={{ fontSize: '0.65rem', fontWeight: 900 }}>{c.name}</span>
-                            </div>
-                            
-                            <div style={{ 
-                                fontSize: '0.55rem', 
-                                fontFamily: 'var(--font-mono)', 
-                                padding: '2px 4px', 
-                                borderRadius: '4px', 
-                                background: c.ref ? `${c.color}15` : '#f1f5f9', 
-                                color: c.ref ? c.color : '#64748b',
-                                border: `1px solid ${c.ref ? c.color : '#e2e8f0'}`,
-                                fontWeight: 800,
-                                marginBottom: '0.4rem',
-                                width: '100%',
-                                textAlign: 'center',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                            }}>
-                                ref: {c.ref || 'null'}
-                            </div>
+                    {/* Central Core (Singleton Instance) */}
+                    <div style={{ 
+                        position: 'absolute', 
+                        left: '50%', 
+                        top: '50%', 
+                        transform: 'translate(-50%, -50%)', 
+                        zIndex: 5,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center'
+                    }}>
+                        <AnimatePresence mode="wait">
+                            {instance ? (
+                                <motion.div
+                                    key="active-core"
+                                    initial={{ scale: 0.7, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.7, opacity: 0 }}
+                                    transition={{ type: 'spring', damping: 15 }}
+                                    style={{
+                                        width: 140,
+                                        height: 140,
+                                        borderRadius: '50%',
+                                        background: 'radial-gradient(circle at 30% 30%, #ffffff 0%, #a78bfa 50%, #4c1d95 100%)',
+                                        border: '4px solid var(--border)',
+                                        boxShadow: '0 10px 25px -5px rgba(124, 58, 237, 0.4), inset 0 2px 4px rgba(255,255,255,0.4)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        position: 'relative'
+                                    }}
+                                >
+                                    <span style={{ 
+                                        fontSize: '0.55rem', 
+                                        fontWeight: 900, 
+                                        background: '#000', 
+                                        color: '#fff', 
+                                        padding: '2px 6px', 
+                                        borderRadius: '4px', 
+                                        position: 'absolute', 
+                                        top: -10,
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                    }}>
+                                        {instance.address}
+                                    </span>
+                                    <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
+                                        {className}
+                                    </span>
+                                    <span style={{ fontSize: '0.55rem', color: '#e9d5ff', marginTop: '0.2rem', fontWeight: 700 }}>
+                                        Active Instance
+                                    </span>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="inactive-core"
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.9, opacity: 0 }}
+                                    style={{
+                                        width: 140,
+                                        height: 140,
+                                        borderRadius: '50%',
+                                        border: '3px dashed #cbd5e1',
+                                        background: 'rgba(241, 245, 249, 0.6)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#94a3b8'
+                                    }}
+                                >
+                                    <ClockIcon size={24} color="#94a3b8" style={{ marginBottom: '0.2rem' }} />
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 800 }}>null</span>
+                                    <span style={{ fontSize: '0.55rem', opacity: 0.7 }}>Uninitialized</span>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
-                            <button 
-                                className="btn btn-sm" 
-                                style={{ 
-                                    fontSize: '0.55rem', 
-                                    padding: '0.15rem 0.4rem', 
-                                    width: '100%',
-                                    background: 'var(--white)',
-                                    border: '1.5px solid var(--border)',
-                                    fontWeight: 800,
-                                    cursor: 'pointer'
-                                }}
-                                onClick={() => runRequest(idx)}
-                                disabled={isSimulating}
-                            >
-                                getInstance()
-                            </button>
-                        </div>
+                        {/* Private Constructor Forcefield Alert */}
+                        <AnimatePresence>
+                            {showConstructorError && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 155,
+                                        width: 220,
+                                        background: '#fee2e2',
+                                        border: '2px solid #ef4444',
+                                        borderRadius: '8px',
+                                        padding: '0.5rem',
+                                        textAlign: 'center',
+                                        boxShadow: '0 10px 15px -3px rgba(239, 68, 68, 0.2)',
+                                        zIndex: 20
+                                    }}
+                                >
+                                    <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#991b1b', textTransform: 'uppercase', marginBottom: '0.1rem' }}>
+                                        Access Blocked
+                                    </div>
+                                    <div style={{ fontSize: '0.55rem', color: '#7f1d1d', fontFamily: 'var(--font-mono)' }}>
+                                        Constructor is private! Direct creation is forbidden.
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
-                ))}
+
+                    {/* Clients layout */}
+                    {clients.map((c, idx) => (
+                        <div
+                            key={c.name}
+                            style={{
+                                position: 'absolute',
+                                left: c.x,
+                                top: c.y,
+                                transform: 'translate(-50%, -50%)',
+                                zIndex: 6,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '0.4rem'
+                            }}
+                        >
+                            <div style={{
+                                border: '2px solid var(--border)',
+                                borderRadius: '10px',
+                                padding: '0.5rem 0.6rem',
+                                background: '#fff',
+                                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 3px 3px 0 var(--border)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                minWidth: 100
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.2rem' }}>
+                                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.color }} />
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 900 }}>{c.name}</span>
+                                </div>
+                                
+                                <div style={{ 
+                                    fontSize: '0.55rem', 
+                                    fontFamily: 'var(--font-mono)', 
+                                    padding: '2px 4px', 
+                                    borderRadius: '4px', 
+                                    background: c.ref ? `${c.color}15` : '#f1f5f9', 
+                                    color: c.ref ? c.color : '#64748b',
+                                    border: `1px solid ${c.ref ? c.color : '#e2e8f0'}`,
+                                    fontWeight: 800,
+                                    marginBottom: '0.4rem',
+                                    width: '100%',
+                                    textAlign: 'center',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                    ref: {c.ref || 'null'}
+                                </div>
+
+                                <button 
+                                    className="btn btn-sm" 
+                                    style={{ 
+                                        fontSize: '0.55rem', 
+                                        padding: '0.15rem 0.4rem', 
+                                        width: '100%',
+                                        background: 'var(--white)',
+                                        border: '1.5px solid var(--border)',
+                                        fontWeight: 800,
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => runRequest(idx)}
+                                    disabled={isSimulating}
+                                >
+                                    getInstance()
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
@@ -440,7 +446,7 @@ const SingletonSim = () => {
 /* ══════════════════════════════════════════════════════════════
    2. FACTORY — Production Line
    ══════════════════════════════════════════════════════════════ */
-const FactorySim = () => {
+const FactorySim = ({ isMobile }) => {
     const [products, setProducts] = useState([]);
     const [customTypes, setCustomTypes] = useState([
         { type: 'Circle', icon: 'CircleShape', color: '#66d9ef' },
@@ -479,32 +485,34 @@ const FactorySim = () => {
     const addType = () => {
         if (!newType.trim() || customTypes.length >= 4) return;
         const icon = ICONS[customTypes.length % ICONS.length];
-        const color = COLORS[customTypes.length % COLORS.length];
-        setCustomTypes(prev => [...prev, { type: newType.trim(), icon, color }]);
+        const trimmed = newType.trim();
+        if (!trimmed) return;
+        if (customTypes.some(t => t.type.toLowerCase() === trimmed.toLowerCase())) return;
+        if (customTypes.length >= 5) return; // Limit categories
+
+        const icons = ['TriangleShape', 'PentagonShape', 'HexagonShape'];
+        const colors = ['#b39ddb', '#ffb347', '#4dd0c8'];
+        const nextIdx = customTypes.length - 3; // custom categories start after default 3
+
+        const newブルー = {
+            type: trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
+            icon: icons[nextIdx % icons.length],
+            color: colors[nextIdx % colors.length]
+        };
+
+        setCustomTypes(prev => [...prev, newブルー]);
         setNewType('');
     };
 
-    const getLaneLeft = (typeStr) => {
-        const idx = customTypes.findIndex(t => t.type === typeStr);
-        if (idx === -1) return '75%';
-        const L = customTypes.length;
-        const leftPercent = 58 + ((idx + 0.5) / L) * 40;
-        return `${leftPercent}%`;
-    };
-
     return (
-        <div style={{ ...FULL, padding: '1rem', gap: '0.8rem' }}>
-            <style>{`
-                .hide-scrollbar::-webkit-scrollbar {
-                    display: none;
-                }
-            `}</style>
-            {DOT_BG('factGrid')}
+        <div style={{ ...FULL, padding: isMobile ? '0.8rem' : '1.2rem', gap: '0.8rem', overflowY: isMobile ? 'auto' : 'hidden' }}>
+            {DOT_BG('factoryGrid')}
 
             {/* Header Control Panel */}
             <div style={{ 
                 display: 'flex', 
-                alignItems: 'center', 
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'stretch' : 'center', 
                 justifyContent: 'space-between', 
                 gap: '0.6rem', 
                 flexShrink: 0, 
@@ -512,16 +520,16 @@ const FactorySim = () => {
                 borderBottom: '2.5px solid var(--border)', 
                 paddingBottom: '0.6rem' 
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', color: '#0f172a' }}>Factory blueprints:</span>
-                    <div style={{ display: 'flex', gap: '0.3rem' }}>
+                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
                         <input value={newType} onChange={e => setNewType(e.target.value)} placeholder="Custom Product"
                             style={{ ...MINI_INPUT, width: 120, height: 26, fontSize: '0.7rem', border: '2px solid var(--border)' }} disabled={animationState !== 'idle'} onKeyDown={e => e.key === 'Enter' && addType()} />
                         <button className="btn btn-sm" style={{ background: '#a8e6cf', border: '2px solid var(--border)', fontSize: '0.65rem', padding: '0.3rem 0.6rem', fontWeight: 800, color: '#0f172a', cursor: 'pointer' }} onClick={addType} disabled={animationState !== 'idle' || customTypes.length >= 4}>+ Register Type</button>
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                <div style={{ display: 'flex', gap: '0.4rem', alignSelf: isMobile ? 'flex-end' : 'auto' }}>
                     {products.length > 0 && (
                         <button className="btn btn-sm" style={{ background: '#ef4444', border: '2px solid var(--border)', color: '#fff', fontSize: '0.65rem', padding: '0.3rem 0.6rem', fontWeight: 800, cursor: 'pointer' }}
                             onClick={() => setProducts([])}>Clear Products</button>
@@ -530,11 +538,11 @@ const FactorySim = () => {
             </div>
 
             {/* Main Interactive Flow */}
-            <div style={{ flex: 1, display: 'flex', gap: '1.2rem', minHeight: 0, zIndex: 1, position: 'relative' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1.2rem', minHeight: 0, zIndex: 1, position: 'relative' }}>
                 
                 {/* 1. Client Order Panel */}
                 <div style={{ 
-                    width: '25%', 
+                    width: isMobile ? '100%' : '25%', 
                     border: '2.5px solid var(--border)', 
                     borderRadius: '12px', 
                     background: '#fff', 
@@ -583,7 +591,8 @@ const FactorySim = () => {
 
                 {/* 2. Factory Dispatch Node */}
                 <div style={{ 
-                    width: '30%', 
+                    width: isMobile ? '100%' : '30%', 
+                    minHeight: isMobile ? '180px' : 'auto',
                     border: '2.5px solid var(--border)', 
                     borderRadius: '12px', 
                     background: '#fff', 
@@ -602,24 +611,24 @@ const FactorySim = () => {
 
                     <div style={{ 
                         display: 'flex', 
-                        flexDirection: 'column', 
+                        flexDirection: 'column',
                         alignItems: 'center',
-                        gap: '0.8rem'
+                        gap: '0.8rem',
+                        zIndex: 2
                     }}>
-                        {/* Interactive Gears */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                            <motion.div 
-                                animate={animationState === 'manufacturing' ? { rotate: 360 } : {}} 
-                                transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }}
-                                style={{ display: 'inline-block' }}
+                        {/* Animated Gear */}
+                        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                            <motion.div
+                                animate={animationState === 'manufacturing' ? { rotate: 360 } : {}}
+                                transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
+                                style={{ display: 'flex', alignItems: 'center' }}
                             >
-                                <GearIcon size={24} color="#1e293b" />
+                                <GearIcon size={32} color={animationState === 'manufacturing' ? '#d97706' : '#94a3b8'} />
                             </motion.div>
-                            <FactoryIcon size={44} color="#1e293b" />
-                            <motion.div 
-                                animate={animationState === 'manufacturing' ? { rotate: -360 } : {}} 
-                                transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }}
-                                style={{ display: 'inline-block' }}
+                            <motion.div
+                                animate={animationState === 'manufacturing' ? { rotate: -360 } : {}}
+                                transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                                style={{ display: 'flex', alignItems: 'center', marginTop: '0.4rem' }}
                             >
                                 <GearIcon size={24} color="#1e293b" />
                             </motion.div>
@@ -649,8 +658,10 @@ const FactorySim = () => {
                     flex: 1, 
                     display: 'flex', 
                     gap: '0.6rem', 
-                    height: '100%',
-                    minWidth: 0
+                    height: isMobile ? '350px' : '100%',
+                    minWidth: isMobile ? '100%' : 0,
+                    overflowX: isMobile ? 'auto' : 'visible',
+                    paddingBottom: isMobile ? '0.5rem' : 0
                 }}>
                     {customTypes.map(typeObj => (
                         <div key={typeObj.type} style={{
@@ -664,7 +675,7 @@ const FactorySim = () => {
                             padding: '0.6rem',
                             position: 'relative',
                             boxShadow: '4px 4px 0 var(--border)',
-                            minWidth: 0
+                            minWidth: isMobile ? '130px' : 0
                         }}>
                             {/* Conveyor Belt Indicator */}
                             <div style={{ 
@@ -760,7 +771,7 @@ const FactorySim = () => {
                             zIndex: 20,
                         }}
                     >
-                                request({activeShape.type})
+                        request({activeShape.type})
                     </motion.div>
                 )}
 
@@ -797,7 +808,7 @@ const FactorySim = () => {
 /* ══════════════════════════════════════════════════════════════
    3. OBSERVER — Broadcast Tower
    ══════════════════════════════════════════════════════════════ */
-const ObserverSim = () => {
+const ObserverSim = ({ isMobile }) => {
     const [subscribers, setSubscribers] = useState([
         { id: 1, name: 'EmailNotifier', icon: 'EmailIcon', subscribed: true, active: false, msg: '' },
         { id: 2, name: 'SMSNotifier', icon: 'PhoneIcon', subscribed: true, active: false, msg: '' },
@@ -817,10 +828,9 @@ const ObserverSim = () => {
     const SUB_ICONS = ['EmailIcon', 'PhoneIcon', 'BellIcon', 'SendIcon', 'LaptopIcon'];
 
     const getObserverPosition = (index, total) => {
-        // Distribute evenly around a circle
         const angle = (index * (2 * Math.PI) / total) - Math.PI / 2;
-        const radiusX = 35; // percentage of parent container width
-        const radiusY = 35; // percentage of parent container height
+        const radiusX = 35;
+        const radiusY = 35;
         return {
             x: `${50 + radiusX * Math.cos(angle)}%`,
             y: `${50 + radiusY * Math.sin(angle)}%`,
@@ -836,7 +846,7 @@ const ObserverSim = () => {
     const addSub = () => {
         if (publishing) return;
         const name = newSubName.trim() || `ClientNotifier ${nextId.current}`;
-        if (subscribers.length >= 8) return; // Prevent overcrowding
+        if (subscribers.length >= 8) return;
         setSubscribers(prev => [
             ...prev,
             {
@@ -863,16 +873,12 @@ const ObserverSim = () => {
         setPublishing(true);
         setWave(true);
         
-        // Reset active notified flash states at start, but keep previous messages until pulse hits
         setSubscribers(prev => prev.map(s => ({ ...s, active: false })));
 
-        // Broadcast ripple waves
         setTimeout(() => setWave(false), 1200);
 
-        // Pulse animation duration is 800ms
         await new Promise(r => setTimeout(r, 800));
 
-        // When pulse hits the observers:
         setSubscribers(prev => prev.map(s => {
             if (s.subscribed) {
                 return { ...s, active: true, msg: msg };
@@ -885,7 +891,6 @@ const ObserverSim = () => {
             ...prev
         ].slice(0, 5));
 
-        // Let the notified state flash for 1.8 seconds, then turn off active flash but keep message visible
         await new Promise(r => setTimeout(r, 1800));
 
         setSubscribers(prev => prev.map(s => ({ ...s, active: false })));
@@ -904,7 +909,8 @@ const ObserverSim = () => {
             {/* Header Control Panel */}
             <div style={{ 
                 display: 'flex', 
-                alignItems: 'center', 
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'stretch' : 'center', 
                 justifyContent: 'space-between', 
                 gap: '0.6rem', 
                 flexShrink: 0, 
@@ -912,7 +918,7 @@ const ObserverSim = () => {
                 borderBottom: '2.5px solid var(--border)', 
                 paddingBottom: '0.6rem' 
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                         <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0f172a' }}>Subject:</span>
                         <input value={channelName} onChange={e => setChannelName(e.target.value)} style={{ ...MINI_INPUT, width: 120, height: 26, fontSize: '0.7rem', border: '2px solid var(--border)' }} disabled={publishing} />
@@ -924,7 +930,7 @@ const ObserverSim = () => {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap', alignSelf: isMobile ? 'flex-end' : 'auto' }}>
                     <div style={{ display: 'flex', gap: '0.2rem' }}>
                         <input value={newSubName} onChange={e => setNewSubName(e.target.value)} placeholder="New Observer"
                             style={{ ...MINI_INPUT, width: 100, height: 26, fontSize: '0.7rem', border: '2px solid var(--border)' }} disabled={publishing || subscribers.length >= 8} onKeyDown={e => e.key === 'Enter' && addSub()} />
@@ -938,261 +944,271 @@ const ObserverSim = () => {
             </div>
 
             {/* Main Interactive Circle View */}
-            <div style={{ flex: 1, display: 'flex', gap: '1.2rem', minHeight: 0, zIndex: 1 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1.2rem', minHeight: 0, zIndex: 1, overflowY: isMobile ? 'auto' : 'visible' }}>
                 
                 {/* Visualizer Canvas */}
                 <div style={{ 
-                    flex: 1, 
+                    flex: isMobile ? 'none' : 1, 
                     border: '2.5px solid var(--border)', 
                     borderRadius: '12px', 
                     background: '#f8fafc', 
                     position: 'relative', 
-                    overflow: 'hidden',
+                    overflowX: isMobile ? 'auto' : 'hidden',
+                    overflowY: 'hidden',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+                    justifyContent: isMobile ? 'flex-start' : 'center',
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)',
+                    height: isMobile ? '400px' : 'auto'
                 }}>
-                    
-                    {/* SVG Subscription Connections */}
-                    <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-                        {subscribers.map((sub, idx) => {
-                            const pos = getObserverPosition(idx, subscribers.length);
-                            return (
-                                <motion.line
-                                    key={`line-${sub.id}`}
-                                    x1="50%"
-                                    y1="50%"
-                                    x2={pos.x}
-                                    y2={pos.y}
-                                    stroke={sub.subscribed ? '#ff6b9d' : 'var(--border)'}
-                                    strokeWidth={sub.subscribed ? '3' : '1.5'}
-                                    strokeDasharray={sub.subscribed ? 'none' : '4,4'}
-                                    animate={sub.subscribed && publishing ? {
-                                        strokeDasharray: ['0,0', '8,4', '0,0']
-                                    } : {}}
-                                    transition={{ duration: 0.8 }}
-                                    style={{ 
-                                        opacity: sub.subscribed ? 0.8 : 0.2, 
-                                        transition: 'all 0.3s' 
-                                    }}
-                                />
-                            );
-                        })}
-                    </svg>
-
-                    {/* Outer Broadcast Wave Ripples */}
-                    {wave && [1, 2, 3].map(i => (
-                        <motion.div
-                            key={`ripple-${i}`}
-                            initial={{ width: 60, height: 60, opacity: 0.8 }}
-                            animate={{ width: 500, height: 500, opacity: 0 }}
-                            transition={{ duration: 1.2, ease: 'easeOut', delay: i * 0.15 }}
-                            style={{
-                                position: 'absolute',
-                                left: '50%',
-                                top: '50%',
-                                transform: 'translate(-50%, -50%)',
-                                borderRadius: '50%',
-                                border: '2.5px solid #ff6b9d',
-                                pointerEvents: 'none',
-                                zIndex: 2
-                            }}
-                        />
-                    ))}
-
-                    {/* Pulses traveling to Subscribed Observers */}
-                    {publishing && wave && subscribers.map((sub, idx) => {
-                        if (!sub.subscribed) return null;
-                        const pos = getObserverPosition(idx, subscribers.length);
-                        return (
-                            <motion.div
-                                key={`pulse-${sub.id}`}
-                                initial={{ left: '50%', top: '50%', scale: 0.4, opacity: 1, x: '-50%', y: '-50%' }}
-                                animate={{ left: pos.x, top: pos.y, scale: 1, opacity: [1, 1, 0] }}
-                                transition={{ duration: 0.8, ease: 'easeOut' }}
-                                style={{
-                                    position: 'absolute',
-                                    width: 24,
-                                    height: 24,
-                                    borderRadius: '50%',
-                                    background: '#ff6b9d',
-                                    border: '2px solid var(--border)',
-                                    boxShadow: '2px 2px 0 var(--border)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    zIndex: 15,
-                                }}
-                            >
-                                <ZapIcon size={12} color="#fff" />
-                            </motion.div>
-                        );
-                    })}
-
-                    {/* Central Publisher / Broadcast Subject Tower */}
                     <div style={{
-                        position: 'absolute',
-                        left: '50%',
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        zIndex: 10,
+                        position: 'relative',
+                        width: isMobile ? 650 : '100%',
+                        height: '100%',
+                        minWidth: isMobile ? 650 : 'auto',
                         display: 'flex',
-                        flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}>
-                        <motion.div
-                            animate={publishing ? { 
-                                scale: [1, 1.15, 0.95, 1.05, 1],
-                                boxShadow: ['0 0 15px rgba(255,107,157,0.3)', '0 0 35px rgba(255,107,157,0.8)', '0 0 15px rgba(255,107,157,0.3)']
-                            } : {}}
-                            transition={{ duration: 0.8 }}
-                            style={{
-                                width: 100,
-                                height: 100,
-                                borderRadius: '50%',
-                                border: '2.5px solid var(--border)',
-                                background: '#fff',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '4px 4px 0 var(--border)',
-                                cursor: 'default'
-                            }}
-                        >
-                            <SignalIcon size={32} color="#ff6b9d" />
-                            <span style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', color: '#ff6b9d', marginTop: '2px' }}>
-                                {publishing ? 'Broadcasting' : 'Subject'}
-                            </span>
-                        </motion.div>
-                        <div style={{
-                            marginTop: '0.5rem',
-                            background: '#000',
-                            color: '#fff',
-                            fontSize: '0.55rem',
-                            fontFamily: 'var(--font-mono)',
-                            padding: '3px 10px',
-                            borderRadius: '4px',
-                            fontWeight: 900,
-                            boxShadow: '2px 2px 0 var(--border)',
-                            whiteSpace: 'nowrap'
-                        }}>
-                            {channelName}
-                        </div>
-                    </div>
+                        
+                        {/* SVG Subscription Connections */}
+                        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+                            {subscribers.map((sub, idx) => {
+                                const pos = getObserverPosition(idx, subscribers.length);
+                                return (
+                                    <motion.line
+                                        key={`line-${sub.id}`}
+                                        x1="50%"
+                                        y1="50%"
+                                        x2={pos.x}
+                                        y2={pos.y}
+                                        stroke={sub.subscribed ? '#ff6b9d' : 'var(--border)'}
+                                        strokeWidth={sub.subscribed ? '3' : '1.5'}
+                                        strokeDasharray={sub.subscribed ? 'none' : '4,4'}
+                                        animate={sub.subscribed && publishing ? {
+                                            strokeDasharray: ['0,0', '8,4', '0,0']
+                                        } : {}}
+                                        transition={{ duration: 0.8 }}
+                                        style={{ 
+                                            opacity: sub.subscribed ? 0.8 : 0.2, 
+                                            transition: 'all 0.3s' 
+                                        }}
+                                    />
+                                );
+                            })}
+                        </svg>
 
-                    {/* Observers layout */}
-                    {subscribers.map((sub, idx) => {
-                        const pos = getObserverPosition(idx, subscribers.length);
-                        return (
-                            <div
-                                key={sub.id}
+                        {/* Outer Broadcast Wave Ripples */}
+                        {wave && [1, 2, 3].map(i => (
+                            <motion.div
+                                key={`ripple-${i}`}
+                                initial={{ width: 60, height: 60, opacity: 0.8 }}
+                                animate={{ width: 500, height: 500, opacity: 0 }}
+                                transition={{ duration: 1.2, ease: 'easeOut', delay: i * 0.15 }}
                                 style={{
                                     position: 'absolute',
-                                    left: pos.x,
-                                    top: pos.y,
+                                    left: '50%',
+                                    top: '50%',
                                     transform: 'translate(-50%, -50%)',
-                                    zIndex: 6,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center'
+                                    borderRadius: '50%',
+                                    border: '2.5px solid #ff6b9d',
+                                    pointerEvents: 'none',
+                                    zIndex: 2
                                 }}
-                            >
+                            />
+                        ))}
+
+                        {/* Pulses traveling to Subscribed Observers */}
+                        {publishing && wave && subscribers.map((sub, idx) => {
+                            if (!sub.subscribed) return null;
+                            const pos = getObserverPosition(idx, subscribers.length);
+                            return (
                                 <motion.div
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => toggleSub(sub.id)}
+                                    key={`pulse-${sub.id}`}
+                                    initial={{ left: '50%', top: '50%', scale: 0.4, opacity: 1, x: '-50%', y: '-50%' }}
+                                    animate={{ left: pos.x, top: pos.y, scale: 1, opacity: [1, 1, 0] }}
+                                    transition={{ duration: 0.8, ease: 'easeOut' }}
                                     style={{
-                                        border: '2.5px solid var(--border)',
-                                        borderRadius: '10px',
-                                        padding: '0.4rem 0.6rem',
-                                        background: sub.active ? '#ecfdf5' : (sub.subscribed ? '#fff' : '#f1f5f9'),
-                                        boxShadow: sub.active 
-                                            ? '3px 3px 0 #10b981' 
-                                            : `3px 3px 0 ${sub.subscribed ? '#ff6b9d' : 'var(--border)'}`,
+                                        position: 'absolute',
+                                        width: 24,
+                                        height: 24,
+                                        borderRadius: '50%',
+                                        background: '#ff6b9d',
+                                        border: '2px solid var(--border)',
+                                        boxShadow: '2px 2px 0 var(--border)',
                                         display: 'flex',
-                                        flexDirection: 'column',
                                         alignItems: 'center',
-                                        minWidth: 110,
-                                        cursor: 'pointer',
-                                        opacity: sub.subscribed ? 1 : 0.65,
-                                        transition: 'all 0.3s'
+                                        justifyContent: 'center',
+                                        zIndex: 15,
                                     }}
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-                                        {getObserverIcon(sub.icon, 18, sub.subscribed ? '#0f172a' : '#64748b')}
-                                        <span style={{ fontSize: '0.62rem', fontWeight: 900, color: '#0f172a' }}>{sub.name}</span>
-                                    </div>
-                                    
-                                    <div style={{ 
-                                        fontSize: '0.5rem', 
-                                        fontFamily: 'var(--font-mono)', 
-                                        padding: '2px 4px', 
-                                        borderRadius: '3px', 
-                                        background: sub.active ? '#10b981' : (sub.subscribed ? '#ff6b9d15' : '#e2e8f0'), 
-                                        color: sub.active ? '#fff' : (sub.subscribed ? '#ff6b9d' : '#475569'),
-                                        border: `1px solid ${sub.active ? '#10b981' : (sub.subscribed ? '#ff6b9d30' : '#cbd5e1')}`,
-                                        fontWeight: 900,
-                                        width: '100%',
-                                        textAlign: 'center'
-                                    }}>
-                                        {sub.active ? '✓ NOTIFIED' : (sub.subscribed ? 'SUBSCRIBED' : 'UNSUBSCRIBED')}
-                                    </div>
+                                    <ZapIcon size={12} color="#fff" />
+                                </motion.div>
+                            );
+                        })}
 
-                                    {/* Render the message directly inside the card when notified or holding state */}
-                                    {sub.msg && (
-                                        <div style={{
-                                            marginTop: '0.4rem',
-                                            fontSize: '0.52rem',
-                                            fontFamily: 'var(--font-mono)',
-                                            background: sub.active ? '#10b98125' : '#f1f5f9',
-                                            color: sub.active ? '#047857' : '#334155',
-                                            border: `1.5px solid ${sub.active ? '#10b98150' : 'var(--border)'}`,
-                                            padding: '2px 4px',
-                                            borderRadius: '4px',
-                                            fontWeight: 800,
-                                            width: '100%',
-                                            textAlign: 'center',
-                                            wordBreak: 'break-all'
-                                        }}>
-                                            {sub.msg}
-                                        </div>
-                                    )}
+                        {/* Central Publisher / Broadcast Subject Tower */}
+                        <div style={{
+                            position: 'absolute',
+                            left: '50%',
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            zIndex: 10,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            <motion.div
+                                animate={publishing ? { 
+                                    scale: [1, 1.15, 0.95, 1.05, 1],
+                                    boxShadow: ['0 0 15px rgba(255,107,157,0.3)', '0 0 35px rgba(255,107,157,0.8)', '0 0 15px rgba(255,107,157,0.3)']
+                                } : {}}
+                                transition={{ duration: 0.8 }}
+                                style={{
+                                    width: 100,
+                                    height: 100,
+                                    borderRadius: '50%',
+                                    border: '2.5px solid var(--border)',
+                                    background: '#fff',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '4px 4px 0 var(--border)',
+                                    cursor: 'default'
+                                }}
+                            >
+                                <SignalIcon size={32} color="#ff6b9d" />
+                                <span style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', color: '#ff6b9d', marginTop: '2px' }}>
+                                    {publishing ? 'Broadcasting' : 'Subject'}
+                                </span>
+                            </motion.div>
+                            <div style={{
+                                marginTop: '0.5rem',
+                                background: '#000',
+                                color: '#fff',
+                                fontSize: '0.55rem',
+                                fontFamily: 'var(--font-mono)',
+                                padding: '3px 10px',
+                                borderRadius: '4px',
+                                fontWeight: 900,
+                                boxShadow: '2px 2px 0 var(--border)',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                {channelName}
+                            </div>
+                        </div>
 
-                                    {/* Action buttons on hover/select */}
-                                    <button 
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            removeSub(sub.id);
-                                        }}
-                                        disabled={publishing}
-                                        style={{ 
-                                            fontSize: '0.48rem', 
-                                            cursor: publishing ? 'not-allowed' : 'pointer', 
-                                            background: '#ef444415', 
-                                            color: '#ef4444', 
-                                            border: '1px solid #ef444430', 
-                                            borderRadius: '4px', 
-                                            padding: '2px 4px', 
-                                            marginTop: '0.3rem', 
-                                            fontWeight: 800,
-                                            width: '100%',
-                                            opacity: publishing ? 0.5 : 1
+                        {/* Observers layout */}
+                        {subscribers.map((sub, idx) => {
+                            const pos = getObserverPosition(idx, subscribers.length);
+                            return (
+                                <div
+                                    key={sub.id}
+                                    style={{
+                                        position: 'absolute',
+                                        left: pos.x,
+                                        top: pos.y,
+                                        transform: 'translate(-50%, -50%)',
+                                        zIndex: 6,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    <motion.div
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => toggleSub(sub.id)}
+                                        style={{
+                                            border: '2.5px solid var(--border)',
+                                            borderRadius: '10px',
+                                            padding: '0.4rem 0.6rem',
+                                            background: sub.active ? '#ecfdf5' : (sub.subscribed ? '#fff' : '#f1f5f9'),
+                                            boxShadow: sub.active 
+                                                ? '3px 3px 0 #10b981' 
+                                                : `3px 3px 0 ${sub.subscribed ? '#ff6b9d' : 'var(--border)'}`,
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            minWidth: 110,
+                                            cursor: 'pointer',
+                                            opacity: sub.subscribed ? 1 : 0.65,
+                                            transition: 'all 0.3s'
                                         }}
                                     >
-                                        Delete Observer
-                                    </button>
-                                </motion.div>
-                            </div>
-                        );
-                    })}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
+                                            {getObserverIcon(sub.icon, 18, sub.subscribed ? '#0f172a' : '#64748b')}
+                                            <span style={{ fontSize: '0.62rem', fontWeight: 900, color: '#0f172a' }}>{sub.name}</span>
+                                        </div>
+                                        
+                                        <div style={{ 
+                                            fontSize: '0.5rem', 
+                                            fontFamily: 'var(--font-mono)', 
+                                            padding: '2px 4px', 
+                                            borderRadius: '3px', 
+                                            background: sub.active ? '#10b981' : (sub.subscribed ? '#ff6b9d15' : '#e2e8f0'), 
+                                            color: sub.active ? '#fff' : (sub.subscribed ? '#ff6b9d' : '#475569'),
+                                            border: `1px solid ${sub.active ? '#10b981' : (sub.subscribed ? '#ff6b9d30' : '#cbd5e1')}`,
+                                            fontWeight: 900,
+                                            width: '100%',
+                                            textAlign: 'center'
+                                        }}>
+                                            {sub.active ? '✓ NOTIFIED' : (sub.subscribed ? 'SUBSCRIBED' : 'UNSUBSCRIBED')}
+                                        </div>
+
+                                        {sub.msg && (
+                                            <div style={{
+                                                marginTop: '0.4rem',
+                                                fontSize: '0.52rem',
+                                                fontFamily: 'var(--font-mono)',
+                                                background: sub.active ? '#10b98125' : '#f1f5f9',
+                                                color: sub.active ? '#047857' : '#334155',
+                                                border: `1.5px solid ${sub.active ? '#10b98150' : 'var(--border)'}`,
+                                                padding: '2px 4px',
+                                                borderRadius: '4px',
+                                                fontWeight: 800,
+                                                width: '100%',
+                                                textAlign: 'center',
+                                                wordBreak: 'break-all'
+                                            }}>
+                                                {sub.msg}
+                                            </div>
+                                        )}
+
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeSub(sub.id);
+                                            }}
+                                            disabled={publishing}
+                                            style={{ 
+                                                fontSize: '0.48rem', 
+                                                cursor: publishing ? 'not-allowed' : 'pointer', 
+                                                background: '#ef444415', 
+                                                color: '#ef4444', 
+                                                border: '1px solid #ef444430', 
+                                                borderRadius: '4px', 
+                                                padding: '2px 4px', 
+                                                marginTop: '0.3rem', 
+                                                fontWeight: 800,
+                                                width: '100%',
+                                                opacity: publishing ? 0.5 : 1
+                                            }}
+                                        >
+                                            Delete Observer
+                                        </button>
+                                    </motion.div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Sidebar Broadcast Log & Info */}
                 <div style={{ 
-                    width: '25%', 
+                    width: isMobile ? '100%' : '25%', 
                     border: '2.5px solid var(--border)', 
                     borderRadius: '12px', 
                     background: '#fff', 
@@ -1200,7 +1216,8 @@ const ObserverSim = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '0.6rem',
-                    boxShadow: '4px 4px 0 var(--border)'
+                    boxShadow: '4px 4px 0 var(--border)',
+                    height: isMobile ? '250px' : 'auto'
                 }}>
                     <div style={{ fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase', color: '#0f172a' }}>
                         Broadcast History
@@ -1223,10 +1240,10 @@ const ObserverSim = () => {
                                 }}
                             >
                                 <div style={{ fontWeight: 800, color: '#0f172a' }}>"{m.msg}"</div>
-                                        <div style={{ opacity: 0.7, marginTop: '2px', display: 'flex', justifyContent: 'space-between', color: '#334155', fontWeight: 700 }}>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><SignalIcon size={12} color="#ff6b9d" /> Broadcasted</span>
-                                            <span>{m.count} notified</span>
-                                        </div>
+                                <div style={{ opacity: 0.7, marginTop: '2px', display: 'flex', justifyContent: 'space-between', color: '#334155', fontWeight: 700 }}>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><SignalIcon size={12} color="#ff6b9d" /> Broadcasted</span>
+                                    <span>{m.count} notified</span>
+                                </div>
                             </motion.div>
                         ))}
                         {msgLog.length === 0 && (
@@ -1256,7 +1273,7 @@ const ObserverSim = () => {
 /* ══════════════════════════════════════════════════════════════
    4. DECORATOR — Layered Enhancement
    ══════════════════════════════════════════════════════════════ */
-const DecoratorSim = () => {
+const DecoratorSim = ({ isMobile }) => {
     const [decorators, setDecorators] = useState([]);
     // User input
     const [baseName, setBaseName] = useState('Coffee');
@@ -1298,7 +1315,8 @@ const DecoratorSim = () => {
             {/* Controls row */}
             <div style={{ 
                 display: 'flex', 
-                alignItems: 'center', 
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'stretch' : 'center', 
                 justifyContent: 'space-between', 
                 gap: '0.6rem', 
                 flexShrink: 0, 
@@ -1327,7 +1345,7 @@ const DecoratorSim = () => {
                     ))}
                 </div>
                 
-                <div style={{ display: 'flex', gap: '0.2rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.2rem', alignItems: 'center', alignSelf: isMobile ? 'flex-end' : 'auto' }}>
                     <input value={newAddon} onChange={e => setNewAddon(e.target.value)} placeholder="Addon Name"
                         style={{ ...MINI_INPUT, width: 80, height: 26, fontSize: '0.7rem', border: '2px solid var(--border)' }} />
                     <input value={newCost} onChange={e => setNewCost(e.target.value)} placeholder="₹"
@@ -1337,11 +1355,12 @@ const DecoratorSim = () => {
             </div>
 
             {/* Main visual: structured layout */}
-            <div style={{ flex: 1, display: 'flex', gap: '1.2rem', minHeight: 0, zIndex: 1 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1.2rem', minHeight: 0, zIndex: 1, overflowY: isMobile ? 'auto' : 'visible' }}>
                 
                 {/* Left Visualizer Canvas */}
                 <div style={{
-                    flex: 1,
+                    flex: isMobile ? 'none' : 1,
+                    height: isMobile ? '350px' : 'auto',
                     border: '2.5px solid var(--border)',
                     borderRadius: '12px',
                     background: '#f8fafc',
@@ -1418,7 +1437,7 @@ const DecoratorSim = () => {
 
                 {/* Right Sidebar Composition Stack */}
                 <div style={{ 
-                    width: '25%', 
+                    width: isMobile ? '100%' : '25%', 
                     border: '2.5px solid var(--border)', 
                     borderRadius: '12px', 
                     background: '#fff', 
@@ -1426,7 +1445,8 @@ const DecoratorSim = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '0.6rem',
-                    boxShadow: '4px 4px 0 var(--border)'
+                    boxShadow: '4px 4px 0 var(--border)',
+                    height: isMobile ? '300px' : 'auto'
                 }}>
                     <div style={{ fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase', color: '#0f172a' }}>
                         Composition Stack
@@ -1505,7 +1525,7 @@ const DecoratorSim = () => {
 /* ══════════════════════════════════════════════════════════════
    5. STRATEGY — Swap Algorithms
    ══════════════════════════════════════════════════════════════ */
-const StrategySim = () => {
+const StrategySim = ({ isMobile }) => {
     const [strategy, setStrategy] = useState(null);
     const [sorting, setSorting] = useState(false);
     const [arr, setArr] = useState([64, 25, 12, 22, 11, 45, 38, 90, 55, 33]);
@@ -1561,25 +1581,27 @@ const StrategySim = () => {
     const maxVal = Math.max(...displayArr);
 
     return (
-        <div style={{ ...FULL, padding: '1rem 1.5rem', gap: '0.8rem' }}>
+        <div style={{ ...FULL, padding: isMobile ? '0.8rem' : '1rem 1.5rem', gap: '0.8rem' }}>
             {DOT_BG('stratGrid')}
 
             {/* Strategy selection row */}
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', flexShrink: 0, zIndex: 1 }}>
-                <span style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.4 }}>Strategy:</span>
-                {strategies.map(s => (
-                    <motion.button key={s.name} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                        onClick={() => { setStrategy(s); setSortedArr(null); }}
-                        className="btn btn-sm"
-                        style={{
-                            background: strategy?.name === s.name ? s.color : 'var(--white)',
-                            border: `2px solid ${s.color}`, fontSize: '0.68rem',
-                            boxShadow: strategy?.name === s.name ? `0 0 12px ${s.color}60` : '2px 2px 0 var(--border)',
-                        }}>
-                        {s.name} <span style={{ opacity: 0.5, fontSize: '0.55rem', marginLeft: '0.2rem' }}>{s.complexity}</span>
-                    </motion.button>
-                ))}
-                <div style={{ display: 'flex', gap: '0.2rem', marginLeft: '0.3rem' }}>
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.5rem', flexWrap: 'wrap', alignItems: isMobile ? 'stretch' : 'center', flexShrink: 0, zIndex: 1 }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.4 }}>Strategy:</span>
+                    {strategies.map(s => (
+                        <motion.button key={s.name} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                            onClick={() => { setStrategy(s); setSortedArr(null); }}
+                            className="btn btn-sm"
+                            style={{
+                                background: strategy?.name === s.name ? s.color : 'var(--white)',
+                                border: `2px solid ${s.color}`, fontSize: '0.68rem',
+                                boxShadow: strategy?.name === s.name ? `0 0 12px ${s.color}60` : '2px 2px 0 var(--border)',
+                            }}>
+                            {s.name} <span style={{ opacity: 0.5, fontSize: '0.55rem', marginLeft: '0.2rem' }}>{s.complexity}</span>
+                        </motion.button>
+                    ))}
+                </div>
+                <div style={{ display: 'flex', gap: '0.2rem', alignSelf: isMobile ? 'flex-end' : 'auto' }}>
                     <input value={newStratName} onChange={e => setNewStratName(e.target.value)} placeholder="New strategy"
                         style={{ ...MINI_INPUT, width: 100, fontSize: '0.6rem' }} onKeyDown={e => e.key === 'Enter' && addStrategy()} />
                     <button className="btn btn-sm" style={{ background: '#b39ddb', fontSize: '0.5rem' }} onClick={addStrategy}>+</button>
@@ -1593,16 +1615,16 @@ const StrategySim = () => {
                     flex: 1, border: `3px solid ${strategy ? strategy.color : 'var(--border)'}`, borderRadius: '14px',
                     padding: '1rem', background: strategy ? `${strategy.color}08` : 'var(--white)',
                     boxShadow: '4px 4px 0 var(--border)', display: 'flex', flexDirection: 'column',
-                    transition: 'border-color 0.3s, background 0.3s', minHeight: 0,
+                    transition: 'border-color 0.3s, background 0.3s', minHeight: isMobile ? 240 : 0,
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.4rem', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', flexShrink: 0, marginBottom: '0.5rem' }}>
                         <div style={{ fontWeight: 900, fontSize: '0.82rem' }}>
                             Sorter Context
                             <span style={{ fontSize: '0.62rem', opacity: 0.5, marginLeft: '0.5rem' }}>
                                 strategy = {strategy ? strategy.name : 'null'}
                             </span>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.3rem' }}>
+                        <div style={{ display: 'flex', gap: '0.3rem', alignSelf: isMobile ? 'flex-end' : 'auto' }}>
                             <button className="btn btn-sm" style={{ background: '#f8f9fa', fontSize: '0.6rem', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }} onClick={randomize}><ShuffleIcon size={12} /> Randomize</button>
                             {strategy && (
                                 <button className="btn btn-sm" style={{ background: strategy.color, fontSize: '0.65rem' }}
@@ -1614,7 +1636,7 @@ const StrategySim = () => {
                     </div>
 
                     {/* Bar chart visualization — fills remaining space */}
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '3px', minHeight: 60 }}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '3px', minHeight: 60, overflowX: isMobile ? 'auto' : 'visible', paddingBottom: '0.2rem' }}>
                         {displayArr.map((v, i) => {
                             const pct = (v / maxVal) * 100;
                             const isSorted = sortedArr !== null;
@@ -1622,7 +1644,7 @@ const StrategySim = () => {
                             return (
                                 <motion.div key={i} layout
                                     style={{
-                                        flex: 1, minWidth: 20, maxWidth: 50,
+                                        flex: 1, minWidth: isMobile ? 25 : 20, maxWidth: 50,
                                         height: `${pct}%`,
                                         background: isSorted ? '#38a169' : isHighlight && sorting ? (strategy?.color || '#66d9ef') : '#e2e8f0',
                                         border: '2px solid var(--border)',
@@ -1639,13 +1661,15 @@ const StrategySim = () => {
                 </div>
 
                 {/* Custom input row */}
-                <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: '0.58rem', fontWeight: 800, opacity: 0.4 }}>Custom array:</span>
-                    <input value={customInput} onChange={e => setCustomInput(e.target.value)}
-                        placeholder="e.g. 42, 17, 88, 3, 56, 71"
-                        style={{ ...MINI_INPUT, flex: 1 }}
-                        onKeyDown={e => e.key === 'Enter' && setCustomArray()} />
-                    <button className="btn btn-sm" style={{ background: '#66d9ef', fontSize: '0.6rem' }} onClick={setCustomArray}>Set</button>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.35rem', alignItems: isMobile ? 'stretch' : 'center', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flex: 1 }}>
+                        <span style={{ fontSize: '0.58rem', fontWeight: 800, opacity: 0.4, whiteSpace: 'nowrap' }}>Custom array:</span>
+                        <input value={customInput} onChange={e => setCustomInput(e.target.value)}
+                            placeholder="e.g. 42, 17, 88, 3, 56, 71"
+                            style={{ ...MINI_INPUT, flex: 1 }}
+                            onKeyDown={e => e.key === 'Enter' && setCustomArray()} />
+                    </div>
+                    <button className="btn btn-sm" style={{ background: '#66d9ef', fontSize: '0.6rem', alignSelf: isMobile ? 'flex-end' : 'auto' }} onClick={setCustomArray}>Set</button>
                 </div>
             </div>
         </div>
@@ -1660,17 +1684,38 @@ export default function DesignPatternsSim() {
     const [activePattern, setActivePattern] = useState('singleton');
     const [speed, setSpeed] = useState(700);
 
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const active = PATTERNS.find(p => p.id === activePattern);
 
     const CENTER = (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* Pattern Selector Tabs */}
-            <div style={{ display: 'flex', borderBottom: '3px solid var(--border)', flexShrink: 0 }}>
+            <div style={{ 
+                display: 'flex', 
+                borderBottom: '3px solid var(--border)', 
+                flexShrink: 0,
+                overflowX: isMobile ? 'auto' : 'visible',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+            }}>
                 {PATTERNS.map(p => {
                     const IconComp = p.icon;
                     return (
                         <button key={p.id} onClick={() => setActivePattern(p.id)} style={{
-                            flex: 1, padding: '0.55rem', fontWeight: 800, fontSize: '0.72rem', cursor: 'pointer',
+                            flex: isMobile ? '1 0 auto' : 1,
+                            minWidth: isMobile ? '90px' : 'auto',
+                            padding: isMobile ? '0.4rem 0.6rem' : '0.55rem',
+                            fontWeight: 800,
+                            fontSize: isMobile ? '0.62rem' : '0.72rem',
+                            cursor: 'pointer',
                             background: activePattern === p.id ? p.color : 'var(--white)', border: 'none',
                             borderRight: '2px solid var(--border)', fontFamily: 'var(--font-main)', color: 'var(--text)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
@@ -1691,11 +1736,11 @@ export default function DesignPatternsSim() {
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.25 }}
                         style={{ width: '100%', height: '100%' }}>
-                        {activePattern === 'singleton' && <SingletonSim />}
-                        {activePattern === 'factory' && <FactorySim />}
-                        {activePattern === 'observer' && <ObserverSim />}
-                        {activePattern === 'decorator' && <DecoratorSim />}
-                        {activePattern === 'strategy' && <StrategySim />}
+                        {activePattern === 'singleton' && <SingletonSim isMobile={isMobile} />}
+                        {activePattern === 'factory' && <FactorySim isMobile={isMobile} />}
+                        {activePattern === 'observer' && <ObserverSim isMobile={isMobile} />}
+                        {activePattern === 'decorator' && <DecoratorSim isMobile={isMobile} />}
+                        {activePattern === 'strategy' && <StrategySim isMobile={isMobile} />}
                     </motion.div>
                 </AnimatePresence>
             </div>

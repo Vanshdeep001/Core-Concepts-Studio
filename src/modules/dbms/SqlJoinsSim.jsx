@@ -236,9 +236,9 @@ export default function SqlJoinsSim() {
             phaseName={`Compiling SQL ${joinType.toUpperCase()} result...`}
             centerContent={
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '0.8rem', background: 'var(--white)', padding: '1rem', overflowY: 'auto' }}>
-                    
+
                     {/* Join selectors */}
-                    <div style={{ display: 'flex', gap: '4px', border: '3.5px solid var(--border)', background: 'var(--white)', padding: '2px', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0 }}>
+                    <div className="join-selectors-bar" style={{ display: 'flex', gap: '4px', border: '3.5px solid var(--border)', background: 'var(--white)', padding: '2px', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0 }}>
                         {['inner', 'left', 'right', 'full', 'cross', 'self'].map(type => (
                             <button
                                 key={type}
@@ -256,7 +256,7 @@ export default function SqlJoinsSim() {
 
                     {/* SVG Connector Viewports */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '2rem', flexShrink: 0, position: 'relative' }}>
-                        
+
                         {/* Table Employees */}
                         <div ref={tableARef} style={{ border: '3px solid var(--border)', background: 'var(--white)', boxShadow: '3px 3px 0 var(--border)' }}>
                             <div style={{ background: 'var(--yellow)', borderBottom: '3px solid var(--border)', padding: '4px 10px', fontSize: '0.75rem', fontWeight: 900, display: 'flex', justifyContent: 'space-between' }}>
@@ -379,7 +379,7 @@ export default function SqlJoinsSim() {
             leftContent={
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                     <div style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.45 }}>Venn Join visual</div>
-                    
+
                     {renderVennDiagram()}
 
                     <div style={{ height: 2, background: 'var(--border)' }} />

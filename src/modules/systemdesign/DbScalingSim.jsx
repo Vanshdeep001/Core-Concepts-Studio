@@ -5,6 +5,12 @@ import { ScaleIcon, DatabaseIcon, GlobeIcon, SignalIcon } from '../../components
 
 export default function DbScalingSim() {
     const [mode, setMode] = useState('replication'); // replication, sharding
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const h = () => setIsMobile(window.innerWidth < 768);
+        h(); window.addEventListener('resize', h);
+        return () => window.removeEventListener('resize', h);
+    }, []);
     const [primaryDb, setPrimaryDb] = useState([
         { id: 1, name: 'Alice', score: 100 },
         { id: 2, name: 'Bob', score: 85 }
@@ -72,6 +78,18 @@ export default function DbScalingSim() {
 
     // Spacing coordinates for dynamically scaled Replicas (relative layout sizing)
     const getReplicaCoordinates = (idx, total) => {
+        if (isMobile) {
+            if (total === 1) return { left: '50%', top: '58%' };
+            if (total === 2) {
+                return idx === 0 ? { left: '50%', top: '55%' } : { left: '50%', top: '78%' };
+            }
+            if (total === 3) {
+                return idx === 0 ? { left: '50%', top: '52%' } : idx === 1 ? { left: '50%', top: '71%' } : { left: '50%', top: '90%' };
+            }
+            if (total === 4) {
+                return idx === 0 ? { left: '50%', top: '50%' } : idx === 1 ? { left: '50%', top: '63%' } : idx === 2 ? { left: '50%', top: '76%' } : { left: '50%', top: '89%' };
+            }
+        }
         if (total === 1) return { left: '50%', top: '68%' };
         if (total === 2) {
             return idx === 0 ? { left: '28%', top: '68%' } : { left: '72%', top: '68%' };
@@ -777,7 +795,7 @@ export default function DbScalingSim() {
                 </div>
             }
             centerContent={
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fafafa', overflowY: 'auto', padding: '1rem' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fafafa', overflowY: 'auto', padding: isMobile ? '0.5rem' : '1rem' }}>
                     
                     <style>{`
                         @keyframes marching-ants {
@@ -878,7 +896,7 @@ export default function DbScalingSim() {
                     )}
 
                     {/* Canvas containing nodes and wires */}
-                    <div style={{ flex: 1, minHeight: '520px', position: 'relative', background: '#fff', border: '2.5px solid var(--border)', borderRadius: '8px', boxShadow: '4px 4px 0 var(--border)', overflow: 'hidden' }}>
+                    <div style={{ flex: 1, minHeight: isMobile ? '950px' : '520px', position: 'relative', background: '#fff', border: '2.5px solid var(--border)', borderRadius: '8px', boxShadow: '4px 4px 0 var(--border)', overflow: isMobile ? 'auto' : 'hidden', WebkitOverflowScrolling: 'touch' }}>
                         
                         {isFinished && (
                             <div style={{
@@ -912,7 +930,7 @@ export default function DbScalingSim() {
                         <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
                             {/* Client -> Center (Primary or Shard Router) */}
                             <line 
-                                x1="50%" y1="8%" x2="50%" y2="30%" 
+                                x1="50%" y1="8%" x2="50%" y2={isMobile ? "22%" : "30%"} 
                                 stroke="var(--border)" 
                                 strokeWidth="2"
                                 strokeDasharray="4 4"
@@ -921,7 +939,7 @@ export default function DbScalingSim() {
                             />
                             {isLineActive('client', 'center') && (
                                 <line 
-                                    x1="50%" y1="8%" x2="50%" y2="30%" 
+                                    x1="50%" y1="8%" x2="50%" y2={isMobile ? "22%" : "30%"} 
                                     stroke="var(--green)" 
                                     strokeWidth="3.5"
                                     strokeDasharray="6 4"
@@ -939,7 +957,7 @@ export default function DbScalingSim() {
                                         return (
                                             <g key={targetName}>
                                                 <line 
-                                                    x1="50%" y1="34%" x2={coords.left} y2={coords.top} 
+                                                    x1="50%" y1={isMobile ? "22%" : "34%"} x2={coords.left} y2={coords.top} 
                                                     stroke="var(--border)" 
                                                     strokeWidth="2"
                                                     strokeDasharray="4 4"
@@ -948,7 +966,7 @@ export default function DbScalingSim() {
                                                 />
                                                 {isLineActive('center', targetName) && (
                                                     <line 
-                                                        x1="50%" y1="34%" x2={coords.left} y2={coords.top} 
+                                                        x1="50%" y1={isMobile ? "22%" : "34%"} x2={coords.left} y2={coords.top} 
                                                         stroke="var(--green)" 
                                                         strokeWidth="3.5"
                                                         strokeDasharray="6 4"
@@ -963,7 +981,7 @@ export default function DbScalingSim() {
                                 <>
                                     {/* Router -> Shard A */}
                                     <line 
-                                        x1="50%" y1="34%" x2="18%" y2="68%" 
+                                        x1="50%" y1={isMobile ? "22%" : "34%"} x2={isMobile ? "50%" : "18%"} y2={isMobile ? "48%" : "68%"} 
                                         stroke="var(--border)" 
                                         strokeWidth="2"
                                         strokeDasharray="4 4"
@@ -972,7 +990,7 @@ export default function DbScalingSim() {
                                     />
                                     {isLineActive('center', 'shardA') && (
                                         <line 
-                                            x1="50%" y1="34%" x2="18%" y2="68%" 
+                                            x1="50%" y1={isMobile ? "22%" : "34%"} x2={isMobile ? "50%" : "18%"} y2={isMobile ? "48%" : "68%"} 
                                             stroke="var(--green)" 
                                             strokeWidth="3.5"
                                             strokeDasharray="6 4"
@@ -982,7 +1000,7 @@ export default function DbScalingSim() {
 
                                     {/* Router -> Shard B */}
                                     <line 
-                                        x1="50%" y1="34%" x2="50%" y2="68%" 
+                                        x1="50%" y1={isMobile ? "22%" : "34%"} x2={isMobile ? "50%" : "50%"} y2={isMobile ? "69%" : "68%"} 
                                         stroke="var(--border)" 
                                         strokeWidth="2"
                                         strokeDasharray="4 4"
@@ -991,7 +1009,7 @@ export default function DbScalingSim() {
                                     />
                                     {isLineActive('center', 'shardB') && (
                                         <line 
-                                            x1="50%" y1="34%" x2="50%" y2="68%" 
+                                            x1="50%" y1={isMobile ? "22%" : "34%"} x2={isMobile ? "50%" : "50%"} y2={isMobile ? "69%" : "68%"} 
                                             stroke="var(--green)" 
                                             strokeWidth="3.5"
                                             strokeDasharray="6 4"
@@ -1001,7 +1019,7 @@ export default function DbScalingSim() {
 
                                     {/* Router -> Shard C */}
                                     <line 
-                                        x1="50%" y1="34%" x2="82%" y2="68%" 
+                                        x1="50%" y1={isMobile ? "22%" : "34%"} x2={isMobile ? "50%" : "82%"} y2={isMobile ? "90%" : "68%"} 
                                         stroke="var(--border)" 
                                         strokeWidth="2"
                                         strokeDasharray="4 4"
@@ -1010,7 +1028,7 @@ export default function DbScalingSim() {
                                     />
                                     {isLineActive('center', 'shardC') && (
                                         <line 
-                                            x1="50%" y1="34%" x2="82%" y2="68%" 
+                                            x1="50%" y1={isMobile ? "22%" : "34%"} x2={isMobile ? "50%" : "82%"} y2={isMobile ? "90%" : "68%"} 
                                             stroke="var(--green)" 
                                             strokeWidth="3.5"
                                             strokeDasharray="6 4"
@@ -1047,7 +1065,7 @@ export default function DbScalingSim() {
                         {mode === 'replication' ? (
                             <div style={{
                                 position: 'absolute',
-                                top: '30%',
+                                top: isMobile ? '22%' : '30%',
                                 left: '50%',
                                 transform: 'translateX(-50%)',
                                 border: '3px solid var(--border)',
@@ -1121,7 +1139,7 @@ export default function DbScalingSim() {
                         ) : (
                             <div style={{
                                 position: 'absolute',
-                                top: '28%',
+                                top: isMobile ? '22%' : '28%',
                                 left: '50%',
                                 transform: 'translateX(-50%)',
                                 border: '3px solid var(--border)',
@@ -1188,7 +1206,7 @@ export default function DbScalingSim() {
                                                 transform: 'translateX(-50%)',
                                                 border: '2.5px solid var(--border)',
                                                 background: 'var(--cyan)',
-                                                width: replicaCount === 4 ? 135 : replicaCount === 3 ? 165 : 190,
+                                                width: isMobile ? 220 : (replicaCount === 4 ? 135 : replicaCount === 3 ? 165 : 190),
                                                 padding: '0.5rem',
                                                 borderRadius: '8px',
                                                 boxShadow: '3px 3px 0 var(--border)',
@@ -1274,12 +1292,12 @@ export default function DbScalingSim() {
                                 {/* Shard A */}
                                 <div style={{
                                     position: 'absolute',
-                                    top: '68%',
-                                    left: '18%',
+                                    top: isMobile ? '48%' : '68%',
+                                    left: isMobile ? '50%' : '18%',
                                     transform: 'translateX(-50%)',
                                     border: '2.5px solid var(--border)',
                                     background: 'var(--pink)',
-                                    width: 180,
+                                    width: isMobile ? 220 : 180,
                                     padding: '0.5rem',
                                     borderRadius: '8px',
                                     boxShadow: '3px 3px 0 var(--border)',
@@ -1381,12 +1399,12 @@ export default function DbScalingSim() {
                                 {/* Shard B */}
                                 <div style={{
                                     position: 'absolute',
-                                    top: '68%',
-                                    left: '50%',
+                                    top: isMobile ? '69%' : '68%',
+                                    left: isMobile ? '50%' : '50%',
                                     transform: 'translateX(-50%)',
                                     border: '2.5px solid var(--border)',
                                     background: 'var(--cyan)',
-                                    width: 180,
+                                    width: isMobile ? 220 : 180,
                                     padding: '0.5rem',
                                     borderRadius: '8px',
                                     boxShadow: '3px 3px 0 var(--border)',
@@ -1488,12 +1506,12 @@ export default function DbScalingSim() {
                                 {/* Shard C */}
                                 <div style={{
                                     position: 'absolute',
-                                    top: '68%',
-                                    left: '82%',
+                                    top: isMobile ? '90%' : '68%',
+                                    left: isMobile ? '50%' : '82%',
                                     transform: 'translateX(-50%)',
                                     border: '2.5px solid var(--border)',
                                     background: 'var(--yellow)',
-                                    width: 180,
+                                    width: isMobile ? 220 : 180,
                                     padding: '0.5rem',
                                     borderRadius: '8px',
                                     boxShadow: '3px 3px 0 var(--border)',
@@ -1621,7 +1639,7 @@ export default function DbScalingSim() {
                                 if (mode === 'replication') {
                                     if (pkt.type === 'write') {
                                         targetLeft = '50%';
-                                        targetTop = '30%';
+                                        targetTop = isMobile ? '22%' : '30%';
                                     } else if (pkt.type === 'read') {
                                         // Find coordinate of target replica
                                         const repId = parseInt(pkt.target.replace('replica', '')) || 1;
@@ -1635,7 +1653,7 @@ export default function DbScalingSim() {
                                         return (
                                             <motion.div
                                                 key={pkt.id}
-                                                initial={{ top: '34%', left: '50%', x: '-50%', y: '-50%', scale: 0.6, opacity: 0 }}
+                                                initial={{ top: isMobile ? '24%' : '34%', left: '50%', x: '-50%', y: '-50%', scale: 0.6, opacity: 0 }}
                                                 animate={{
                                                     top: coords.top,
                                                     left: coords.left,
@@ -1667,8 +1685,12 @@ export default function DbScalingSim() {
                                     }
                                 } else {
                                     // Sharding mode
-                                    targetTop = '68%';
-                                    targetLeft = pkt.target === 'shardA' ? '18%' : pkt.target === 'shardB' ? '50%' : '82%';
+                                    targetTop = isMobile 
+                                        ? (pkt.target === 'shardA' ? '48%' : pkt.target === 'shardB' ? '69%' : '90%') 
+                                        : '68%';
+                                    targetLeft = isMobile 
+                                        ? '50%' 
+                                        : (pkt.target === 'shardA' ? '18%' : pkt.target === 'shardB' ? '50%' : '82%');
                                 }
 
                                 return (
@@ -1676,7 +1698,7 @@ export default function DbScalingSim() {
                                         key={pkt.id}
                                         initial={{ top: '8%', left: '50%', x: '-50%', y: '-50%', scale: 0.6, opacity: 0 }}
                                         animate={isStep0 
-                                            ? { top: '28%', left: '50%', x: '-50%', y: '-50%', scale: 1, opacity: 1 } 
+                                            ? { top: isMobile ? '22%' : '28%', left: '50%', x: '-50%', y: '-50%', scale: 1, opacity: 1 } 
                                             : { top: targetTop, left: targetLeft, x: '-50%', y: '-50%', scale: 1, opacity: 1 }
                                         }
                                         exit={{ opacity: 0, scale: 0.6 }}

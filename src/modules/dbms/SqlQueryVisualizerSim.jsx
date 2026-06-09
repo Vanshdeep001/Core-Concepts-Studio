@@ -61,8 +61,8 @@ const TEMPLATES = [
 
 // ─── SQL Syntax Tokenizer ───
 // Splits a SQL line into tokens with type info for coloring
-const SQL_KEYWORDS = new Set(['SELECT','FROM','WHERE','JOIN','INNER','LEFT','RIGHT','ON','INSERT','INTO','VALUES','UPDATE','SET','DELETE','GROUP','BY','AS','AND','OR','NOT','IN','COUNT','AVG','SUM','MIN','MAX','ORDER','HAVING','LIMIT','DISTINCT']);
-const SQL_OPERATORS = new Set(['=','>=','<=','>','<','!=','<>','*']);
+const SQL_KEYWORDS = new Set(['SELECT', 'FROM', 'WHERE', 'JOIN', 'INNER', 'LEFT', 'RIGHT', 'ON', 'INSERT', 'INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'GROUP', 'BY', 'AS', 'AND', 'OR', 'NOT', 'IN', 'COUNT', 'AVG', 'SUM', 'MIN', 'MAX', 'ORDER', 'HAVING', 'LIMIT', 'DISTINCT']);
+const SQL_OPERATORS = new Set(['=', '>=', '<=', '>', '<', '!=', '<>', '*']);
 
 function tokenizeSqlLine(line) {
     const tokens = [];
@@ -363,7 +363,7 @@ export default function SqlQueryVisualizerSim() {
             if (joinTable) {
                 const leftTable = tables[primaryTable];
                 const rightTable = tables[joinTable];
-                
+
                 // If SELECT *, project all columns from both tables
                 let finalResultCols = [];
                 if (selectColsStr === '*') {
@@ -474,7 +474,7 @@ export default function SqlQueryVisualizerSim() {
                         }
                     });
                 });
-            } 
+            }
             // Case B: Group By Aggregation
             else if (groupByCol) {
                 const targetTable = tables[primaryTable];
@@ -497,7 +497,7 @@ export default function SqlQueryVisualizerSim() {
                 });
 
                 const buckets = {};
-                
+
                 targetTable.forEach((row, idx) => {
                     const rowId = row.id || row.order_id || Object.values(row)[0];
                     const keyVal = String(row[grpCol] ?? row[groupByCol] ?? '');
@@ -529,7 +529,7 @@ export default function SqlQueryVisualizerSim() {
                 keys.forEach((key, kIdx) => {
                     const groupRows = buckets[key];
                     const count = groupRows.length;
-                    
+
                     let sumVal = 0;
                     let hasAge = groupRows.some(r => r.age !== undefined);
                     if (hasAge) {
@@ -567,12 +567,12 @@ export default function SqlQueryVisualizerSim() {
                         currentResults: [...currentResults]
                     });
                 });
-            } 
+            }
             // Case C: Standard Select / Filter
             else {
                 const targetTable = tables[primaryTable];
                 const isUsers = primaryTable === 'users';
-                
+
                 if (selectColsStr === '*') {
                     const firstRow = targetTable[0] || {};
                     setResultColumns(Object.keys(firstRow));
@@ -666,8 +666,8 @@ export default function SqlQueryVisualizerSim() {
             setSteps(animSteps);
             setTotalSteps(animSteps.length);
             setIsRunning(true);
-        } 
-        
+        }
+
         // ─── INSERT MUTATION ───
         else if (q.toUpperCase().startsWith('INSERT')) {
             const insertRegex = /^INSERT\s+INTO\s+(\w+)\s*(?:\((.+?)\))?\s*VALUES\s*\((.+?)\)$/i;
@@ -996,8 +996,8 @@ export default function SqlQueryVisualizerSim() {
             setSteps(animSteps);
             setTotalSteps(animSteps.length);
             setIsRunning(true);
-        } 
-        
+        }
+
         else {
             setError("SQL Compiler Error: Unsupported SQL statement. This engine supports SELECT, INSERT, UPDATE, and DELETE.");
         }
@@ -1106,12 +1106,12 @@ export default function SqlQueryVisualizerSim() {
         setTables(prev => {
             const tableData = [...prev[tableName]];
             const row = { ...tableData[rowIndex] };
-            
+
             // Cast numeric fields if applicable
             row[field] = (field.toLowerCase().includes('id') || field.toLowerCase() === 'age' || field.toLowerCase() === 'amount')
                 ? (isNaN(Number(value)) ? value : Number(value))
                 : value;
-                
+
             tableData[rowIndex] = row;
             return { ...prev, [tableName]: tableData };
         });
@@ -1122,11 +1122,11 @@ export default function SqlQueryVisualizerSim() {
             const tableData = [...prev[tableName]];
             const firstRow = tableData[0] || {};
             const newRow = {};
-            
+
             Object.keys(firstRow).forEach(col => {
                 if (col.toLowerCase().includes('id')) {
-                    const maxVal = tableData.length > 0 
-                        ? Math.max(...tableData.map(r => Number(r[col]) || 0)) 
+                    const maxVal = tableData.length > 0
+                        ? Math.max(...tableData.map(r => Number(r[col]) || 0))
                         : 0;
                     newRow[col] = maxVal + 1;
                 } else if (typeof firstRow[col] === 'number') {
@@ -1135,11 +1135,11 @@ export default function SqlQueryVisualizerSim() {
                     newRow[col] = '';
                 }
             });
-            
+
             if (Object.keys(firstRow).length === 0) {
                 newRow['id'] = 1;
             }
-            
+
             return { ...prev, [tableName]: [...tableData, newRow] };
         });
     };
@@ -1200,17 +1200,17 @@ export default function SqlQueryVisualizerSim() {
     // Helper to calculate row background color during simulation
     const getRowHighlightStyle = (tableName, rowId) => {
         if (!isSimActive) return { bg: 'transparent' };
-        
+
         const highlights = activeStepObj.activeTableHighlights?.[tableName] || [];
         const isHlg = highlights.includes(rowId) ||
             (tableName === 'users' && activeStepObj.highlightedUsers?.includes(rowId)) ||
             (tableName === 'orders' && activeStepObj.highlightedOrders?.includes(rowId));
-            
+
         if (!isHlg) return { bg: 'transparent' };
-        
+
         const type = activeStepObj.type;
         const isMatch = activeStepObj.isMatch;
-        
+
         // Green tints for pass/matches
         if (
             (type === 'eval_filter' && isMatch) ||
@@ -1222,7 +1222,7 @@ export default function SqlQueryVisualizerSim() {
         ) {
             return { bg: 'rgba(168,230,207,0.45)' };
         }
-        
+
         // Red/Pink tints for fail/discards
         if (
             (type === 'eval_filter' && !isMatch) ||
@@ -1232,12 +1232,12 @@ export default function SqlQueryVisualizerSim() {
         ) {
             return { bg: 'rgba(255,107,157,0.25)' };
         }
-        
+
         // Blue/Purple for bucketing / grouping
         if (type === 'bucket' || type === 'aggregate') {
             return { bg: 'rgba(189,147,249,0.25)' };
         }
-        
+
         // Yellow/orange for scanning or general highlights
         return { bg: 'rgba(255,217,61,0.25)' };
     };
@@ -1245,16 +1245,16 @@ export default function SqlQueryVisualizerSim() {
     // Helper to style specific cell values during active simulation stages
     const getCellHighlightStyle = (tableName, rowId, field) => {
         if (!isSimActive) return {};
-        
+
         const highlights = activeStepObj.activeTableHighlights?.[tableName] || [];
         const isHlg = highlights.includes(rowId) ||
             (tableName === 'users' && activeStepObj.highlightedUsers?.includes(rowId)) ||
             (tableName === 'orders' && activeStepObj.highlightedOrders?.includes(rowId));
-            
+
         if (!isHlg) return {};
-        
+
         const type = activeStepObj.type;
-        
+
         // 1. Highlight target filtering column
         if (activeStepObj.filterField && activeStepObj.filterField.toLowerCase() === field.toLowerCase()) {
             if (type === 'eval_filter' || type === 'update_row' || type === 'delete_row' || type === 'bucket') {
@@ -1266,7 +1266,7 @@ export default function SqlQueryVisualizerSim() {
                 };
             }
         }
-        
+
         // 2. Highlight target join column
         if (type === 'join_check' || type === 'emit_join') {
             const cleanL = activeStepObj.joinKeyL;
@@ -1288,7 +1288,7 @@ export default function SqlQueryVisualizerSim() {
                 };
             }
         }
-        
+
         // 3. Highlight updated field during update mutations
         if (type === 'update_row' && activeStepObj.isMatch && activeStepObj.updateField && activeStepObj.updateField.toLowerCase() === field.toLowerCase()) {
             return {
@@ -1297,28 +1297,28 @@ export default function SqlQueryVisualizerSim() {
                 color: 'var(--white)',
             };
         }
-        
+
         return {};
     };
 
     const getColumnHeaderStyle = (tableName, columnName) => {
         if (!isSimActive) return {};
-        
+
         const currentClause = clauses[activeLineIdx];
         if (!currentClause) return {};
-        
+
         const type = activeStepObj.type;
         const clauseType = currentClause.clauseType;
-        
+
         let isAffected = false;
-        
+
         // 1. WHERE filter column
         if (clauseType === 'where' && activeStepObj.filterField) {
             if (activeStepObj.filterField.toLowerCase() === columnName.toLowerCase()) {
                 isAffected = true;
             }
         }
-        
+
         // 2. JOIN ON keys
         if ((clauseType === 'on' || clauseType === 'join') && (type === 'join_check' || type === 'emit_join')) {
             const cleanL = activeStepObj.joinKeyL;
@@ -1330,14 +1330,14 @@ export default function SqlQueryVisualizerSim() {
                 isAffected = true;
             }
         }
-        
+
         // 3. SET columns during UPDATE
         if (clauseType === 'set' && activeStepObj.updateField) {
             if (activeStepObj.updateField.toLowerCase() === columnName.toLowerCase()) {
                 isAffected = true;
             }
         }
-        
+
         // 4. SELECT / projection columns
         if (clauseType === 'select') {
             const textUpper = currentClause.text.toUpperCase();
@@ -1352,7 +1352,7 @@ export default function SqlQueryVisualizerSim() {
                 }
             }
         }
-        
+
         // 5. GROUP BY columns
         if (clauseType === 'groupby') {
             const colPattern = new RegExp(`\\b(${tableName}\\.)?${columnName}\\b`, 'i');
@@ -1367,7 +1367,7 @@ export default function SqlQueryVisualizerSim() {
                 isAffected = true;
             }
         }
-        
+
         if (isAffected) {
             return {
                 background: 'rgba(255, 217, 61, 0.45)',
@@ -1383,7 +1383,7 @@ export default function SqlQueryVisualizerSim() {
     const getRowStatusIndicator = (type, isMatch) => {
         let color = '#f1fa8c'; // default scanning yellow
         let label = 'SCAN';
-        
+
         if (type === 'left_scan' || type === 'init') {
             color = '#f1fa8c'; // yellow
             label = 'SCAN';
@@ -1488,7 +1488,7 @@ export default function SqlQueryVisualizerSim() {
                             animation: statusPulse 1s infinite alternate ease-in-out;
                         }
                     `}</style>
-                    
+
                     {/* Error Overlay Console */}
                     {error && (
                         <div style={{ border: '2px solid var(--pink)', borderLeft: '5px solid var(--pink)', background: 'rgba(255,107,157,0.08)', color: 'var(--pink)', padding: '0.6rem 0.8rem', fontWeight: 700, fontSize: '0.78rem', fontFamily: 'var(--font-mono)', margin: '0.5rem' }}>
@@ -1522,7 +1522,7 @@ export default function SqlQueryVisualizerSim() {
 
                     {/* ─── UNIFIED SQL CONSOLE ─── */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '320px' }}>
-                        
+
                         {/* Mode A: Editable textarea when idle */}
                         {!isSimActive && (
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0' }}>
@@ -1556,135 +1556,135 @@ export default function SqlQueryVisualizerSim() {
                                     </span>
                                 </div>
                                 <div style={{ padding: '0.3rem 0', flex: 1, overflowY: 'auto' }}>
-                                {clauses.map((clause, lineIdx) => {
-                                    const isActive = lineIdx === activeLineIdx;
-                                    const isPast = activeLineIdx > lineIdx;
-                                    return (
-                                        <div key={lineIdx}>
-                                            {/* The SQL line */}
-                                            <motion.div
-                                                animate={{
-                                                    backgroundColor: isActive ? 'rgba(255,255,255,0.06)' : 'transparent',
-                                                }}
-                                                transition={{ duration: 0.2 }}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', padding: '0', cursor: 'default',
-                                                    borderLeft: isActive ? '3px solid #a6e3a1' : isPast ? '3px solid rgba(166,227,161,0.2)' : '3px solid transparent',
-                                                    minHeight: '1.6rem',
-                                                }}
-                                            >
-                                                {/* Line number gutter */}
-                                                <div style={{
-                                                    width: 32, flexShrink: 0, textAlign: 'right', paddingRight: '0.4rem',
-                                                    fontFamily: 'var(--font-mono)', fontSize: '0.62rem',
-                                                    color: isActive ? '#a6e3a1' : 'rgba(255,255,255,0.15)',
-                                                    userSelect: 'none', fontWeight: isActive ? 800 : 400,
-                                                }}>
-                                                    {lineIdx + 1}
-                                                </div>
+                                    {clauses.map((clause, lineIdx) => {
+                                        const isActive = lineIdx === activeLineIdx;
+                                        const isPast = activeLineIdx > lineIdx;
+                                        return (
+                                            <div key={lineIdx}>
+                                                {/* The SQL line */}
+                                                <motion.div
+                                                    animate={{
+                                                        backgroundColor: isActive ? 'rgba(255,255,255,0.06)' : 'transparent',
+                                                    }}
+                                                    transition={{ duration: 0.2 }}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', padding: '0', cursor: 'default',
+                                                        borderLeft: isActive ? '3px solid #a6e3a1' : isPast ? '3px solid rgba(166,227,161,0.2)' : '3px solid transparent',
+                                                        minHeight: '1.6rem',
+                                                    }}
+                                                >
+                                                    {/* Line number gutter */}
+                                                    <div style={{
+                                                        width: 32, flexShrink: 0, textAlign: 'right', paddingRight: '0.4rem',
+                                                        fontFamily: 'var(--font-mono)', fontSize: '0.62rem',
+                                                        color: isActive ? '#a6e3a1' : 'rgba(255,255,255,0.15)',
+                                                        userSelect: 'none', fontWeight: isActive ? 800 : 400,
+                                                    }}>
+                                                        {lineIdx + 1}
+                                                    </div>
 
-                                                {/* Active indicator arrow */}
-                                                <div style={{
-                                                    width: 16, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    fontSize: '0.5rem', color: '#a6e3a1',
-                                                }}>
+                                                    {/* Active indicator arrow */}
+                                                    <div style={{
+                                                        width: 16, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        fontSize: '0.5rem', color: '#a6e3a1',
+                                                    }}>
+                                                        {isActive && (
+                                                            <motion.span
+                                                                initial={{ opacity: 0, x: -3 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                style={{ fontWeight: 900, lineHeight: 1 }}
+                                                            >▶</motion.span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* SQL Code */}
+                                                    <div style={{
+                                                        flex: 1, padding: '0.15rem 0.4rem', fontFamily: 'var(--font-mono)', fontSize: '0.78rem',
+                                                        lineHeight: 1.5, opacity: isActive ? 1 : isPast ? 0.35 : 0.65,
+                                                        whiteSpace: 'pre-wrap', wordBreak: 'break-all',
+                                                    }}>
+                                                        <RenderSqlTokens line={clause.text} />
+                                                    </div>
+                                                </motion.div>
+
+                                                {/* ─── Inline Detail Drawer (only under active line) ─── */}
+                                                <AnimatePresence>
                                                     {isActive && (
-                                                        <motion.span
-                                                            initial={{ opacity: 0, x: -3 }}
-                                                            animate={{ opacity: 1, x: 0 }}
-                                                            style={{ fontWeight: 900, lineHeight: 1 }}
-                                                        >▶</motion.span>
-                                                    )}
-                                                </div>
-
-                                                {/* SQL Code */}
-                                                <div style={{
-                                                    flex: 1, padding: '0.15rem 0.4rem', fontFamily: 'var(--font-mono)', fontSize: '0.78rem',
-                                                    lineHeight: 1.5, opacity: isActive ? 1 : isPast ? 0.35 : 0.65,
-                                                    whiteSpace: 'pre-wrap', wordBreak: 'break-all',
-                                                }}>
-                                                    <RenderSqlTokens line={clause.text} />
-                                                </div>
-                                            </motion.div>
-
-                                            {/* ─── Inline Detail Drawer (only under active line) ─── */}
-                                            <AnimatePresence>
-                                                {isActive && (
-                                                    <motion.div
-                                                        initial={{ height: 0, opacity: 0 }}
-                                                        animate={{ height: 'auto', opacity: 1 }}
-                                                        exit={{ height: 0, opacity: 0 }}
-                                                        transition={{ duration: 0.25, ease: 'easeOut' }}
-                                                        style={{ overflow: 'hidden', marginLeft: 51, marginRight: 8 }}
-                                                    >
-                                                        <div style={{
-                                                            background: 'rgba(255,255,255,0.04)', borderRadius: '4px',
-                                                            border: '1px solid rgba(255,255,255,0.08)', padding: '0.4rem 0.6rem',
-                                                            marginBottom: '0.25rem', marginTop: '0.1rem',
-                                                        }}>
-                                                            {/* Natural language log */}
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            transition={{ duration: 0.25, ease: 'easeOut' }}
+                                                            style={{ overflow: 'hidden', marginLeft: 51, marginRight: 8 }}
+                                                        >
                                                             <div style={{
-                                                                fontSize: '0.68rem', color: '#a6e3a1', fontFamily: 'var(--font-mono)',
-                                                                lineHeight: 1.5, marginBottom: activeRowData ? '0.35rem' : 0,
+                                                                background: 'rgba(255,255,255,0.04)', borderRadius: '4px',
+                                                                border: '1px solid rgba(255,255,255,0.08)', padding: '0.4rem 0.6rem',
+                                                                marginBottom: '0.25rem', marginTop: '0.1rem',
                                                             }}>
-                                                                {activeStepObj.desc}
+                                                                {/* Natural language log */}
+                                                                <div style={{
+                                                                    fontSize: '0.68rem', color: '#a6e3a1', fontFamily: 'var(--font-mono)',
+                                                                    lineHeight: 1.5, marginBottom: activeRowData ? '0.35rem' : 0,
+                                                                }}>
+                                                                    {activeStepObj.desc}
+                                                                </div>
+
+                                                                {/* Active record data pills + status badge */}
+                                                                {activeRowData && (
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
+                                                                        {Object.entries(activeRowData).map(([key, val]) => (
+                                                                            <span key={key} style={{
+                                                                                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                                                                                borderRadius: '3px', padding: '0.1rem 0.3rem',
+                                                                                fontSize: '0.58rem', fontFamily: 'var(--font-mono)', color: '#cdd6f4',
+                                                                            }}>
+                                                                                <span style={{ color: '#6c7086' }}>{key}:</span> {String(val)}
+                                                                            </span>
+                                                                        ))}
+
+                                                                        {/* Status badge */}
+                                                                        <motion.span
+                                                                            key={opDetails.status + currentStep}
+                                                                            initial={{ scale: 0.8, opacity: 0 }}
+                                                                            animate={{ scale: 1, opacity: 1 }}
+                                                                            style={{
+                                                                                background: getStatusStyle(opDetails.status).bg,
+                                                                                color: getStatusStyle(opDetails.status).color,
+                                                                                fontSize: '0.55rem', fontWeight: 900, padding: '0.1rem 0.4rem',
+                                                                                borderRadius: '3px', textTransform: 'uppercase', letterSpacing: '0.05em',
+                                                                                marginLeft: 'auto',
+                                                                            }}
+                                                                        >
+                                                                            {opDetails.status}
+                                                                        </motion.span>
+                                                                    </div>
+                                                                )}
+
+                                                                {!activeRowData && opDetails.status && (
+                                                                    <div style={{ marginTop: '0.2rem' }}>
+                                                                        <motion.span
+                                                                            key={opDetails.status + currentStep}
+                                                                            initial={{ scale: 0.8 }}
+                                                                            animate={{ scale: 1 }}
+                                                                            style={{
+                                                                                background: getStatusStyle(opDetails.status).bg,
+                                                                                color: getStatusStyle(opDetails.status).color,
+                                                                                fontSize: '0.55rem', fontWeight: 900, padding: '0.1rem 0.4rem',
+                                                                                borderRadius: '3px', textTransform: 'uppercase',
+                                                                            }}
+                                                                        >
+                                                                            {opDetails.status}
+                                                                        </motion.span>
+                                                                    </div>
+                                                                )}
                                                             </div>
-
-                                                            {/* Active record data pills + status badge */}
-                                                            {activeRowData && (
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
-                                                                    {Object.entries(activeRowData).map(([key, val]) => (
-                                                                        <span key={key} style={{
-                                                                            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-                                                                            borderRadius: '3px', padding: '0.1rem 0.3rem',
-                                                                            fontSize: '0.58rem', fontFamily: 'var(--font-mono)', color: '#cdd6f4',
-                                                                        }}>
-                                                                            <span style={{ color: '#6c7086' }}>{key}:</span> {String(val)}
-                                                                        </span>
-                                                                    ))}
-
-                                                                    {/* Status badge */}
-                                                                    <motion.span
-                                                                        key={opDetails.status + currentStep}
-                                                                        initial={{ scale: 0.8, opacity: 0 }}
-                                                                        animate={{ scale: 1, opacity: 1 }}
-                                                                        style={{
-                                                                            background: getStatusStyle(opDetails.status).bg,
-                                                                            color: getStatusStyle(opDetails.status).color,
-                                                                            fontSize: '0.55rem', fontWeight: 900, padding: '0.1rem 0.4rem',
-                                                                            borderRadius: '3px', textTransform: 'uppercase', letterSpacing: '0.05em',
-                                                                            marginLeft: 'auto',
-                                                                        }}
-                                                                    >
-                                                                        {opDetails.status}
-                                                                    </motion.span>
-                                                                </div>
-                                                            )}
-
-                                                            {!activeRowData && opDetails.status && (
-                                                                <div style={{ marginTop: '0.2rem' }}>
-                                                                    <motion.span
-                                                                        key={opDetails.status + currentStep}
-                                                                        initial={{ scale: 0.8 }}
-                                                                        animate={{ scale: 1 }}
-                                                                        style={{
-                                                                            background: getStatusStyle(opDetails.status).bg,
-                                                                            color: getStatusStyle(opDetails.status).color,
-                                                                            fontSize: '0.55rem', fontWeight: 900, padding: '0.1rem 0.4rem',
-                                                                            borderRadius: '3px', textTransform: 'uppercase',
-                                                                        }}
-                                                                    >
-                                                                        {opDetails.status}
-                                                                    </motion.span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
-                                    );
-                                })}
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
@@ -1725,7 +1725,7 @@ export default function SqlQueryVisualizerSim() {
                             const columns = Object.keys(firstRow);
                             const isUsers = tableName === 'users';
                             const headerColor = isUsers ? 'var(--cyan)' : tableName === 'orders' ? 'var(--pink)' : 'var(--yellow)';
-                            
+
                             return (
                                 <div key={tableName} style={{ border: '2px solid var(--border)', background: 'var(--white)' }}>
                                     <div style={{
@@ -1784,14 +1784,14 @@ export default function SqlQueryVisualizerSim() {
                                                 {rows.map((row, rowIndex) => {
                                                     const rowId = row.id || row.order_id || Object.values(row)[0];
                                                     const style = getRowHighlightStyle(tableName, rowId);
-                                                    
+
                                                     const highlights = activeStepObj.activeTableHighlights?.[tableName] || [];
                                                     const isRowActive = isSimActive && (
                                                         highlights.includes(rowId) ||
                                                         (tableName === 'users' && activeStepObj.highlightedUsers?.includes(rowId)) ||
                                                         (tableName === 'orders' && activeStepObj.highlightedOrders?.includes(rowId))
                                                     );
-                                                    
+
                                                     return (
                                                         <motion.tr
                                                             key={rowIndex}
@@ -1809,7 +1809,7 @@ export default function SqlQueryVisualizerSim() {
                                                             {columns.map((field, colIdx) => {
                                                                 const cellStyle = getCellHighlightStyle(tableName, rowId, field);
                                                                 return (
-                                                                    <td key={field} style={{ 
+                                                                    <td key={field} style={{
                                                                         fontFamily: field.toLowerCase().includes('id') || field.toLowerCase() === 'age' || field.toLowerCase() === 'amount' ? 'var(--font-mono)' : 'inherit',
                                                                         fontWeight: field.toLowerCase().includes('id') ? 800 : 400,
                                                                         ...cellStyle
@@ -1882,7 +1882,7 @@ export default function SqlQueryVisualizerSim() {
             }
             rightContent={
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                    
+
                     {/* Query Execution Plan Panel */}
                     {queryPlan && (
                         <div className="panel" style={{ boxShadow: '2px 2px 0 var(--border)' }}>
@@ -1894,7 +1894,7 @@ export default function SqlQueryVisualizerSim() {
                                 <div><strong>Target Tables:</strong> {queryPlan.tables.join(', ')}</div>
                                 <div><strong>Est. Time Cost:</strong> <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--pink)', fontWeight: 700 }}>{queryPlan.cost}</span></div>
                                 <div><strong>Index Access:</strong> {queryPlan.index}</div>
-                                
+
                                 <div style={{ height: 1, background: '#eee', margin: '4px 0' }} />
                                 <strong>Execution Pipeline Stages:</strong>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginTop: '2px' }}>

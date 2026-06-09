@@ -190,6 +190,15 @@ function bellmanFordSteps(nodes, edges, srcId, cutEdges = []) {
    COMPONENT
    ════════════════════════════════════════ */
 export default function RoutingAlgoSim() {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const [preset, setPreset] = useState('Simple');
     const [nodes, setNodes] = useState(PRESETS.Simple.nodes);
     const [edges, setEdges] = useState(PRESETS.Simple.edges);
@@ -298,7 +307,7 @@ export default function RoutingAlgoSim() {
                         cursor: 'pointer',
                     }}>{p}</button>
                 ))}
-                <div style={{ width: 1, height: 20, background: 'var(--border)', opacity: 0.3 }} />
+                <div style={{ display: isMobile ? 'none' : 'block', width: 1, height: 20, background: 'var(--border)', opacity: 0.3 }} />
                 {['Dijkstra', 'Bellman-Ford'].map(a => (
                     <button key={a} onClick={() => setAlgorithm(a)} style={{
                         padding: '0.2rem 0.5rem', fontSize: '0.68rem', fontWeight: 700,
@@ -307,7 +316,7 @@ export default function RoutingAlgoSim() {
                         cursor: 'pointer',
                     }}>{a}</button>
                 ))}
-                <div style={{ width: 1, height: 20, background: 'var(--border)', opacity: 0.3 }} />
+                <div style={{ display: isMobile ? 'none' : 'block', width: 1, height: 20, background: 'var(--border)', opacity: 0.3 }} />
                 <span style={{ fontSize: '0.6rem', fontWeight: 700, opacity: 0.4 }}>Source:</span>
                 <select value={srcNode} onChange={e => setSrcNode(e.target.value)}
                     style={{ fontSize: '0.7rem', fontWeight: 700, padding: '0.15rem 0.3rem', border: '2px solid var(--border)', fontFamily: 'var(--font-mono)' }}>
@@ -316,16 +325,20 @@ export default function RoutingAlgoSim() {
             </div>
 
             {/* Canvas */}
-            <div
-                ref={canvasRef}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                style={{
-                    flex: 1, position: 'relative', border: '2px solid var(--border)',
-                    background: 'rgba(0,0,0,0.02)', overflow: 'hidden', cursor: dragging ? 'grabbing' : 'default',
-                }}
-            >
+            <div style={{ flex: 1, width: '100%', overflow: 'auto', border: '2px solid var(--border)', background: 'rgba(0,0,0,0.02)' }}>
+                <div
+                    ref={canvasRef}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    style={{
+                        position: 'relative',
+                        width: isMobile ? '600px' : '100%',
+                        height: isMobile ? '350px' : '100%',
+                        cursor: dragging ? 'grabbing' : 'default',
+                        overflow: 'hidden'
+                    }}
+                >
                 <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
                     {/* Edges */}
                     {edges.map((e, i) => {
@@ -421,6 +434,7 @@ export default function RoutingAlgoSim() {
                         }}
                     >⚠ Negative weights not supported by Dijkstra!</motion.div>
                 )}
+                </div>
             </div>
         </div>
     );
@@ -508,7 +522,7 @@ export default function RoutingAlgoSim() {
             <div style={{ border: '2px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
                 <div style={{ background: 'var(--cyan)', padding: '0.4rem 0.6rem', borderBottom: '2px solid var(--border)', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>Concept: Link State vs Distance Vector</div>
                 <div style={{ padding: '0.5rem 0.6rem', fontSize: '0.72rem', lineHeight: 1.5 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.3rem', fontSize: '0.65rem' }}>
+                    <div className="no-mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.3rem', fontSize: '0.65rem' }}>
                         <div style={{ fontWeight: 800, background: 'var(--green)', padding: '0.2rem', textAlign: 'center', border: '1px solid var(--border)' }}>Link State (OSPF)</div>
                         <div style={{ fontWeight: 800, background: 'var(--orange)', padding: '0.2rem', textAlign: 'center', border: '1px solid var(--border)' }}>Distance Vector (RIP)</div>
                         <div style={{ padding: '0.15rem 0.25rem', border: '1px solid var(--border)' }}>Dijkstra</div>
@@ -555,7 +569,7 @@ export default function RoutingAlgoSim() {
                     <h1 style={{ fontSize: '1.9rem', fontWeight: 700 }}>🗺 Routing Algorithms</h1>
                     <p style={{ opacity: 0.6, fontSize: '0.9rem', marginTop: '0.3rem' }}>Interactive topology with Dijkstra & Bellman-Ford step-through, link failure, distance tables, and path visualization.</p>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
                     <div className="panel">
                         <div className="panel-header" style={{ background: 'var(--green)' }}>⚙ Configuration</div>
                         <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -589,7 +603,7 @@ export default function RoutingAlgoSim() {
                         <div className="panel-header" style={{ background: 'var(--green)' }}>🏷 Concepts Covered</div>
                         <div style={{ padding: '1rem' }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginBottom: '0.75rem' }}>
-                                {['Dijkstra','Bellman-Ford','Link State','Distance Vector','OSPF','RIP'].map(t => (
+                                {['Dijkstra', 'Bellman-Ford', 'Link State', 'Distance Vector', 'OSPF', 'RIP'].map(t => (
                                     <span key={t} style={{
                                         fontSize: '0.72rem', fontWeight: 700, fontFamily: 'var(--font-mono)',
                                         padding: '0.2rem 0.5rem', border: '2px solid var(--border)', background: 'var(--green)',
@@ -600,9 +614,9 @@ export default function RoutingAlgoSim() {
                         </div>
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button className="btn btn-lg btn-green" onClick={handleStart}>▶ Simulate</button>
-                    <button className="btn btn-sm" style={{ marginTop: '0.15rem' }} onClick={handleStep}>⏭ Step Through</button>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.75rem' }}>
+                    <button className="btn btn-lg btn-green" style={{ justifyContent: 'center' }} onClick={handleStart}>▶ Simulate</button>
+                    <button className="btn btn-sm" style={{ marginTop: isMobile ? '0' : '0.15rem', justifyContent: 'center' }} onClick={handleStep}>⏭ Step Through</button>
                 </div>
             </div>
         </ImmersiveLayout>

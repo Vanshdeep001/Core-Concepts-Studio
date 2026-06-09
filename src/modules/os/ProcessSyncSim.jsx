@@ -2,12 +2,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
-import { 
-    AlertIcon, GearIcon, OutboxIcon, InboxIcon, SatelliteIcon, RocketIcon, 
-    UFOIcon, SwirlIcon, ExplosionIcon, LockIcon, UnlockIcon, StopIcon, 
-    CircleFilled, GamepadIcon, CrownIcon, KeyIcon, CoffeeIcon, BoxIcon, 
+import {
+    AlertIcon, GearIcon, OutboxIcon, InboxIcon, SatelliteIcon, RocketIcon,
+    UFOIcon, SwirlIcon, ExplosionIcon, LockIcon, UnlockIcon, StopIcon,
+    CircleFilled, GamepadIcon, CrownIcon, KeyIcon, CoffeeIcon, BoxIcon,
     FoodIcon, ClipboardIcon, EyeIcon, WrenchIcon, ZapIcon, ActivityIcon,
-    ClockIcon, BlockIcon, SyncIcon
+    ClockIcon, BlockIcon, SyncIcon, FactoryIcon
 } from '../../components/Icons';
 
 /* ══════════════════════════════════════════
@@ -691,7 +691,7 @@ export default function ProcessSyncSim() {
 
         return (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem', padding: '1rem', overflowY: 'auto' }}>
-                
+
                 {/* Configuration control panel */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr', gap: '0.6rem', border: '3px solid var(--border)', background: 'var(--white)', padding: '0.5rem', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0 }}>
                     <div>
@@ -832,7 +832,7 @@ export default function ProcessSyncSim() {
 
         return (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem', padding: '1rem', overflowY: 'auto' }}>
-                
+
                 {/* Configuration control panel */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr', gap: '0.6rem', border: '3px solid var(--border)', background: 'var(--white)', padding: '0.5rem', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0 }}>
                     <div>
@@ -880,7 +880,7 @@ export default function ProcessSyncSim() {
                     border: '3px solid var(--border)', background: '#111', position: 'relative', flex: 1, minHeight: 260,
                     boxShadow: '4px 4px 0 var(--border)', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '1rem'
                 }}>
-                    
+
                     {/* Stars Decors */}
                     <div style={{ position: 'absolute', top: '15%', left: '20%', width: 2, height: 2, background: '#fff', borderRadius: '50%' }} />
                     <div style={{ position: 'absolute', top: '40%', left: '75%', width: 3, height: 3, background: '#fff', borderRadius: '50%' }} />
@@ -897,8 +897,8 @@ export default function ProcessSyncSim() {
                     <motion.div
                         animate={
                             p1Sec === 'remainder' ? { y: [0, -10, 0], x: [0, 8, 0] } :
-                            p1Sec === 'entry' ? { x: -80, y: 15 } :
-                            p1Sec === 'critical' ? { x: 0, y: 35, scale: 1.1 } : { x: 80, y: -20 }
+                                p1Sec === 'entry' ? { x: -80, y: 15 } :
+                                    p1Sec === 'critical' ? { x: 0, y: 35, scale: 1.1 } : { x: 80, y: -20 }
                         }
                         transition={{ duration: 0.6 }}
                         style={{
@@ -916,8 +916,8 @@ export default function ProcessSyncSim() {
                     <motion.div
                         animate={
                             p2Sec === 'remainder' ? { y: [0, 10, 0], x: [0, -8, 0] } :
-                            p2Sec === 'entry' ? { x: 80, y: 15 } :
-                            p2Sec === 'critical' ? { x: 0, y: 35, scale: 1.1 } : { x: -80, y: -20 }
+                                p2Sec === 'entry' ? { x: 80, y: 15 } :
+                                    p2Sec === 'critical' ? { x: 0, y: 35, scale: 1.1 } : { x: -80, y: -20 }
                         }
                         transition={{ duration: 0.6 }}
                         style={{
@@ -1009,7 +1009,7 @@ export default function ProcessSyncSim() {
 
         return (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem', padding: '1rem', overflowY: 'auto' }}>
-                
+
                 {/* Configuration control panel */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', border: '3px solid var(--border)', background: 'var(--white)', padding: '0.5rem', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0 }}>
                     <div>
@@ -1054,7 +1054,7 @@ export default function ProcessSyncSim() {
                             <CrownIcon size={16} /> Royal Chest Mutex (Capacity = 1)
                         </div>
                         <div style={{ padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', flex: 1, overflowY: 'auto' }}>
-                            
+
                             {/* Graphic Chest */}
                             <div style={{ border: '2px solid var(--border)', padding: '0.4rem', background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', height: 64 }}>
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -1133,7 +1133,7 @@ export default function ProcessSyncSim() {
                             <UnlockIcon size={16} /> VIP Club Counting Semaphore
                         </div>
                         <div style={{ padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', flex: 1, overflowY: 'auto' }}>
-                            
+
                             {/* Glow counter */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '2px solid var(--border)', padding: '0.4rem', background: '#fafafa', height: 64 }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>VIP Free Seats S:</span>
@@ -1220,7 +1220,7 @@ export default function ProcessSyncSim() {
     const renderCenterStage4 = () => {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '0.8rem', padding: '0.8rem', overflowY: 'hidden' }}>
-                
+
                 {/* Stage 4 Dynamic Parameter forms */}
                 <div style={{ border: '3px solid var(--border)', background: 'var(--white)', padding: '0.5rem', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0 }}>
                     {stage4Tab === 'pc' && (
@@ -1461,12 +1461,12 @@ export default function ProcessSyncSim() {
 
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', height: '100%', overflowY: 'auto' }}>
-                
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '0.75rem', flex: 1 }}>
-                    
+
                     {/* Database Central Spotlights */}
                     <div style={{ border: '3px solid var(--border)', background: 'var(--white)', padding: '1rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '1rem', boxShadow: '3px 3px 0 var(--border)', position: 'relative' }}>
-                        
+
                         <div style={{ fontSize: '0.55rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.6, position: 'absolute', top: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <ClipboardIcon size={14} /> Shared Database Library
                         </div>
@@ -1541,11 +1541,11 @@ export default function ProcessSyncSim() {
                         <span style={{ fontSize: '0.52rem', background: '#000', color: '#fff', padding: '1px 4px', fontWeight: 900 }}>DEADLOCK</span>
                     </div>
                     <div style={{ padding: '0.5rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.5rem' }}>
-                        
+
                         <div style={{ height: 110, border: '2px dashed var(--border)', position: 'relative', background: '#111', overflow: 'hidden' }}>
                             {/* Circular traffic ring */}
                             <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 64, height: 64, borderRadius: '50%', border: '4.5px solid var(--yellow)' }} />
-                            
+
                             <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 6, ease: 'linear' }} style={{ position: 'absolute', inset: 0 }}>
                                 <div style={{ position: 'absolute', top: 5, left: '45%', border: '1.5px solid var(--border)', background: 'var(--pink)', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <RocketIcon size={12} color="var(--text)" />
@@ -1574,7 +1574,7 @@ export default function ProcessSyncSim() {
                         <span style={{ fontSize: '0.52rem', background: '#000', color: '#fff', padding: '1px 4px', fontWeight: 900 }}>LIVELOCK</span>
                     </div>
                     <div style={{ padding: '0.5rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.5rem' }}>
-                        
+
                         <div style={{ height: 110, border: '2px dashed var(--border)', position: 'relative', background: '#e2e8f0', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                             <div style={{ width: '80%', height: 24, border: '2px solid var(--border)', background: '#94a3b8', display: 'flex', position: 'relative' }}>
                                 {/* Avatar 1 */}
@@ -1614,7 +1614,7 @@ export default function ProcessSyncSim() {
                         <span style={{ fontSize: '0.52rem', background: '#000', color: '#fff', padding: '1px 4px', fontWeight: 900 }}>STARVATION</span>
                     </div>
                     <div style={{ padding: '0.5rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.5rem' }}>
-                        
+
                         <div style={{ height: 110, border: '2px dashed var(--border)', background: '#334155', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '0.4rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <motion.div animate={{ x: [0, 120] }} transition={{ repeat: Infinity, duration: 1.5 }} style={{ fontSize: '0.8rem', zIndex: 3 }}>
@@ -1724,13 +1724,13 @@ export default function ProcessSyncSim() {
 
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                
+
                 {conceptMode && (
                     <div style={{
                         background: 'var(--purple)', border: '2px solid var(--border)',
                         boxShadow: '3px 3px 0 var(--border)', padding: '0.5rem 0.75rem', fontSize: '0.72rem', fontWeight: 800
                     }}>
-                        Concept Mode Active:<br/>
+                        Concept Mode Active:<br />
                         Showing academic guidelines and core theorems side-by-side!
                     </div>
                 )}

@@ -37,7 +37,7 @@ export default function BPlusTreeSim() {
     // tree node calculator for keys [10 to 80] to guarantee flawless layout and avoid rendering overlaps.
     const computeTreeLayout = () => {
         const sorted = [...keys].sort((a, b) => a - b);
-        
+
         // Root and leaves layout
         if (sorted.length <= 2) {
             return {
@@ -68,7 +68,7 @@ export default function BPlusTreeSim() {
                     id: `leaf_${idx}`,
                     keys: leafKeys,
                     isLeaf: true,
-                    x: 60 + idx * leafWidth + leafWidth/2,
+                    x: 60 + idx * leafWidth + leafWidth / 2,
                     y: 140
                 })),
                 leaves: leaves.map((leafKeys, idx) => `leaf_${idx}`)
@@ -87,7 +87,7 @@ export default function BPlusTreeSim() {
             id: `leaf_${idx}`,
             keys: leafKeys,
             isLeaf: true,
-            x: 50 + idx * leafWidth + leafWidth/2,
+            x: 50 + idx * leafWidth + leafWidth / 2,
             y: 180
         }));
 
@@ -306,7 +306,7 @@ export default function BPlusTreeSim() {
             phaseName="Tree Search Trace"
             centerContent={
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '0.8rem', background: 'var(--white)', padding: '1rem', overflowY: 'auto' }}>
-                    
+
                     {/* Controls Panel */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1fr', gap: '0.6rem', border: '3px solid var(--border)', background: 'var(--white)', padding: '0.4rem', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0 }}>
                         <form onSubmit={handleInsert} style={{ display: 'flex', gap: 4 }}>
@@ -337,7 +337,7 @@ export default function BPlusTreeSim() {
 
                     {/* Dynamic B+ Tree SVG Canvas */}
                     <div style={{ border: '3px solid var(--border)', background: '#111', position: 'relative', flex: 1, minHeight: 250, boxShadow: '4px 4px 0 var(--border)', overflow: 'hidden' }}>
-                        
+
                         <svg width="100%" height="100%" viewBox="0 0 500 240" style={{ position: 'absolute', inset: 0 }}>
                             {/* Connectors */}
                             {treeData.root.childrenIds && treeData.root.childrenIds.map(cid => {
@@ -434,7 +434,7 @@ export default function BPlusTreeSim() {
             leftContent={
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                     <div style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.45 }}>Index Speed Race</div>
-                    
+
                     <button className="btn btn-sm btn-pink" onClick={runRaceDemo} disabled={raceActive && !raceWinner} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
                         <ZapIcon size={12} /> Start Search Race Test
                     </button>

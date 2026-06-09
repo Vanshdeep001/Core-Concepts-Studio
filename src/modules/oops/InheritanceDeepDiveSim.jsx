@@ -600,7 +600,7 @@ const ClassNodeCard = ({ node, isActive, mroPath, foundNodeId, currentMroSearch,
 /* ══════════════════════════════════════════════════════════════════
    OVERRIDE PANEL — DARK NEON VTABLE VISUALIZATION
    ══════════════════════════════════════════════════════════════════ */
-const OverrideOverloadPanel = ({ nodes }) => {
+const OverrideOverloadPanel = ({ nodes, isMobile }) => {
     const [selectedClassId, setSelectedClassId] = useState(nodes[0]?.id || '');
     const [selectedParentId, setSelectedParentId] = useState('');
     const [hoveredMethod, setHoveredMethod] = useState(null); // { name, classId }
@@ -935,7 +935,8 @@ const OverrideOverloadPanel = ({ nodes }) => {
                 position: 'relative', flex: 1, minHeight: 380, display: 'flex', gap: '1.2rem',
                 justifyContent: 'space-between', alignItems: 'stretch', background: 'var(--white)',
                 border: '3px solid var(--border)', borderRadius: 'var(--radius)', padding: '1rem',
-                overflow: 'hidden', boxShadow: 'var(--shadow)'
+                overflow: 'hidden', boxShadow: 'var(--shadow)',
+                minWidth: isMobile ? '700px' : 'auto'
             }}>
                 {/* SVG Connections Overlay */}
                 <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
@@ -1156,7 +1157,8 @@ const RuntimeDispatchPanel = ({
     log,
     runSimulation,
     onReset,
-    isRunning
+    isRunning,
+    isMobile
 }) => {
     const activePair = dispatchPairs[pairIdx] || null;
 
@@ -1436,11 +1438,22 @@ const RuntimeDispatchPanel = ({
             </div>
 
             {/* Memory Canvas Visualization */}
-            <div ref={containerRef} style={{
-                flex: 1, border: '3px solid var(--border)', background: 'var(--white)', borderRadius: 'var(--radius)',
-                minHeight: 280, padding: '1rem', position: 'relative', display: 'flex', gap: '1rem',
-                justifyContent: 'space-around', alignItems: 'stretch', overflow: 'hidden', boxShadow: 'var(--shadow)'
+            <div style={{
+                overflowX: isMobile ? 'auto' : 'hidden',
+                overflowY: 'hidden',
+                width: '100%',
+                flex: 1,
+                minHeight: 280
             }}>
+                <div ref={containerRef} style={{
+                    width: isMobile ? 800 : '100%',
+                    height: '100%',
+                    minHeight: 280,
+                    border: '3px solid var(--border)', background: 'var(--white)', borderRadius: 'var(--radius)',
+                    padding: '1rem', position: 'relative', display: 'flex', gap: '1rem',
+                    justifyContent: 'space-around', alignItems: 'stretch', overflow: 'hidden', boxShadow: 'var(--shadow)',
+                    flexShrink: 0
+                }}>
                 
                 {/* SVG Connections Overlay */}
                 <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
@@ -1638,6 +1651,7 @@ const RuntimeDispatchPanel = ({
                     </div>
                 </div>
             </div>
+            </div>
 
             {/* Simulation Console Log Log */}
             <div className="panel" style={{
@@ -1658,6 +1672,14 @@ const RuntimeDispatchPanel = ({
    MAIN COMPONENT DEFINITION
    ══════════════════════════════════════════════════════════════════ */
 export default function InheritanceDeepDiveSim() {
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const [treeType, setTreeType] = useState('Single');
     const [nodes, setNodes] = useState(PRESETS['Single'].map(n => ({ ...n })));
     const [activeNode, setActiveNode] = useState(null);
@@ -2184,10 +2206,24 @@ export default function InheritanceDeepDiveSim() {
     const CENTER = (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* View selectors */}
-            <div style={{ display: 'flex', borderBottom: 'var(--border-width) solid var(--border)', flexShrink: 0, background: 'var(--white)' }}>
+            <div style={{ 
+                display: 'flex', 
+                borderBottom: 'var(--border-width) solid var(--border)', 
+                flexShrink: 0, 
+                background: 'var(--white)',
+                overflowX: isMobile ? 'auto' : 'visible',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+            }}>
                 {[['tree', 'Inheritance Canvas'], ['override', 'Overriding'], ['dispatch', 'Runtime Dispatch']].map(([k, label]) => (
                     <button key={k} onClick={() => setView(k)} style={{
-                        flex: 1, padding: '0.55rem', fontWeight: 800, fontSize: '0.75rem', cursor: 'pointer',
+                        flex: isMobile ? '1 0 auto' : 1,
+                        minWidth: isMobile ? '110px' : 'auto',
+                        padding: isMobile ? '0.4rem 0.6rem' : '0.55rem',
+                        fontWeight: 800,
+                        fontSize: isMobile ? '0.65rem' : '0.75rem',
+                        cursor: 'pointer',
                         background: view === k ? 'var(--yellow)' : 'transparent',
                         border: 'none', borderBottom: view === k ? `3px solid var(--border)` : '3px solid transparent',
                         borderRight: 'var(--border-width) solid var(--border)', fontFamily: 'var(--font-main)',
@@ -2198,7 +2234,7 @@ export default function InheritanceDeepDiveSim() {
 
             <div style={{ flex: 1, overflow: 'auto', background: 'var(--bg)', position: 'relative', padding: '1rem' }}>
                 {view === 'tree' && (
-                    <div style={{ width: '100%', height: '100%', minHeight: 480, position: 'relative', overflow: 'hidden', background: `radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px), var(--bg)`, backgroundSize: '24px 24px', border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)' }}>
+                    <div style={{ width: isMobile ? 650 : '100%', height: '100%', minHeight: 480, position: 'relative', overflow: 'hidden', background: `radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px), var(--bg)`, backgroundSize: '24px 24px', border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)' }}>
                         
                         {/* Connection Lines Rendering */}
                         <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
@@ -2288,7 +2324,7 @@ export default function InheritanceDeepDiveSim() {
                         </AnimatePresence>
                     </div>
                 )}
-                {view === 'override' && <OverrideOverloadPanel nodes={nodes} />}
+                {view === 'override' && <OverrideOverloadPanel nodes={nodes} isMobile={isMobile} />}
                 {view === 'dispatch' && (
                     <RuntimeDispatchPanel
                         nodes={nodes}
@@ -2302,6 +2338,7 @@ export default function InheritanceDeepDiveSim() {
                         runSimulation={handleStart}
                         onReset={handleReset}
                         isRunning={isRunning}
+                        isMobile={isMobile}
                     />
                 )}
             </div>

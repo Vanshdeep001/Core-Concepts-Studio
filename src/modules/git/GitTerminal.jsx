@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { COMMAND_GROUPS } from './engine/gitEngine';
 
-export default function GitTerminal({ onCommand, commandLog, disabled }) {
+export default function GitTerminal({ onCommand, commandLog, disabled, isMobile }) {
     const [selectedGroup, setSelectedGroup] = useState(0);
     const [argValues, setArgValues] = useState({});
     const [selectedCmd, setSelectedCmd] = useState(null);
@@ -39,16 +39,18 @@ export default function GitTerminal({ onCommand, commandLog, disabled }) {
 
             {/* Group tabs */}
             <div style={{
-                display: 'flex', gap: '0.3rem', padding: '0.5rem 0.75rem',
+                display: 'flex', gap: isMobile ? '0.2rem' : '0.3rem', padding: isMobile ? '0.35rem 0.5rem' : '0.5rem 0.75rem',
                 background: '#f8f9fa', borderBottom: '2px solid var(--border)',
                 overflowX: 'auto', flexShrink: 0,
+                scrollbarWidth: 'none',
+                WebkitOverflowScrolling: 'touch',
             }}>
                 {COMMAND_GROUPS.map((g, i) => (
                     <button
                         key={g.label}
                         onClick={() => { setSelectedGroup(i); setSelectedCmd(null); }}
                         style={{
-                            padding: '0.3rem 0.65rem', fontSize: '0.7rem', fontWeight: 800,
+                            padding: isMobile ? '0.25rem 0.45rem' : '0.3rem 0.65rem', fontSize: isMobile ? '0.62rem' : '0.7rem', fontWeight: 800,
                             border: '2px solid var(--border)', borderRadius: 6, cursor: 'pointer',
                             background: selectedGroup === i ? g.color : 'var(--white)',
                             flexShrink: 0, transition: 'background 0.15s',
@@ -62,8 +64,8 @@ export default function GitTerminal({ onCommand, commandLog, disabled }) {
 
             {/* Command Buttons */}
             <div style={{
-                padding: '0.75rem', borderBottom: '2px solid var(--border)',
-                display: 'flex', flexWrap: 'wrap', gap: '0.35rem', flexShrink: 0,
+                padding: isMobile ? '0.5rem' : '0.75rem', borderBottom: '2px solid var(--border)',
+                display: 'flex', flexWrap: 'wrap', gap: isMobile ? '0.25rem' : '0.35rem', flexShrink: 0,
             }}>
                 {group.commands.map((cmdDef) => (
                     <button
@@ -71,7 +73,7 @@ export default function GitTerminal({ onCommand, commandLog, disabled }) {
                         onClick={() => setSelectedCmd(selectedCmd?.cmd === cmdDef.cmd ? null : cmdDef)}
                         disabled={disabled}
                         style={{
-                            padding: '0.3rem 0.65rem', fontSize: '0.72rem', fontWeight: 800,
+                            padding: isMobile ? '0.25rem 0.45rem' : '0.3rem 0.65rem', fontSize: isMobile ? '0.65rem' : '0.72rem', fontWeight: 800,
                             border: `2px solid ${selectedCmd?.cmd === cmdDef.cmd ? '#000' : 'var(--border)'}`,
                             borderRadius: 6, cursor: disabled ? 'not-allowed' : 'pointer',
                             background: selectedCmd?.cmd === cmdDef.cmd ? group.color : 'var(--white)',
@@ -93,7 +95,7 @@ export default function GitTerminal({ onCommand, commandLog, disabled }) {
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         style={{
-                            padding: '0.75rem', borderBottom: '2px solid var(--border)',
+                            padding: isMobile ? '0.5rem' : '0.75rem', borderBottom: '2px solid var(--border)',
                             background: '#fffbea', flexShrink: 0, overflow: 'hidden',
                         }}
                     >
@@ -105,7 +107,7 @@ export default function GitTerminal({ onCommand, commandLog, disabled }) {
                             {selectedCmd.argsSchema?.map(s => ` [${s.placeholder || s.key}]`)}
                         </div>
 
-                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: isMobile ? 'stretch' : 'flex-end', flexDirection: isMobile ? 'column' : 'row' }}>
                             {(selectedCmd.argsSchema || []).map((schema) => (
                                 schema.type === 'checkbox' ? (
                                     <label key={schema.key} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>
@@ -124,9 +126,10 @@ export default function GitTerminal({ onCommand, commandLog, disabled }) {
                                         defaultValue={schema.default || ''}
                                         onChange={e => handleArgChange(selectedCmd.cmd, schema.key, e.target.value)}
                                         style={{
-                                            fontFamily: 'var(--font-mono)', fontSize: '0.75rem',
+                                            fontFamily: 'var(--font-mono)', fontSize: isMobile ? '0.7rem' : '0.75rem',
                                             padding: '0.3rem 0.5rem', border: '2px solid var(--border)',
-                                            borderRadius: 6, outline: 'none', minWidth: 140,
+                                            borderRadius: 6, outline: 'none', minWidth: isMobile ? 0 : 140,
+                                            width: isMobile ? '100%' : 'auto',
                                         }}
                                     />
                                 )
@@ -151,7 +154,7 @@ export default function GitTerminal({ onCommand, commandLog, disabled }) {
             </AnimatePresence>
 
             {/* Command History */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0.75rem', minHeight: 80, background: '#1a1a2e' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '0.35rem 0.5rem' : '0.5rem 0.75rem', minHeight: isMobile ? 50 : 80, background: '#1a1a2e' }}>
                 <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', color: '#66d9ef' }}>
                     History ({commandLog.length})
                 </div>

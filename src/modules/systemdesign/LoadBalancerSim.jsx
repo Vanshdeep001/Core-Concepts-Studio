@@ -5,6 +5,12 @@ import { ShuffleIcon, GlobeIcon, CpuIcon } from '../../components/Icons';
 
 export default function LoadBalancerSim() {
     const [algo, setAlgo] = useState('round-robin'); // round-robin, weighted-rr, least-conn, ip-hash
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const h = () => setIsMobile(window.innerWidth < 768);
+        h(); window.addEventListener('resize', h);
+        return () => window.removeEventListener('resize', h);
+    }, []);
     
     // Server health statuses
     const [serverHealth, setServerHealth] = useState({
@@ -634,7 +640,7 @@ export default function LoadBalancerSim() {
                     `}</style>
 
                     {/* Visualizer Canvas container */}
-                    <div style={{ flex: 1, position: 'relative', width: '100%', minHeight: 540 }}>
+                    <div style={{ flex: 1, position: 'relative', width: '100%', minHeight: isMobile ? 400 : 540, overflowX: isMobile ? 'auto' : 'hidden', overflowY: isMobile ? 'auto' : 'hidden', WebkitOverflowScrolling: 'touch' }}>
                         
                         {/* Dotted wiring lines showing network architecture */}
                         <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
@@ -722,7 +728,7 @@ export default function LoadBalancerSim() {
                             top: '8%',
                             transform: 'translate(-50%, -50%)',
                             zIndex: 3,
-                            width: 190,
+                            width: isMobile ? 140 : 190,
                             border: '2.5px solid var(--border)',
                             background: '#fff',
                             borderRadius: '6px',
@@ -731,7 +737,7 @@ export default function LoadBalancerSim() {
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <GlobeIcon size={16} />
-                                <span style={{ fontWeight: 900, fontSize: '0.72rem', letterSpacing: '0.02em' }}>CLIENT TRAFFIC NODE</span>
+                                <span style={{ fontWeight: 900, fontSize: isMobile ? '0.6rem' : '0.72rem', letterSpacing: '0.02em' }}>{isMobile ? 'CLIENT' : 'CLIENT TRAFFIC NODE'}</span>
                             </div>
                             <div style={{ height: 1.5, background: '#eee', margin: '4px 0' }} />
                             <div style={{ fontSize: '0.55rem', color: '#666', fontFamily: 'var(--font-mono)' }}>
@@ -747,7 +753,7 @@ export default function LoadBalancerSim() {
                             top: '36%',
                             transform: 'translate(-50%, -50%)',
                             zIndex: 3,
-                            width: 250,
+                            width: isMobile ? 180 : 250,
                             border: '3px solid var(--border)',
                             background: 'var(--yellow)',
                             borderRadius: '8px',

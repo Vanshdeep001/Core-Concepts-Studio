@@ -13,8 +13,8 @@ import { GitBranchIcon } from '../../components/Icons';
 
 
 // ─── Floating Quest Log & Narration HUD ───────────────────────────────────────
-function GitQuestLog({ state }) {
-    const [collapsed, setCollapsed] = useState(false);
+function GitQuestLog({ state, isMobile }) {
+    const [collapsed, setCollapsed] = useState(isMobile);
     const isInitialized = state.initialized;
     const hasFiles = Object.keys(state.workingDirectory || {}).length > 0 || Object.keys(state.stagingArea || {}).length > 0 || Object.keys(state.commits || {}).length > 0;
     const hasStaged = Object.keys(state.stagingArea || {}).length > 0 || Object.keys(state.commits || {}).length > 0;
@@ -26,16 +26,16 @@ function GitQuestLog({ state }) {
     return (
         <div style={{
             position: 'absolute',
-            left: 12,
-            top: '2.3rem',
+            left: isMobile ? 6 : 12,
+            top: isMobile ? '0.4rem' : '2.3rem',
             background: 'rgba(255, 255, 255, 0.95)',
             border: '2px solid var(--border)',
             borderRadius: '6px',
             boxShadow: '3px 3px 0 var(--border)',
             padding: collapsed ? '0.3rem 0.5rem' : '0.5rem 0.65rem',
-            width: collapsed ? 'auto' : '185px',
+            width: collapsed ? 'auto' : (isMobile ? '145px' : '185px'),
             zIndex: 10,
-            fontSize: '0.7rem',
+            fontSize: isMobile ? '0.62rem' : '0.7rem',
             backdropFilter: 'blur(4px)',
             transition: 'all 0.2s ease',
         }}>
@@ -71,23 +71,24 @@ function GitQuestLog({ state }) {
     );
 }
 
-function FloatingNarration({ text, color }) {
-    const [collapsed, setCollapsed] = useState(false);
+function FloatingNarration({ text, color, isMobile }) {
+    const [collapsed, setCollapsed] = useState(isMobile);
+
     if (!text) return null;
 
     return (
         <div style={{
             position: 'absolute',
-            right: 12,
-            top: '2.3rem',
-            maxWidth: collapsed ? '110px' : '250px',
+            right: isMobile ? 6 : 12,
+            top: isMobile ? '0.4rem' : '2.3rem',
+            maxWidth: collapsed ? '90px' : (isMobile ? '160px' : '250px'),
             background: color || '#e8f5e9',
             border: '2px solid var(--border)',
             borderRadius: '6px',
             boxShadow: '3px 3px 0 var(--border)',
             padding: collapsed ? '0.3rem 0.5rem' : '0.5rem 0.65rem',
             zIndex: 10,
-            fontSize: '0.72rem',
+            fontSize: isMobile ? '0.62rem' : '0.72rem',
             lineHeight: 1.3,
             display: 'flex',
             flexDirection: 'column',
@@ -161,7 +162,8 @@ function FileEditorBar({
     content,
     setContent,
     open,
-    setOpen
+    setOpen,
+    isMobile
 }) {
     const allFiles = { ...(state.currentFiles || {}), ...(state.workingDirectory || {}) };
     const fileList = Object.keys(allFiles);
@@ -182,6 +184,79 @@ function FileEditorBar({
             setFilename(selected);
             setContent(allFiles[selected] || '');
         }
+    }
+
+    if (isMobile && open) {
+        return (
+            <div style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.5)',
+                backdropFilter: 'blur(3px)',
+                zIndex: 2000,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '1rem'
+            }}>
+                <div style={{
+                    background: 'var(--white)',
+                    border: '3px solid var(--border)',
+                    borderRadius: '8px',
+                    boxShadow: '6px 6px 0 var(--border)',
+                    padding: '1rem',
+                    width: '100%',
+                    maxWidth: '300px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.8rem',
+                    color: 'var(--text)'
+                }}>
+                    <div style={{ fontWeight: 800, fontSize: '0.8rem', borderBottom: '2px solid var(--border)', paddingBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#111' }}>
+                        <span>📁 Add / Edit File</span>
+                        <button onClick={() => setOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontWeight: 900, fontSize: '0.8rem', color: '#111' }}>✕</button>
+                    </div>
+
+                    {fileList.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                            <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.6, color: '#444' }}>SELECT EXISTING OR CREATE NEW:</span>
+                            <select
+                                onChange={handleSelectFile}
+                                value={fileList.includes(filename) ? filename : '__new__'}
+                                style={{
+                                    fontFamily: 'var(--font-mono)', fontSize: '0.72rem',
+                                    padding: '0.3rem', border: '2px solid var(--border)',
+                                    borderRadius: 4, background: 'white', cursor: 'pointer',
+                                    width: '100%', color: '#111'
+                                }}
+                            >
+                                <option value="__new__">+ New File...</option>
+                                {fileList.map(f => (
+                                    <option key={f} value={f}>{f}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.6, color: '#444' }}>FILENAME:</span>
+                        <input value={filename} onChange={e => setFilename(e.target.value)} placeholder="filename.ext"
+                            style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', padding: '0.3rem', border: '2px solid var(--border)', borderRadius: 4, width: '100%', color: '#111', background: '#fff' }} />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.6, color: '#444' }}>CONTENT:</span>
+                        <textarea value={content} onChange={e => setContent(e.target.value)} placeholder="File content..." rows={3}
+                            style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', padding: '0.3rem', border: '2px solid var(--border)', borderRadius: 4, width: '100%', resize: 'vertical', color: '#111', background: '#fff' }} />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
+                        <button onClick={handleSubmit} style={{ flex: 1, padding: '0.4rem', fontWeight: 800, fontSize: '0.75rem', border: '2px solid var(--border)', borderRadius: 4, background: '#a8e6cf', cursor: 'pointer', color: '#111' }}>Save File</button>
+                        <button onClick={() => setOpen(false)} style={{ padding: '0.4rem 0.8rem', fontWeight: 800, fontSize: '0.75rem', border: '2px solid var(--border)', borderRadius: 4, background: '#f8d7da', cursor: 'pointer', color: '#111' }}>Cancel</button>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -224,6 +299,13 @@ function FileEditorBar({
 
 // ─── Main GitSim Component ────────────────────────────────────────────────────
 export default function GitSim() {
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Auto-init: start with git init already run
     const [initState] = useState(() => {
@@ -345,7 +427,7 @@ export default function GitSim() {
         setDagHeightPx(Math.max(min, Math.min(max, relY)));
     }
 
-    const scenarioColor = GUIDED_SCENARIOS[scenarioKey]?.color || '#fffbea';
+
 
     // ── Center Content ──────────────────────────────────────────────────────
     const centerContent = (
@@ -354,24 +436,25 @@ export default function GitSim() {
             {/* DAG Area */}
             <div style={{
                 flexShrink: 0,
-                height: dagHeightPx ? `${dagHeightPx}px` : '55%',
+                height: isMobile ? '50%' : (dagHeightPx ? `${dagHeightPx}px` : '55%'),
                 display: 'flex', flexDirection: 'column', overflow: 'hidden',
                 position: 'relative',
             }}>
                 <div style={{
-                    padding: '0.4rem 0.75rem', background: '#f0fff4', borderBottom: '2px solid var(--border)',
+                    padding: isMobile ? '0.3rem 0.5rem' : '0.4rem 0.75rem', background: '#f0fff4', borderBottom: '2px solid var(--border)',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    fontSize: '0.7rem', fontWeight: 800, flexShrink: 0,
+                    fontSize: isMobile ? '0.6rem' : '0.7rem', fontWeight: 800, flexShrink: 0,
                 }}>
-                    <span><GitBranchIcon size={14} /> Commit DAG — {repoName}</span>
-                    <span style={{ opacity: 0.5 }}>{Object.keys(state.commits).length} commit{Object.keys(state.commits).length !== 1 ? 's' : ''} · {Object.keys(state.branches).length} branch{Object.keys(state.branches).length !== 1 ? 'es' : ''}</span>
+                    <span><GitBranchIcon size={isMobile ? 12 : 14} /> {isMobile ? 'DAG' : `Commit DAG — ${repoName}`}</span>
+                    <span style={{ opacity: 0.5, fontSize: isMobile ? '0.55rem' : 'inherit' }}>{Object.keys(state.commits).length} commit{Object.keys(state.commits).length !== 1 ? 's' : ''}{!isMobile && ` · ${Object.keys(state.branches).length} branch${Object.keys(state.branches).length !== 1 ? 'es' : ''}`}</span>
                 </div>
 
                 {/* HUD Overlays */}
-                <GitQuestLog state={state} />
+                <GitQuestLog state={state} isMobile={isMobile} />
                 <FloatingNarration
                     text={currentNarration}
                     color="#e8f5e9"
+                    isMobile={isMobile}
                 />
 
                 <div style={{ flex: 1, overflow: 'auto' }}>
@@ -382,21 +465,22 @@ export default function GitSim() {
                         remote={state.remote}
                         orphanedHashes={orphanedHashes}
                         highlightHash={highlightHash}
+                        isMobile={isMobile}
                     />
                 </div>
             </div>
 
             {/* Drag Handle */}
-            <ResizableDivider onDrag={handleDividerDrag} />
+            {!isMobile && <ResizableDivider onDrag={handleDividerDrag} />}
 
             {/* Terminal / Command Panel */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
                 <div style={{
-                    padding: '0.35rem 0.75rem', background: '#1a1a2e', borderBottom: '2px solid var(--border)',
+                    padding: isMobile ? '0.25rem 0.5rem' : '0.35rem 0.75rem', background: '#1a1a2e', borderBottom: '2px solid var(--border)',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
-                    fontSize: '0.7rem', fontWeight: 800, color: '#66d9ef',
+                    fontSize: isMobile ? '0.6rem' : '0.7rem', fontWeight: 800, color: '#66d9ef',
                 }}>
-                    <span>⌨️ Command Panel{isRunning && !isPaused ? ' (scenario running…)' : ''}</span>
+                    <span>⌨️ Command Panel</span>
                     <FileEditorBar 
                         state={state} 
                         onAddFile={handleAddFile} 
@@ -407,10 +491,11 @@ export default function GitSim() {
                         setContent={setEditorContent}
                         open={editorOpen}
                         setOpen={setEditorOpen}
+                        isMobile={isMobile}
                     />
                 </div>
                 <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
-                    <GitTerminal onCommand={handleCommand} commandLog={commandLog} disabled={false} />
+                    <GitTerminal onCommand={handleCommand} commandLog={commandLog} disabled={false} isMobile={isMobile} />
                 </div>
             </div>
         </div>

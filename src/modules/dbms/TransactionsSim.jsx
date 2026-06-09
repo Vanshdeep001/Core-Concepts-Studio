@@ -7,6 +7,14 @@ import { VaultIcon, LaptopIcon, LockIcon, UnlockIcon, AlertIcon } from '../../co
 export default function TransactionsSim() {
     const [activeTab, setActiveTab] = useState('pipeline'); // 'pipeline' | 'sandbox'
     const [speed, setSpeed] = useState(800);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
     const [isRunning, setIsRunning] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
@@ -21,11 +29,11 @@ export default function TransactionsSim() {
 
     // ─── TAB 2: TRANSACTION ISOLATION SANDBOX STATE ───
     const [isoLevel, setIsoLevel] = useState('RU'); // 'RU' (Read Uncommitted), 'RC' (Read Committed), 'RR' (Repeatable Read), 'SZ' (Serializable)
-    
+
     // Client connections states
     const [t1State, setT1State] = useState('IDLE'); // 'IDLE' | 'ACTIVE' | 'COMMITTED' | 'ABORTED'
     const [t2State, setT2State] = useState('IDLE');
-    
+
     // Command histories
     const [t1History, setT1History] = useState([]);
     const [t2History, setT2History] = useState([]);
@@ -33,7 +41,7 @@ export default function TransactionsSim() {
     // Shared Database Tables
     const [dbAlice, setDbAlice] = useState(1000); // Committed Alice balance
     const [bufferAlice, setBufferAlice] = useState(1000); // Uncommitted Alice balance
-    
+
     const [charlieInserted, setCharlieInserted] = useState(false); // If Charlie row is inserted
     const [charlieCommitted, setCharlieCommitted] = useState(false); // If Charlie row is committed
 
@@ -107,7 +115,7 @@ export default function TransactionsSim() {
         if (pipeStep < 4) {
             const next = pipeStep + 1;
             setPipeStep(next);
-            
+
             if (next === 1) {
                 setLogs(prev => [...prev, 'T1: BEGIN TRANSACTION; (Vault row locks acquired)']);
             } else if (next === 2) {
@@ -216,13 +224,13 @@ export default function TransactionsSim() {
     const executeT1UpdateAlice = (currentLocks) => {
         // T1 updates Alice to 1200
         setBufferAlice(1200);
-        
+
         // Acquire Exclusive (X) Lock on Alice
         setLocks(prev => ({
             ...prev,
             Alice: { type: 'X', holder: 'T1' }
         }));
-        
+
         setT1History(prev => [...prev, 'T1: UPDATE Accounts SET Balance = 1200 WHERE User = "Alice";']);
     };
 
@@ -269,11 +277,11 @@ export default function TransactionsSim() {
 
     const handleT1Commit = () => {
         if (t1State !== 'ACTIVE') return;
-        
+
         // Persist Alice uncommitted state to database committed state
         const finalAlice = bufferAlice;
         setDbAlice(finalAlice);
-        
+
         const finalCharlieCommitted = charlieInserted;
         if (charlieInserted) {
             setCharlieCommitted(true);
@@ -329,8 +337,8 @@ export default function TransactionsSim() {
 
     const executeT2SelectAlice = (currentLocks, committedAliceVal) => {
         // T2 queries Alice
-        const activeAliceBalance = (isoLevel === 'RU' && t1State === 'ACTIVE' && bufferAlice === 1200) 
-            ? 1200 
+        const activeAliceBalance = (isoLevel === 'RU' && t1State === 'ACTIVE' && bufferAlice === 1200)
+            ? 1200
             : committedAliceVal;
 
         // RU does not place read locks. RC places short-lived read locks.
@@ -506,19 +514,19 @@ export default function TransactionsSim() {
             title="Database Transactions & ACID Sandbox" icon={<VaultIcon size={20} />} moduleLabel="DBMS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}
-            onStart={() => { setIsRunning(true); setIsFinished(false); }} 
-            onPause={() => setIsPaused(true)} 
+            onStart={() => { setIsRunning(true); setIsFinished(false); }}
+            onPause={() => setIsPaused(true)}
             onResume={() => setIsRunning(true)}
             onReset={activeTab === 'pipeline' ? handleResetPipeline : handleResetSandbox}
-            onStep={activeTab === 'pipeline' ? executeNextPipelineStep : () => {}}
+            onStep={activeTab === 'pipeline' ? executeNextPipelineStep : () => { }}
             currentStepNum={activeTab === 'pipeline' ? pipeStep : t1History.length + t2History.length}
             totalSteps={activeTab === 'pipeline' ? 4 : 20}
             phaseName={activeTab === 'pipeline' ? `ACID Pipeline Execution` : `Sandbox Level: ${isoLevel}`}
             centerContent={
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '0.8rem', background: 'var(--white)', padding: '0.8rem', overflowY: 'auto' }}>
-                    
+
                     {/* Tab Selectors */}
-                    <div style={{ display: 'flex', gap: '8px', border: '3.5px solid var(--border)', background: '#fafafa', padding: '4px', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0, borderRadius: '6px' }}>
+                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '8px', border: '3.5px solid var(--border)', background: '#fafafa', padding: '4px', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0, borderRadius: '6px' }}>
                         <button
                             onClick={() => { setActiveTab('pipeline'); handleResetPipeline(); }}
                             style={{
@@ -527,7 +535,7 @@ export default function TransactionsSim() {
                                 fontSize: '0.75rem', fontFamily: 'var(--font-mono)', borderRadius: '4px'
                             }}
                         >
-                            Tab 1: ACID Transaction Execution Pipeline
+                            {isMobile ? "Tab 1: ACID Pipeline" : "Tab 1: ACID Transaction Execution Pipeline"}
                         </button>
                         <button
                             onClick={() => { setActiveTab('sandbox'); handleResetSandbox(); }}
@@ -537,14 +545,14 @@ export default function TransactionsSim() {
                                 fontSize: '0.75rem', fontFamily: 'var(--font-mono)', borderRadius: '4px'
                             }}
                         >
-                            Tab 2: Live Concurrency Isolation Sandbox
+                            {isMobile ? "Tab 2: Live Sandbox" : "Tab 2: Live Concurrency Isolation Sandbox"}
                         </button>
                     </div>
 
                     {activeTab === 'pipeline' ? (
                         /* ─── TAB 1: ACID PIPELINE SANDBOX ─── */
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', flex: 1 }}>
-                            
+
                             {/* Visual Engine Status Banner */}
                             <div style={{ border: '3px solid var(--border)', background: isCrashed ? 'rgba(255,107,157,0.1)' : 'rgba(255,221,0,0.06)', padding: '0.6rem 0.8rem', fontSize: '0.75rem', fontWeight: 900, lineHeight: 1.4, flexShrink: 0, borderRadius: '6px' }}>
                                 {pipeStep === 0 && !isCrashed && !recoveryDone && "SANDBOX START: Click the STEP button in the top-right control bar to execute the Client A $300 balance transfer step-by-step. Or trigger a hardware crash midway to test consistency!"}
@@ -557,8 +565,22 @@ export default function TransactionsSim() {
                             </div>
 
                             {/* Main Stage Grid */}
-                            <div style={{ flex: 1, border: '3.5px solid var(--border)', background: '#0f172a', position: 'relative', minHeight: 220, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2.5rem', overflow: 'hidden', boxShadow: '4px 4px 0 var(--border)', borderRadius: '6px' }}>
-                                
+                            <div style={{
+                                flex: 1,
+                                border: '3.5px solid var(--border)',
+                                background: '#0f172a',
+                                position: 'relative',
+                                minHeight: isMobile ? 320 : 220,
+                                display: 'flex',
+                                flexDirection: isMobile ? 'column' : 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: isMobile ? '1.5rem 0.5rem' : '0 2.5rem',
+                                overflow: 'hidden',
+                                boxShadow: '4px 4px 0 var(--border)',
+                                borderRadius: '6px'
+                            }}>
+
                                 {isCrashed && (
                                     <div style={{ position: 'absolute', inset: 0, opacity: 0.15, background: 'repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #000 10px, #000 20px)' }} />
                                 )}
@@ -572,24 +594,47 @@ export default function TransactionsSim() {
                                 </div>
 
                                 {/* Flow Connection Pipe */}
-                                <div style={{ flex: 1, height: 16, background: isCrashed ? '#ef4444' : 'rgba(255,255,255,0.08)', borderY: '3px solid var(--border)', position: 'relative', margin: '0 1rem', display: 'flex', alignItems: 'center' }}>
-                                    <div style={{ position: 'absolute', inset: 0, borderTop: '3.5px solid var(--border)', borderBottom: '3.5px solid var(--border)' }} />
-                                    
+                                <div style={{
+                                    flex: isMobile ? 'none' : 1,
+                                    height: isMobile ? 40 : 16,
+                                    width: isMobile ? 16 : 'auto',
+                                    background: isCrashed ? '#ef4444' : 'rgba(255,255,255,0.08)',
+                                    position: 'relative',
+                                    margin: isMobile ? '0.5rem 0' : '0 1rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <div style={{
+                                        position: 'absolute', inset: 0,
+                                        borderLeft: isMobile ? '3.5px solid var(--border)' : 'none',
+                                        borderRight: isMobile ? '3.5px solid var(--border)' : 'none',
+                                        borderTop: isMobile ? 'none' : '3.5px solid var(--border)',
+                                        borderBottom: isMobile ? 'none' : '3.5px solid var(--border)',
+                                    }} />
+
                                     <AnimatePresence>
                                         {pipeStep > 0 && pipeStep < 4 && !isCrashed && (
                                             <motion.div
-                                                initial={{ left: '0%' }}
-                                                animate={{
+                                                initial={isMobile ? { top: '0%', left: '50%', x: '-50%' } : { left: '0%', top: '50%', y: '-50%' }}
+                                                animate={isMobile ? {
+                                                    top: pipeStep === 1 ? '10%' : pipeStep === 2 ? '50%' : '90%',
+                                                    scale: pipeStep === 2 ? 1.25 : 1
+                                                } : {
                                                     left: pipeStep === 1 ? '10%' : pipeStep === 2 ? '50%' : '90%',
                                                     scale: pipeStep === 2 ? 1.25 : 1
                                                 }}
                                                 exit={{ opacity: 0 }}
                                                 transition={{ duration: 0.4, type: 'spring' }}
                                                 style={{
-                                                    position: 'absolute', transform: 'translateY(-50%)', width: 36, height: 36,
+                                                    position: 'absolute',
+                                                    width: 36, height: 36,
                                                     background: 'var(--yellow)', border: '2.5px solid var(--border)', borderRadius: '50%',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.65rem',
-                                                    boxShadow: '0 0 10px var(--yellow)', zIndex: 5, y: -10
+                                                    boxShadow: '0 0 10px var(--yellow)', zIndex: 5,
+                                                    top: isMobile ? undefined : '50%',
+                                                    left: isMobile ? '50%' : undefined,
+                                                    transform: isMobile ? 'translateX(-50%)' : 'translateY(-50%)',
                                                 }}
                                             >
                                                 $300
@@ -601,8 +646,11 @@ export default function TransactionsSim() {
                                         <motion.div
                                             animate={{ scale: [1, 1.3, 1.2] }}
                                             style={{
-                                                position: 'absolute', left: '46%', transform: 'translateY(-50%)',
-                                                zIndex: 10, y: -20
+                                                position: 'absolute',
+                                                left: isMobile ? '50%' : '46%',
+                                                top: isMobile ? '46%' : '50%',
+                                                transform: isMobile ? 'translate(-50%, -50%)' : 'translateY(-50%)',
+                                                zIndex: 10
                                             }}
                                         >
                                             <AlertIcon size={28} color="#ef4444" />
@@ -620,7 +668,7 @@ export default function TransactionsSim() {
                             </div>
 
                             {/* Crash & Recovery trigger buttons */}
-                            <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.5rem', flexShrink: 0 }}>
                                 <button
                                     onClick={triggerCrash}
                                     disabled={pipeStep < 2 || pipeStep > 3 || isCrashed}
@@ -650,7 +698,7 @@ export default function TransactionsSim() {
                     ) : (
                         /* ─── TAB 2: LIVE ISOLATION LEVEL CONCURRENCY SANDBOX (USER INVOLVEMENT PLAYGROUND) ─── */
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', flex: 1, position: 'relative' }}>
-                            
+
                             {/* ANOMALY ALERT FLOAT DOWN MODAL */}
                             <AnimatePresence>
                                 {anomalyAlert.type && (
@@ -670,7 +718,7 @@ export default function TransactionsSim() {
                                                 <h4 style={{ fontWeight: 900, fontSize: '0.85rem', textTransform: 'uppercase', marginBottom: 4 }}>CONCURRENCY ANOMALY DETECTED!</h4>
                                                 <p style={{ fontSize: '0.7rem', fontWeight: 700, lineHeight: 1.45 }}>{anomalyAlert.msg}</p>
                                             </div>
-                                            <button 
+                                            <button
                                                 onClick={() => setAnomalyAlert({ type: null, msg: null })}
                                                 style={{ background: 'red', color: 'white', border: '2px solid var(--border)', padding: '2px 6px', fontWeight: 900, cursor: 'pointer', borderRadius: '4px' }}
                                             >
@@ -682,19 +730,32 @@ export default function TransactionsSim() {
                             </AnimatePresence>
 
                             {/* Active Isolation Level Selector Bar */}
-                            <div style={{ display: 'flex', gap: '6px', border: '3px solid var(--border)', background: '#fafafa', padding: '6px 10px', boxShadow: '3px 3px 0 var(--border)', flexShrink: 0, borderRadius: '6px', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div className="isolation-selector-bar" style={{
+                                display: 'flex',
+                                flexDirection: isMobile ? 'column' : 'row',
+                                alignItems: isMobile ? 'stretch' : 'center',
+                                gap: isMobile ? '8px' : '6px',
+                                border: '3px solid var(--border)',
+                                background: '#fafafa',
+                                padding: isMobile ? '8px 10px' : '6px 10px',
+                                boxShadow: '3px 3px 0 var(--border)',
+                                flexShrink: 0,
+                                borderRadius: '6px',
+                                justifyContent: 'space-between'
+                            }}>
                                 <span style={{ fontSize: '0.7rem', fontWeight: 900 }}>Database Isolation Level:</span>
-                                <div style={{ display: 'flex', gap: '4px' }}>
+                                <div className="isolation-buttons" style={{ display: 'flex', gap: '4px', width: isMobile ? '100%' : 'auto' }}>
                                     {[
-                                        { code: 'RU', label: 'READ UNCOMMITTED', color: 'var(--pink)' },
-                                        { code: 'RC', label: 'READ COMMITTED', color: 'var(--yellow)' },
-                                        { code: 'RR', label: 'REPEATABLE READ', color: 'var(--cyan)' },
-                                        { code: 'SZ', label: 'SERIALIZABLE', color: 'var(--green)' }
+                                        { code: 'RU', label: isMobile ? 'RU' : 'READ UNCOMMITTED', color: 'var(--pink)' },
+                                        { code: 'RC', label: isMobile ? 'RC' : 'READ COMMITTED', color: 'var(--yellow)' },
+                                        { code: 'RR', label: isMobile ? 'RR' : 'REPEATABLE READ', color: 'var(--cyan)' },
+                                        { code: 'SZ', label: isMobile ? 'SZ' : 'SERIALIZABLE', color: 'var(--green)' }
                                     ].map(item => (
                                         <button
                                             key={item.code}
                                             onClick={() => { setIsoLevel(item.code); handleResetSandbox(); }}
                                             style={{
+                                                flex: isMobile ? 1 : 'none',
                                                 fontSize: '0.62rem', fontWeight: 900, padding: '4px 8px', border: '2px solid var(--border)',
                                                 borderRadius: '4px', cursor: 'pointer',
                                                 background: isoLevel === item.code ? item.color : 'white',
@@ -708,11 +769,11 @@ export default function TransactionsSim() {
                             </div>
 
                             {/* Main Split Sandbox Grid */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: '0.8rem', flex: 1, minHeight: 280 }}>
-                                
+                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.25fr 1fr', gap: '0.8rem', flex: 1, minHeight: 280 }}>
+
                                 {/* T1 & T2 Parallel Client Connection Columns */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
-                                    
+                                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '0.6rem' }}>
+
                                     {/* Transaction Client Thread 1 (T1) */}
                                     <div style={{ border: '3px solid var(--border)', background: '#f8fafc', padding: '0.6rem', borderRadius: '6px', boxShadow: '3px 3px 0 var(--border)', display: 'flex', flexDirection: 'column', gap: '0.4rem', position: 'relative' }}>
                                         <div style={{ position: 'absolute', top: -10, left: 10, background: 'var(--yellow)', border: '1.5px solid var(--border)', fontSize: '0.58rem', fontWeight: 900, padding: '1px 5px', borderRadius: '3px' }}>
@@ -726,7 +787,7 @@ export default function TransactionsSim() {
 
                                         {/* Action buttons (T1 Control panel) */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginTop: '0.2rem' }}>
-                                            <button 
+                                            <button
                                                 className="btn btn-sm btn-green"
                                                 onClick={handleT1Begin}
                                                 disabled={t1State !== 'IDLE' || blockedQuery.thread === 'T1'}
@@ -734,7 +795,7 @@ export default function TransactionsSim() {
                                             >
                                                 Begin T1
                                             </button>
-                                            <button 
+                                            <button
                                                 className="btn btn-sm btn-yellow"
                                                 onClick={handleT1UpdateAlice}
                                                 disabled={t1State !== 'ACTIVE' || blockedQuery.thread === 'T1'}
@@ -742,7 +803,7 @@ export default function TransactionsSim() {
                                             >
                                                 UPDATE Alice = $1200
                                             </button>
-                                            <button 
+                                            <button
                                                 className="btn btn-sm btn-cyan"
                                                 onClick={handleT1InsertCharlie}
                                                 disabled={t1State !== 'ACTIVE' || charlieInserted || blockedQuery.thread === 'T1'}
@@ -750,7 +811,7 @@ export default function TransactionsSim() {
                                             >
                                                 INSERT Charlie = $800
                                             </button>
-                                            <button 
+                                            <button
                                                 className="btn btn-sm btn-pink"
                                                 onClick={handleT1Commit}
                                                 disabled={t1State !== 'ACTIVE' || blockedQuery.thread === 'T1'}
@@ -758,7 +819,7 @@ export default function TransactionsSim() {
                                             >
                                                 COMMIT T1
                                             </button>
-                                            <button 
+                                            <button
                                                 className="btn btn-sm btn-pink"
                                                 onClick={handleT1Rollback}
                                                 disabled={t1State !== 'ACTIVE' || blockedQuery.thread === 'T1'}
@@ -795,7 +856,7 @@ export default function TransactionsSim() {
 
                                         {/* Action buttons (T2 Control panel) */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginTop: '0.2rem' }}>
-                                            <button 
+                                            <button
                                                 className="btn btn-sm btn-green"
                                                 onClick={handleT2Begin}
                                                 disabled={t2State !== 'IDLE' || blockedQuery.thread === 'T2'}
@@ -803,7 +864,7 @@ export default function TransactionsSim() {
                                             >
                                                 Begin T2
                                             </button>
-                                            <button 
+                                            <button
                                                 className="btn btn-sm btn-yellow"
                                                 onClick={handleT2SelectAlice}
                                                 disabled={t2State !== 'ACTIVE' || blockedQuery.thread === 'T2'}
@@ -811,15 +872,15 @@ export default function TransactionsSim() {
                                             >
                                                 SELECT Alice Balance
                                             </button>
-                                            <button 
+                                            <button
                                                 className="btn btn-sm btn-cyan"
                                                 onClick={handleT2RangeScan}
                                                 disabled={t2State !== 'ACTIVE' || blockedQuery.thread === 'T2'}
                                                 style={{ fontSize: '0.62rem', fontWeight: 800, padding: '4px' }}
                                             >
-                                                SCAN range > $600
+                                                SCAN range &gt; $600
                                             </button>
-                                            <button 
+                                            <button
                                                 className="btn btn-sm btn-pink"
                                                 onClick={handleT2Commit}
                                                 disabled={t2State !== 'ACTIVE' || blockedQuery.thread === 'T2'}
@@ -827,7 +888,7 @@ export default function TransactionsSim() {
                                             >
                                                 COMMIT T2
                                             </button>
-                                            <button 
+                                            <button
                                                 className="btn btn-sm btn-pink"
                                                 onClick={handleT2Rollback}
                                                 disabled={t2State !== 'ACTIVE' || blockedQuery.thread === 'T2'}
@@ -859,55 +920,57 @@ export default function TransactionsSim() {
                                     </div>
 
                                     {/* Physical Table View */}
-                                    <div style={{ border: '2.5px solid var(--border)', background: 'white', borderRadius: '4px', overflow: 'hidden', boxShadow: '2px 2px 0 var(--border)' }}>
+                                    <div style={{ border: '2.5px solid var(--border)', background: 'white', borderRadius: '4px', overflow: 'hidden', boxShadow: '2px 2px 0 var(--border)', width: '100%' }}>
                                         <div style={{ background: '#e2e8f0', borderBottom: '2px solid var(--border)', padding: '3px 8px', fontSize: '0.58rem', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>TABLE: Accounts (Shared Disk)</div>
-                                        <table style={{ width: '100%', fontSize: '0.65rem', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                            <thead>
-                                                <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid var(--border)' }}>
-                                                    <th style={{ padding: '4px 6px' }}>User</th>
-                                                    <th style={{ padding: '4px 6px' }}>Committed Balance</th>
-                                                    <th style={{ padding: '4px 6px' }}>Buffer Value</th>
-                                                    <th style={{ padding: '4px 6px' }}>Active Lock State</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {/* Alice Row */}
-                                                <tr>
-                                                    <td style={{ padding: '4px 6px', fontWeight: 800 }}>Alice</td>
-                                                    <td style={{ padding: '4px 6px', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>${dbAlice}</td>
-                                                    <td style={{ padding: '4px 6px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: bufferAlice !== dbAlice ? 'orange' : 'inherit' }}>
-                                                        ${bufferAlice}
-                                                    </td>
-                                                    <td style={{ padding: '4px 6px', fontWeight: 900 }}>
-                                                        {locks.Alice.type === 'X' && <span style={{ color: 'red', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><LockIcon size={12} color="red" /> Exclusive (X) lock by T1</span>}
-                                                        {locks.Alice.type === 'S' && <span style={{ color: 'green', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><LockIcon size={12} color="green" /> Shared (S) lock by T2</span>}
-                                                        {!locks.Alice.type && <span style={{ color: '#888', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><UnlockIcon size={12} /> Unlocked</span>}
-                                                    </td>
-                                                </tr>
-                                                
-                                                {/* Bob Row */}
-                                                <tr>
-                                                    <td style={{ padding: '4px 6px', fontWeight: 800 }}>Bob</td>
-                                                    <td style={{ padding: '4px 6px', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>$500</td>
-                                                    <td style={{ padding: '4px 6px', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>$500</td>
-                                                    <td style={{ padding: '4px 6px', fontWeight: 900, color: '#888', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><UnlockIcon size={12} /> Unlocked</td>
-                                                </tr>
-
-                                                {/* Charlie Ghost Row */}
-                                                {charlieInserted && (
-                                                    <tr style={{ background: charlieCommitted ? '#d1fae5' : '#ffe4e6', borderTop: '1px solid #e2e8f0' }}>
-                                                        <td style={{ padding: '4px 6px', fontWeight: 800 }}>Charlie {charlieCommitted ? '' : '(Ghost)'}</td>
-                                                        <td style={{ padding: '4px 6px', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>{charlieCommitted ? '$800' : 'N/A (Uncommitted)'}</td>
-                                                        <td style={{ padding: '4px 6px', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>$800</td>
+                                        <div style={{ overflowX: 'auto', width: '100%' }}>
+                                            <table style={{ width: '100%', minWidth: isMobile ? '460px' : 'auto', fontSize: '0.65rem', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                                <thead>
+                                                    <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid var(--border)' }}>
+                                                        <th style={{ padding: '4px 6px' }}>User</th>
+                                                        <th style={{ padding: '4px 6px' }}>Committed Balance</th>
+                                                        <th style={{ padding: '4px 6px' }}>Buffer Value</th>
+                                                        <th style={{ padding: '4px 6px' }}>Active Lock State</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {/* Alice Row */}
+                                                    <tr>
+                                                        <td style={{ padding: '4px 6px', fontWeight: 800 }}>Alice</td>
+                                                        <td style={{ padding: '4px 6px', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>${dbAlice}</td>
+                                                        <td style={{ padding: '4px 6px', fontWeight: 900, fontFamily: 'var(--font-mono)', color: bufferAlice !== dbAlice ? 'orange' : 'inherit' }}>
+                                                            ${bufferAlice}
+                                                        </td>
                                                         <td style={{ padding: '4px 6px', fontWeight: 900 }}>
-                                                            {locks.Charlie.type === 'X' && <span style={{ color: 'red', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><LockIcon size={12} color="red" /> Exclusive (X) lock by T1</span>}
-                                                            {locks.Charlie.type === 'S' && <span style={{ color: 'green', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><LockIcon size={12} color="green" /> Shared (S) lock by T2</span>}
-                                                            {!locks.Charlie.type && <span style={{ color: '#888', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><UnlockIcon size={12} /> Unlocked</span>}
+                                                            {locks.Alice.type === 'X' && <span style={{ color: 'red', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><LockIcon size={12} color="red" /> Exclusive (X) lock by T1</span>}
+                                                            {locks.Alice.type === 'S' && <span style={{ color: 'green', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><LockIcon size={12} color="green" /> Shared (S) lock by T2</span>}
+                                                            {!locks.Alice.type && <span style={{ color: '#888', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><UnlockIcon size={12} /> Unlocked</span>}
                                                         </td>
                                                     </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
+
+                                                    {/* Bob Row */}
+                                                    <tr>
+                                                        <td style={{ padding: '4px 6px', fontWeight: 800 }}>Bob</td>
+                                                        <td style={{ padding: '4px 6px', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>$500</td>
+                                                        <td style={{ padding: '4px 6px', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>$500</td>
+                                                        <td style={{ padding: '4px 6px', fontWeight: 900, color: '#888', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><UnlockIcon size={12} /> Unlocked</td>
+                                                    </tr>
+
+                                                    {/* Charlie Ghost Row */}
+                                                    {charlieInserted && (
+                                                        <tr style={{ background: charlieCommitted ? '#d1fae5' : '#ffe4e6', borderTop: '1px solid #e2e8f0' }}>
+                                                            <td style={{ padding: '4px 6px', fontWeight: 800 }}>Charlie {charlieCommitted ? '' : '(Ghost)'}</td>
+                                                            <td style={{ padding: '4px 6px', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>{charlieCommitted ? '$800' : 'N/A (Uncommitted)'}</td>
+                                                            <td style={{ padding: '4px 6px', fontWeight: 900, fontFamily: 'var(--font-mono)' }}>$800</td>
+                                                            <td style={{ padding: '4px 6px', fontWeight: 900 }}>
+                                                                {locks.Charlie.type === 'X' && <span style={{ color: 'red', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><LockIcon size={12} color="red" /> Exclusive (X) lock by T1</span>}
+                                                                {locks.Charlie.type === 'S' && <span style={{ color: 'green', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><LockIcon size={12} color="green" /> Shared (S) lock by T2</span>}
+                                                                {!locks.Charlie.type && <span style={{ color: '#888', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><UnlockIcon size={12} /> Unlocked</span>}
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
 
                                     {/* Action description banner */}
@@ -920,7 +983,7 @@ export default function TransactionsSim() {
                                             {isoLevel === 'SZ' && "Serializable locks entire key ranges. T2 scan locks the table range. T1 is completely BLOCKED from inserting Charlie. All anomalies fully blocked, enforcing absolute execution order!"}
                                         </span>
                                     </div>
-                                    
+
                                     <button
                                         onClick={handleResetSandbox}
                                         style={{ width: '100%', padding: '6px', fontWeight: 900, border: '2px solid var(--border)', background: 'var(--pink)', boxShadow: '2px 2px 0 var(--border)', borderRadius: '4px', cursor: 'pointer', fontSize: '0.72rem' }}
@@ -936,14 +999,14 @@ export default function TransactionsSim() {
             leftContent={
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                     <div style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.45 }}>ACID Database State Radar</div>
-                    
+
                     {/* ACID meters */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
                         <div style={{ border: '2.5px solid var(--border)', padding: '0.35rem', textAlign: 'center', background: (activeTab === 'pipeline' ? acid.atomicity === 'saved' : sbAcid.atomicity === 'stable') ? 'var(--green)' : (activeTab === 'pipeline' ? acid.atomicity === 'broken' : 'transparent') ? 'var(--pink)' : '#eee', borderRadius: '4px' }}>
                             <div style={{ fontSize: '0.8rem', fontWeight: 900 }}>[ A ]</div>
                             <span style={{ fontSize: '0.52rem', fontWeight: 800 }}>Atomicity</span>
                             <div style={{ fontSize: '0.5rem', opacity: 0.6 }}>
-                                {activeTab === 'pipeline' 
+                                {activeTab === 'pipeline'
                                     ? (acid.atomicity === 'saved' ? '✓ Saved' : acid.atomicity === 'broken' ? 'Aborted' : 'Pending')
                                     : (sbAcid.atomicity === 'stable' ? '✓ Stable' : 'Active')}
                             </div>
@@ -952,7 +1015,7 @@ export default function TransactionsSim() {
                             <div style={{ fontSize: '0.8rem', fontWeight: 900 }}>[ C ]</div>
                             <span style={{ fontSize: '0.52rem', fontWeight: 800 }}>Consistency</span>
                             <div style={{ fontSize: '0.5rem', opacity: 0.6 }}>
-                                {activeTab === 'pipeline' 
+                                {activeTab === 'pipeline'
                                     ? (acid.consistency === 'safe' ? '✓ Safe $1500' : 'Leaked $1200')
                                     : '✓ Asset Valid'}
                             </div>
@@ -961,7 +1024,7 @@ export default function TransactionsSim() {
                             <div style={{ fontSize: '0.8rem', fontWeight: 900 }}>[ I ]</div>
                             <span style={{ fontSize: '0.52rem', fontWeight: 800 }}>Isolation</span>
                             <div style={{ fontSize: '0.5rem', opacity: 0.6 }}>
-                                {activeTab === 'pipeline' 
+                                {activeTab === 'pipeline'
                                     ? (acid.isolation === 'shielded' ? 'Shielded' : 'Normal')
                                     : `🛡️ ${isoLevel}`}
                             </div>
@@ -970,7 +1033,7 @@ export default function TransactionsSim() {
                             <div style={{ fontSize: '0.8rem', fontWeight: 900 }}>[ D ]</div>
                             <span style={{ fontSize: '0.52rem', fontWeight: 800 }}>Durability</span>
                             <div style={{ fontSize: '0.5rem', opacity: 0.6 }}>
-                                {activeTab === 'pipeline' 
+                                {activeTab === 'pipeline'
                                     ? (acid.durability === 'saved' ? 'Saved WAL' : 'Pending')
                                     : (sbAcid.durability === 'flushed' ? 'Disk WAL' : 'Pending')}
                             </div>

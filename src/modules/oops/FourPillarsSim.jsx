@@ -518,7 +518,7 @@ const AbstractionView = ({ parentClass }) => {
 /* ══════════════════════════════════════════════════════════════════
    INHERITANCE VIEW  — Dark Canvas + DRAGGABLE CLASSES
    ══════════════════════════════════════════════════════════════════ */
-const InheritanceView = ({ parentClass, childClasses, onAddChild, onRemoveChild }) => {
+const InheritanceView = ({ parentClass, childClasses, onAddChild, onRemoveChild, isMobile }) => {
     const canvasRef = useRef(null);
     const [positions, setPositions] = useState({});
     const [dragging, setDragging] = useState(null);
@@ -594,7 +594,7 @@ const InheritanceView = ({ parentClass, childClasses, onAddChild, onRemoveChild 
     }).filter(Boolean);
 
     return (
-        <div ref={canvasRef} style={{ ...CANVAS_STYLE, position: 'relative', width: '100%', height: '100%', minHeight: 500, overflow: 'hidden', cursor: dragging ? 'grabbing' : 'default' }}>
+        <div ref={canvasRef} style={{ ...CANVAS_STYLE, position: 'relative', width: isMobile ? 650 : '100%', height: '100%', minHeight: 500, overflow: 'hidden', cursor: dragging ? 'grabbing' : 'default' }}>
             {/* Animated dash keyframes */}
             <style>{`@keyframes dashFlow { to { stroke-dashoffset: -20; } }`}</style>
 
@@ -733,7 +733,7 @@ const InheritanceView = ({ parentClass, childClasses, onAddChild, onRemoveChild 
 /* ══════════════════════════════════════════════════════════════════
    POLYMORPHISM VIEW  — Dark Canvas + Method Dispatch
    ══════════════════════════════════════════════════════════════════ */
-const PolymorphismView = ({ parentClass, childClasses }) => {
+const PolymorphismView = ({ parentClass, childClasses, isMobile }) => {
     const [firing, setFiring] = useState(false);
     const [selMethod, setSelMethod] = useState(null);
     const pubMethods = parentClass.methods.filter(m => m.visibility === '+');
@@ -809,46 +809,64 @@ const PolymorphismView = ({ parentClass, childClasses }) => {
                 </motion.div>
             )}
 
-            {/* Dispatch Lines SVG */}
-            {firing && selMethod && objects.length > 1 && (
-                <svg width={Math.min(objects.length * 160, 650)} height="28" style={{ overflow: 'visible' }}>
-                    {objects.map((o, i) => {
-                        const w = Math.min(objects.length * 160, 650);
-                        const cx = w / 2;
-                        const tx = objects.length === 1 ? cx : (i / (objects.length - 1)) * (w - 60) + 30;
-                        return <motion.line key={i} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.3, delay: i * 0.1 }} x1={cx} y1={0} x2={tx} y2={28} stroke={o.color} strokeWidth={2.5} strokeDasharray="5 3" style={{ filter: `drop-shadow(0 0 3px ${o.color}60)` }} />;
-                    })}
-                </svg>
-            )}
+            {/* Dispatch Container wrapper */}
+            <div style={{
+                width: '100%',
+                overflowX: isMobile ? 'auto' : 'visible',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                paddingBottom: isMobile ? '0.5rem' : 0
+            }}>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    minWidth: isMobile ? `${Math.max(objects.length * 160, 320)}px` : '100%',
+                    flexShrink: 0
+                }}>
+                    {/* Dispatch Lines SVG */}
+                    {firing && selMethod && objects.length > 1 && (
+                        <svg width={Math.min(objects.length * 160, 650)} height="28" style={{ overflow: 'visible' }}>
+                            {objects.map((o, i) => {
+                                const w = Math.min(objects.length * 160, 650);
+                                const cx = w / 2;
+                                const tx = objects.length === 1 ? cx : (i / (objects.length - 1)) * (w - 60) + 30;
+                                return <motion.line key={i} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.3, delay: i * 0.1 }} x1={cx} y1={0} x2={tx} y2={28} stroke={o.color} strokeWidth={2.5} strokeDasharray="5 3" style={{ filter: `drop-shadow(0 0 3px ${o.color}60)` }} />;
+                            })}
+                        </svg>
+                    )}
 
-            {/* Object Cards */}
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                {objects.map((obj, i) => {
-                    const resp = selMethod ? getResp(obj, selMethod.name) : '';
-                    const over = selMethod ? isOver(obj, selMethod.name) : false;
-                    return (
-                        <motion.div key={obj.name} animate={firing ? { scale: [1, 1.06, 1], rotate: over ? [0, 3, -3, 0] : [0, -1, 1, 0] } : {}} transition={{ duration: 0.5, delay: i * 0.12, repeat: firing ? 2 : 0 }}
-                            style={{
-                                width: 155, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden',
-                                boxShadow: firing ? 'var(--shadow-lg)' : 'var(--shadow)', background: CARD_BG, textAlign: 'center', transition: 'box-shadow 0.3s',
-                            }}>
-                            <div style={{ background: obj.color, padding: '0.4rem', borderBottom: 'var(--border-width) solid var(--border)', fontWeight: 800, fontSize: '0.75rem', color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
-                                {getObjIcon(obj.icon, '#000000')} {obj.name}
-                            </div>
-                            <div style={{ padding: '0.55rem', minHeight: 65 }}>
-                                {selMethod && <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--text)', opacity: 0.6 }}>.{selMethod.name}()</div>}
-                                {firing && selMethod && (
-                                    <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.15 }}>
-                                        <div style={{ marginTop: '0.3rem', fontSize: '0.68rem', fontWeight: 800, color: 'var(--text)' }}>{resp}</div>
-                                        {over && <div style={{ marginTop: '0.15rem', fontSize: '0.48rem', fontWeight: 800, background: '#ff6b9d', display: 'inline-block', padding: '1px 4px', borderRadius: '3px', color: '#fff' }}>OVERRIDDEN</div>}
-                                        {!over && !obj.isParent && <div style={{ marginTop: '0.15rem', fontSize: '0.48rem', color: 'var(--text)', opacity: 0.6, fontWeight: 700 }}>inherited</div>}
-                                    </motion.div>
-                                )}
-                                {!firing && !selMethod && <div style={{ fontSize: '0.58rem', color: 'var(--text)', opacity: 0.6, marginTop: '0.3rem' }}>Pick method ↑</div>}
-                            </div>
-                        </motion.div>
-                    );
-                })}
+                    {/* Object Cards */}
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: isMobile ? 'nowrap' : 'wrap', justifyContent: 'center' }}>
+                        {objects.map((obj, i) => {
+                            const resp = selMethod ? getResp(obj, selMethod.name) : '';
+                            const over = selMethod ? isOver(obj, selMethod.name) : false;
+                            return (
+                                <motion.div key={obj.name} animate={firing ? { scale: [1, 1.06, 1], rotate: over ? [0, 3, -3, 0] : [0, -1, 1, 0] } : {}} transition={{ duration: 0.5, delay: i * 0.12, repeat: firing ? 2 : 0 }}
+                                    style={{
+                                        width: 155, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden',
+                                        boxShadow: firing ? 'var(--shadow-lg)' : 'var(--shadow)', background: CARD_BG, textAlign: 'center', transition: 'box-shadow 0.3s',
+                                    }}>
+                                    <div style={{ background: obj.color, padding: '0.4rem', borderBottom: 'var(--border-width) solid var(--border)', fontWeight: 800, fontSize: '0.75rem', color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
+                                        {getObjIcon(obj.icon, '#000000')} {obj.name}
+                                    </div>
+                                    <div style={{ padding: '0.55rem', minHeight: 65 }}>
+                                        {selMethod && <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', fontWeight: 700, color: 'var(--text)', opacity: 0.6 }}>.{selMethod.name}()</div>}
+                                        {firing && selMethod && (
+                                            <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.15 }}>
+                                                <div style={{ marginTop: '0.3rem', fontSize: '0.68rem', fontWeight: 800, color: 'var(--text)' }}>{resp}</div>
+                                                {over && <div style={{ marginTop: '0.15rem', fontSize: '0.48rem', fontWeight: 800, background: '#ff6b9d', display: 'inline-block', padding: '1px 4px', borderRadius: '3px', color: '#fff' }}>OVERRIDDEN</div>}
+                                                {!over && !obj.isParent && <div style={{ marginTop: '0.15rem', fontSize: '0.48rem', color: 'var(--text)', opacity: 0.6, fontWeight: 700 }}>inherited</div>}
+                                            </motion.div>
+                                        )}
+                                        {!firing && !selMethod && <div style={{ fontSize: '0.58rem', color: 'var(--text)', opacity: 0.6, marginTop: '0.3rem' }}>Pick method ↑</div>}
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
 
             {childClasses.length === 0 && (
@@ -953,6 +971,14 @@ const UMLPanel = ({ parentClass, childClasses, activePillar }) => (
    MAIN COMPONENT
    ══════════════════════════════════════════════════════════════════ */
 export default function FourPillarsSim() {
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const [activePillar, setActivePillar] = useState('Encapsulation');
     const [parentClass, setParentClass] = useState({ ...DEFAULT_PARENT, fields: DEFAULT_PARENT.fields.map(f => ({ ...f })), methods: DEFAULT_PARENT.methods.map(m => ({ ...m })) });
     const [childClasses, setChildClasses] = useState([]);
@@ -1020,10 +1046,23 @@ export default function FourPillarsSim() {
     const CENTER = (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: CANVAS_BG }}>
             {/* Pillar Tabs */}
-            <div style={{ display: 'flex', borderBottom: `3px solid ${CARD_BORDER}`, flexShrink: 0 }}>
+            <div style={{ 
+                display: 'flex', 
+                borderBottom: `3px solid ${CARD_BORDER}`, 
+                flexShrink: 0,
+                overflowX: isMobile ? 'auto' : 'visible',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+            }}>
                 {PILLARS.map(p => (
                     <button key={p} onClick={() => changePillar(p)} style={{
-                        flex: 1, padding: '0.55rem', fontWeight: 800, fontSize: '0.78rem', cursor: 'pointer',
+                        flex: isMobile ? '1 0 auto' : 1,
+                        minWidth: isMobile ? '100px' : 'auto',
+                        padding: isMobile ? '0.4rem 0.6rem' : '0.55rem',
+                        fontWeight: 800,
+                        fontSize: isMobile ? '0.62rem' : '0.78rem',
+                        cursor: 'pointer',
                         background: activePillar === p ? PILLAR_COLORS[p] : 'var(--white)',
                         border: 'none',
                         borderRight: `3px solid ${CARD_BORDER}`,
@@ -1044,8 +1083,8 @@ export default function FourPillarsSim() {
                     <motion.div key={activePillar} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} style={{ height: '100%' }}>
                         {activePillar === 'Encapsulation' && <EncapsulationView parentClass={parentClass} showGetters={showGetters} onToggleGetters={() => setShowGetters(p => !p)} />}
                         {activePillar === 'Abstraction' && <AbstractionView parentClass={parentClass} />}
-                        {activePillar === 'Inheritance' && <InheritanceView parentClass={parentClass} childClasses={childClasses} onAddChild={addChild} onRemoveChild={rmChild} />}
-                        {activePillar === 'Polymorphism' && <PolymorphismView parentClass={parentClass} childClasses={childClasses} />}
+                        {activePillar === 'Inheritance' && <InheritanceView parentClass={parentClass} childClasses={childClasses} onAddChild={addChild} onRemoveChild={rmChild} isMobile={isMobile} />}
+                        {activePillar === 'Polymorphism' && <PolymorphismView parentClass={parentClass} childClasses={childClasses} isMobile={isMobile} />}
                     </motion.div>
                 </AnimatePresence>
             </div>

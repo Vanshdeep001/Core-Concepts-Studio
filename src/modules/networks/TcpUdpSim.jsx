@@ -7,13 +7,13 @@ import { HandshakeIcon } from '../../components/Icons';
 /* ════════════════════════════════════════
    DATA — TCP states, scenarios
    ════════════════════════════════════════ */
-const TCP_STATES = ['CLOSED','SYN_SENT','SYN_RCVD','ESTABLISHED','FIN_WAIT_1','FIN_WAIT_2','TIME_WAIT','CLOSED'];
-const STATE_COLORS = { CLOSED:'#ef9a9a', SYN_SENT:'#ffcc80', SYN_RCVD:'#ffe082', ESTABLISHED:'#a5d6a7', FIN_WAIT_1:'#90caf9', FIN_WAIT_2:'#80deea', TIME_WAIT:'#ce93d8' };
+const TCP_STATES = ['CLOSED', 'SYN_SENT', 'SYN_RCVD', 'ESTABLISHED', 'FIN_WAIT_1', 'FIN_WAIT_2', 'TIME_WAIT', 'CLOSED'];
+const STATE_COLORS = { CLOSED: '#ef9a9a', SYN_SENT: '#ffcc80', SYN_RCVD: '#ffe082', ESTABLISHED: '#a5d6a7', FIN_WAIT_1: '#90caf9', FIN_WAIT_2: '#80deea', TIME_WAIT: '#ce93d8' };
 
 const SCENARIOS = {
-    'File download': { desc: 'Large reliable transfer — TCP is ideal. Every byte must arrive in order.', protocol: 'TCP', pattern: [3,3,3,3,3], windowHint: 4 },
-    'Video call':    { desc: 'Real-time streaming — UDP preferred. Dropped frames are better than delayed ones.', protocol: 'UDP', pattern: [1,1,1,1,1,1,1], windowHint: 1 },
-    'Live game':     { desc: 'Low-latency updates — UDP preferred. Stale game-state data is useless.', protocol: 'UDP', pattern: [1,1,1,1,1,1], windowHint: 1 },
+    'File download': { desc: 'Large reliable transfer — TCP is ideal. Every byte must arrive in order.', protocol: 'TCP', pattern: [3, 3, 3, 3, 3], windowHint: 4 },
+    'Video call': { desc: 'Real-time streaming — UDP preferred. Dropped frames are better than delayed ones.', protocol: 'UDP', pattern: [1, 1, 1, 1, 1, 1, 1], windowHint: 1 },
+    'Live game': { desc: 'Low-latency updates — UDP preferred. Stale game-state data is useless.', protocol: 'UDP', pattern: [1, 1, 1, 1, 1, 1], windowHint: 1 },
 };
 
 /* ════════════════════════════════════════
@@ -26,11 +26,11 @@ function buildTcpSteps(windowSize, dropAt, totalData) {
     let tcpState = 'CLOSED', udpLoss = false;
 
     // 3-way handshake
-    steps.push({ type:'handshake', arrow:'SYN', from:'client', to:'server', tcpState:'SYN_SENT', udpState:'—', pktsSent:++pktsSent, pktsLost, retrans, acked, cwnd, windowSize, throughput: 0, explanation:'Client sends SYN packet to initiate connection. Sequence number is randomly generated.', insight:'SYN (Synchronize): The first step of the 3-way handshake. Client proposes initial sequence number.', cwndHistory:[...cwndHistory] });
+    steps.push({ type: 'handshake', arrow: 'SYN', from: 'client', to: 'server', tcpState: 'SYN_SENT', udpState: '—', pktsSent: ++pktsSent, pktsLost, retrans, acked, cwnd, windowSize, throughput: 0, explanation: 'Client sends SYN packet to initiate connection. Sequence number is randomly generated.', insight: 'SYN (Synchronize): The first step of the 3-way handshake. Client proposes initial sequence number.', cwndHistory: [...cwndHistory] });
     tcpState = 'SYN_SENT';
-    steps.push({ type:'handshake', arrow:'SYN-ACK', from:'server', to:'client', tcpState:'SYN_RCVD', udpState:'—', pktsSent:++pktsSent, pktsLost, retrans, acked, cwnd, windowSize, throughput: 0, explanation:'Server responds with SYN-ACK: acknowledges client\'s SYN and sends its own SYN.', insight:'SYN-ACK: Server agrees to connect. Contains both acknowledgment and server\'s own sequence number.', cwndHistory:[...cwndHistory] });
+    steps.push({ type: 'handshake', arrow: 'SYN-ACK', from: 'server', to: 'client', tcpState: 'SYN_RCVD', udpState: '—', pktsSent: ++pktsSent, pktsLost, retrans, acked, cwnd, windowSize, throughput: 0, explanation: 'Server responds with SYN-ACK: acknowledges client\'s SYN and sends its own SYN.', insight: 'SYN-ACK: Server agrees to connect. Contains both acknowledgment and server\'s own sequence number.', cwndHistory: [...cwndHistory] });
     tcpState = 'SYN_RCVD';
-    steps.push({ type:'handshake', arrow:'ACK', from:'client', to:'server', tcpState:'ESTABLISHED', udpState:'—', pktsSent:++pktsSent, pktsLost, retrans, acked:++acked, cwnd, windowSize, throughput: 0, explanation:'Client sends final ACK. Connection is now ESTABLISHED — data can flow.', insight:'3-WAY HANDSHAKE COMPLETE: Both sides have synchronized sequence numbers and confirmed connectivity.', cwndHistory:[...cwndHistory] });
+    steps.push({ type: 'handshake', arrow: 'ACK', from: 'client', to: 'server', tcpState: 'ESTABLISHED', udpState: '—', pktsSent: ++pktsSent, pktsLost, retrans, acked: ++acked, cwnd, windowSize, throughput: 0, explanation: 'Client sends final ACK. Connection is now ESTABLISHED — data can flow.', insight: '3-WAY HANDSHAKE COMPLETE: Both sides have synchronized sequence numbers and confirmed connectivity.', cwndHistory: [...cwndHistory] });
     tcpState = 'ESTABLISHED';
 
     // Data transfer
@@ -49,24 +49,24 @@ function buildTcpSteps(windowSize, dropAt, totalData) {
                 ssthresh = cwnd;
                 cwndHistory.push(cwnd);
                 steps.push({
-                    type:'data', arrow:`DATA[${thisSeq}]`, from:'client', to:'server',
-                    dropped: true, tcpState, udpState:'sending',
-                    pktsSent:++pktsSent, pktsLost, retrans, acked, cwnd, windowSize,
+                    type: 'data', arrow: `DATA[${thisSeq}]`, from: 'client', to: 'server',
+                    dropped: true, tcpState, udpState: 'sending',
+                    pktsSent: ++pktsSent, pktsLost, retrans, acked, cwnd, windowSize,
                     throughput: Math.round((acked * 1024) / Math.max(1, pktsSent) * 10) / 10,
-                    explanation:`Packet DATA[${thisSeq}] is DROPPED! TCP detects loss via timeout. Congestion window halved from ${cwnd*2} to ${cwnd}.`,
-                    insight:'PACKET LOSS: TCP uses timeouts and duplicate ACKs to detect loss. The congestion window is reduced to slow down sending.',
-                    cwndHistory:[...cwndHistory],
+                    explanation: `Packet DATA[${thisSeq}] is DROPPED! TCP detects loss via timeout. Congestion window halved from ${cwnd * 2} to ${cwnd}.`,
+                    insight: 'PACKET LOSS: TCP uses timeouts and duplicate ACKs to detect loss. The congestion window is reduced to slow down sending.',
+                    cwndHistory: [...cwndHistory],
                 });
 
                 // UDP side: silent loss
                 steps.push({
-                    type:'udp-loss', arrow:`DATA[${thisSeq}]`, from:'client', to:'server',
-                    tcpState, udpState:'DATA LOST',
+                    type: 'udp-loss', arrow: `DATA[${thisSeq}]`, from: 'client', to: 'server',
+                    tcpState, udpState: 'DATA LOST',
                     pktsSent, pktsLost, retrans, acked, cwnd, windowSize,
                     throughput: Math.round((acked * 1024) / Math.max(1, pktsSent) * 10) / 10,
-                    explanation:`UDP: Same packet DATA[${thisSeq}] is also lost — but UDP has NO retransmission. Data is gone forever. Application must handle it.`,
-                    insight:'UDP IS STATELESS: No connection tracking, no retransmission, no congestion control. Fire-and-forget.',
-                    cwndHistory:[...cwndHistory],
+                    explanation: `UDP: Same packet DATA[${thisSeq}] is also lost — but UDP has NO retransmission. Data is gone forever. Application must handle it.`,
+                    insight: 'UDP IS STATELESS: No connection tracking, no retransmission, no congestion control. Fire-and-forget.',
+                    cwndHistory: [...cwndHistory],
                 });
 
                 // TCP retransmission
@@ -74,25 +74,25 @@ function buildTcpSteps(windowSize, dropAt, totalData) {
                 cwnd = Math.min(cwnd + 1, windowSize);
                 cwndHistory.push(cwnd);
                 steps.push({
-                    type:'retransmit', arrow:`DATA[${thisSeq}] (retx)`, from:'client', to:'server',
-                    tcpState, udpState:'—',
-                    pktsSent:++pktsSent, pktsLost, retrans, acked, cwnd, windowSize,
+                    type: 'retransmit', arrow: `DATA[${thisSeq}] (retx)`, from: 'client', to: 'server',
+                    tcpState, udpState: '—',
+                    pktsSent: ++pktsSent, pktsLost, retrans, acked, cwnd, windowSize,
                     throughput: Math.round((acked * 1024) / Math.max(1, pktsSent) * 10) / 10,
-                    explanation:`TCP retransmits DATA[${thisSeq}]. Slow start resumes — congestion window grows from ${cwnd-1} to ${cwnd}.`,
-                    insight:'RETRANSMISSION: TCP guarantees delivery by resending lost packets. This adds latency but ensures reliability.',
-                    cwndHistory:[...cwndHistory],
+                    explanation: `TCP retransmits DATA[${thisSeq}]. Slow start resumes — congestion window grows from ${cwnd - 1} to ${cwnd}.`,
+                    insight: 'RETRANSMISSION: TCP guarantees delivery by resending lost packets. This adds latency but ensures reliability.',
+                    cwndHistory: [...cwndHistory],
                 });
             } else {
                 cwnd = Math.min(cwnd < ssthresh ? cwnd * 2 : cwnd + 1, windowSize * 2);
                 cwndHistory.push(cwnd);
                 steps.push({
-                    type:'data', arrow:`DATA[${thisSeq}]`, from:'client', to:'server',
-                    dropped: false, tcpState, udpState:'sending',
-                    pktsSent:++pktsSent, pktsLost, retrans, acked, cwnd, windowSize,
+                    type: 'data', arrow: `DATA[${thisSeq}]`, from: 'client', to: 'server',
+                    dropped: false, tcpState, udpState: 'sending',
+                    pktsSent: ++pktsSent, pktsLost, retrans, acked, cwnd, windowSize,
                     throughput: Math.round((acked * 1024) / Math.max(1, pktsSent) * 10) / 10,
-                    explanation:`Sending DATA[${thisSeq}]. Congestion window: ${cwnd}. ${cwnd < ssthresh ? 'Slow start (exponential growth)' : 'Congestion avoidance (linear growth)'}.`,
+                    explanation: `Sending DATA[${thisSeq}]. Congestion window: ${cwnd}. ${cwnd < ssthresh ? 'Slow start (exponential growth)' : 'Congestion avoidance (linear growth)'}.`,
                     insight: cwnd < ssthresh ? 'SLOW START: cwnd doubles each RTT until ssthresh is reached, probing for available bandwidth.' : 'CONGESTION AVOIDANCE: cwnd increases by 1 MSS per RTT — gentle probing to avoid overwhelming the network.',
-                    cwndHistory:[...cwndHistory],
+                    cwndHistory: [...cwndHistory],
                 });
             }
         }
@@ -100,13 +100,13 @@ function buildTcpSteps(windowSize, dropAt, totalData) {
         // ACK
         acked += sendCount;
         steps.push({
-            type:'ack', arrow:`ACK[${seqNum + sendCount - 1}]`, from:'server', to:'client',
-            tcpState, udpState:'—',
+            type: 'ack', arrow: `ACK[${seqNum + sendCount - 1}]`, from: 'server', to: 'client',
+            tcpState, udpState: '—',
             pktsSent, pktsLost, retrans, acked, cwnd, windowSize,
             throughput: Math.round((acked * 1024) / Math.max(1, pktsSent) * 10) / 10,
-            explanation:`Server acknowledges up to sequence ${seqNum + sendCount - 1}. Window slides forward.`,
-            insight:'CUMULATIVE ACK: TCP acknowledges all bytes received up to this point, allowing the window to advance.',
-            cwndHistory:[...cwndHistory],
+            explanation: `Server acknowledges up to sequence ${seqNum + sendCount - 1}. Window slides forward.`,
+            insight: 'CUMULATIVE ACK: TCP acknowledges all bytes received up to this point, allowing the window to advance.',
+            cwndHistory: [...cwndHistory],
         });
 
         seqNum += sendCount;
@@ -114,9 +114,9 @@ function buildTcpSteps(windowSize, dropAt, totalData) {
     }
 
     // Connection teardown
-    steps.push({ type:'fin', arrow:'FIN', from:'client', to:'server', tcpState:'FIN_WAIT_1', udpState:'—', pktsSent:++pktsSent, pktsLost, retrans, acked, cwnd, windowSize, throughput: Math.round((acked * 1024) / Math.max(1, pktsSent) * 10) / 10, explanation:'Client sends FIN to close the connection. Enters FIN_WAIT_1 state.', insight:'FIN (Finish): Signals that the sender has no more data to transmit. Connection teardown begins.', cwndHistory:[...cwndHistory] });
-    steps.push({ type:'fin', arrow:'FIN-ACK', from:'server', to:'client', tcpState:'TIME_WAIT', udpState:'—', pktsSent:++pktsSent, pktsLost, retrans, acked, cwnd, windowSize, throughput: Math.round((acked * 1024) / Math.max(1, pktsSent) * 10) / 10, explanation:'Server acknowledges FIN and sends its own FIN. Client enters TIME_WAIT (waits 2×MSL before closing).', insight:'TIME_WAIT: Client waits to ensure the final ACK reaches the server. Prevents old packets from interfering with new connections.', cwndHistory:[...cwndHistory] });
-    steps.push({ type:'done', arrow:'', from:'', to:'', tcpState:'CLOSED', udpState:'closed', pktsSent, pktsLost, retrans, acked, cwnd, windowSize, throughput: Math.round((acked * 1024) / Math.max(1, pktsSent) * 10) / 10, explanation:'Connection fully closed. All data delivered reliably via TCP.', insight:'TCP provides reliable, ordered delivery with congestion control. UDP provides speed with no guarantees.', cwndHistory:[...cwndHistory] });
+    steps.push({ type: 'fin', arrow: 'FIN', from: 'client', to: 'server', tcpState: 'FIN_WAIT_1', udpState: '—', pktsSent: ++pktsSent, pktsLost, retrans, acked, cwnd, windowSize, throughput: Math.round((acked * 1024) / Math.max(1, pktsSent) * 10) / 10, explanation: 'Client sends FIN to close the connection. Enters FIN_WAIT_1 state.', insight: 'FIN (Finish): Signals that the sender has no more data to transmit. Connection teardown begins.', cwndHistory: [...cwndHistory] });
+    steps.push({ type: 'fin', arrow: 'FIN-ACK', from: 'server', to: 'client', tcpState: 'TIME_WAIT', udpState: '—', pktsSent: ++pktsSent, pktsLost, retrans, acked, cwnd, windowSize, throughput: Math.round((acked * 1024) / Math.max(1, pktsSent) * 10) / 10, explanation: 'Server acknowledges FIN and sends its own FIN. Client enters TIME_WAIT (waits 2×MSL before closing).', insight: 'TIME_WAIT: Client waits to ensure the final ACK reaches the server. Prevents old packets from interfering with new connections.', cwndHistory: [...cwndHistory] });
+    steps.push({ type: 'done', arrow: '', from: '', to: '', tcpState: 'CLOSED', udpState: 'closed', pktsSent, pktsLost, retrans, acked, cwnd, windowSize, throughput: Math.round((acked * 1024) / Math.max(1, pktsSent) * 10) / 10, explanation: 'Connection fully closed. All data delivered reliably via TCP.', insight: 'TCP provides reliable, ordered delivery with congestion control. UDP provides speed with no guarantees.', cwndHistory: [...cwndHistory] });
 
     return steps;
 }
@@ -247,7 +247,7 @@ export default function TcpUdpSim() {
                                         padding: '0.2rem 0.5rem',
                                         background: isDrop ? 'var(--pink)' : isRetx ? 'var(--orange)' : isUdpLoss ? '#ffcdd2' :
                                             step.type === 'handshake' ? 'var(--cyan)' : step.type === 'ack' ? 'var(--green)' :
-                                            step.type === 'fin' ? 'var(--purple)' : step.type === 'done' ? 'var(--green)' : 'var(--yellow)',
+                                                step.type === 'fin' ? 'var(--purple)' : step.type === 'done' ? 'var(--green)' : 'var(--yellow)',
                                         border: `2px solid var(--border)`,
                                         fontSize: '0.7rem',
                                         fontWeight: 700,
@@ -453,7 +453,7 @@ export default function TcpUdpSim() {
                         <div className="panel-header" style={{ background: 'var(--cyan)' }}>🏷 Concepts Covered</div>
                         <div style={{ padding: '1rem' }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginBottom: '0.75rem' }}>
-                                {['SYN','ACK','Window','Congestion','Reliability','Stateless'].map(t => (
+                                {['SYN', 'ACK', 'Window', 'Congestion', 'Reliability', 'Stateless'].map(t => (
                                     <span key={t} style={{
                                         fontSize: '0.72rem', fontWeight: 700, fontFamily: 'var(--font-mono)',
                                         padding: '0.2rem 0.5rem', border: '2px solid var(--border)', background: 'var(--cyan)',

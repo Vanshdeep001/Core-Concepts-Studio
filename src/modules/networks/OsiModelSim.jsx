@@ -8,20 +8,20 @@ import { BoxIcon } from '../../components/Icons';
    DATA — OSI layers, protocols, PDU fields
    ════════════════════════════════════════ */
 const OSI_LAYERS = [
-    { id: 7, name: 'Application',   color: '#b39ddb', pdu: 'Data',    tcpip: 'Application',  protocols: ['HTTP','HTTPS','FTP','SMTP','DNS','SSH','Telnet','SNMP'], headerSize: 0 },
-    { id: 6, name: 'Presentation',  color: '#ce93d8', pdu: 'Data',    tcpip: 'Application',  protocols: ['SSL/TLS','JPEG','MPEG','ASCII','EBCDIC','GIF'], headerSize: 0 },
-    { id: 5, name: 'Session',       color: '#ef9a9a', pdu: 'Data',    tcpip: 'Application',  protocols: ['NetBIOS','RPC','PPTP','SAP','SDP'], headerSize: 0 },
-    { id: 4, name: 'Transport',     color: '#90caf9', pdu: 'Segment', tcpip: 'Transport',     protocols: ['TCP','UDP','SCTP','DCCP'], headerSize: 20 },
-    { id: 3, name: 'Network',       color: '#a5d6a7', pdu: 'Packet',  tcpip: 'Internet',      protocols: ['IP','ICMP','ARP','RARP','IGMP','OSPF','BGP'], headerSize: 20 },
-    { id: 2, name: 'Data Link',     color: '#ffcc80', pdu: 'Frame',   tcpip: 'Network Access', protocols: ['Ethernet','PPP','HDLC','Frame Relay','Wi-Fi','ARP'], headerSize: 18 },
-    { id: 1, name: 'Physical',      color: '#ffab91', pdu: 'Bits',    tcpip: 'Network Access', protocols: ['RS-232','RJ45','V.35','100BaseTX','DSL','ISDN','USB'], headerSize: 0 },
+    { id: 7, name: 'Application', color: '#b39ddb', pdu: 'Data', tcpip: 'Application', protocols: ['HTTP', 'HTTPS', 'FTP', 'SMTP', 'DNS', 'SSH', 'Telnet', 'SNMP'], headerSize: 0 },
+    { id: 6, name: 'Presentation', color: '#ce93d8', pdu: 'Data', tcpip: 'Application', protocols: ['SSL/TLS', 'JPEG', 'MPEG', 'ASCII', 'EBCDIC', 'GIF'], headerSize: 0 },
+    { id: 5, name: 'Session', color: '#ef9a9a', pdu: 'Data', tcpip: 'Application', protocols: ['NetBIOS', 'RPC', 'PPTP', 'SAP', 'SDP'], headerSize: 0 },
+    { id: 4, name: 'Transport', color: '#90caf9', pdu: 'Segment', tcpip: 'Transport', protocols: ['TCP', 'UDP', 'SCTP', 'DCCP'], headerSize: 20 },
+    { id: 3, name: 'Network', color: '#a5d6a7', pdu: 'Packet', tcpip: 'Internet', protocols: ['IP', 'ICMP', 'ARP', 'RARP', 'IGMP', 'OSPF', 'BGP'], headerSize: 20 },
+    { id: 2, name: 'Data Link', color: '#ffcc80', pdu: 'Frame', tcpip: 'Network Access', protocols: ['Ethernet', 'PPP', 'HDLC', 'Frame Relay', 'Wi-Fi', 'ARP'], headerSize: 18 },
+    { id: 1, name: 'Physical', color: '#ffab91', pdu: 'Bits', tcpip: 'Network Access', protocols: ['RS-232', 'RJ45', 'V.35', '100BaseTX', 'DSL', 'ISDN', 'USB'], headerSize: 0 },
 ];
 
 const TCPIP_LAYERS = [
-    { id: 4, name: 'Application',    color: '#b39ddb', osiLayers: [7,6,5], pdu: 'Data' },
-    { id: 3, name: 'Transport',      color: '#90caf9', osiLayers: [4],     pdu: 'Segment' },
-    { id: 2, name: 'Internet',       color: '#a5d6a7', osiLayers: [3],     pdu: 'Packet' },
-    { id: 1, name: 'Network Access', color: '#ffcc80', osiLayers: [2,1],   pdu: 'Frame' },
+    { id: 4, name: 'Application', color: '#b39ddb', osiLayers: [7, 6, 5], pdu: 'Data' },
+    { id: 3, name: 'Transport', color: '#90caf9', osiLayers: [4], pdu: 'Segment' },
+    { id: 2, name: 'Internet', color: '#a5d6a7', osiLayers: [3], pdu: 'Packet' },
+    { id: 1, name: 'Network Access', color: '#ffcc80', osiLayers: [2, 1], pdu: 'Frame' },
 ];
 
 const PROTOCOL_FIELDS = {
@@ -87,25 +87,25 @@ function buildSteps() {
             explanation: layer.id === 7
                 ? `Application layer receives payload "${PAYLOAD}" (${PAYLOAD_SIZE} bytes). This is the raw data to be sent.`
                 : layer.id === 4
-                ? `Transport layer adds TCP header (20 bytes): source/destination ports, sequence number, flags. PDU is now a Segment (${totalSize} bytes).`
-                : layer.id === 3
-                ? `Network layer adds IP header (20 bytes): source/destination IP addresses, TTL, protocol field. PDU is now a Packet (${totalSize} bytes).`
-                : layer.id === 2
-                ? `Data Link layer adds Ethernet header (14 bytes) + trailer FCS (4 bytes): MAC addresses, EtherType. PDU is now a Frame (${totalSize} bytes).`
-                : layer.id === 1
-                ? `Physical layer converts the frame into a raw bitstream for transmission over the medium.`
-                : `${layer.name} layer processes the data. Encapsulation continues.`,
+                    ? `Transport layer adds TCP header (20 bytes): source/destination ports, sequence number, flags. PDU is now a Segment (${totalSize} bytes).`
+                    : layer.id === 3
+                        ? `Network layer adds IP header (20 bytes): source/destination IP addresses, TTL, protocol field. PDU is now a Packet (${totalSize} bytes).`
+                        : layer.id === 2
+                            ? `Data Link layer adds Ethernet header (14 bytes) + trailer FCS (4 bytes): MAC addresses, EtherType. PDU is now a Frame (${totalSize} bytes).`
+                            : layer.id === 1
+                                ? `Physical layer converts the frame into a raw bitstream for transmission over the medium.`
+                                : `${layer.name} layer processes the data. Encapsulation continues.`,
             insight: layer.id === 7
                 ? 'ENCAPSULATION: Each layer adds its own header (and sometimes trailer) to the data from the layer above, wrapping it like nested envelopes.'
                 : layer.id === 4
-                ? 'SEGMENT: The Transport layer breaks data into segments and adds port numbers for process-to-process delivery.'
-                : layer.id === 3
-                ? 'PACKET: The Network layer adds logical addressing (IP) for host-to-host delivery across networks.'
-                : layer.id === 2
-                ? 'FRAME: The Data Link layer adds physical addressing (MAC) for hop-to-hop delivery on the local network.'
-                : layer.id === 1
-                ? 'BITS: The Physical layer deals with raw bit transmission — voltage levels, cable specs, encoding schemes.'
-                : `The ${layer.name} layer handles ${layer.pdu} formatting.`,
+                    ? 'SEGMENT: The Transport layer breaks data into segments and adds port numbers for process-to-process delivery.'
+                    : layer.id === 3
+                        ? 'PACKET: The Network layer adds logical addressing (IP) for host-to-host delivery across networks.'
+                        : layer.id === 2
+                            ? 'FRAME: The Data Link layer adds physical addressing (MAC) for hop-to-hop delivery on the local network.'
+                            : layer.id === 1
+                                ? 'BITS: The Physical layer deals with raw bit transmission — voltage levels, cable specs, encoding schemes.'
+                                : `The ${layer.name} layer handles ${layer.pdu} formatting.`,
         });
     }
 
@@ -176,14 +176,14 @@ function buildSteps() {
             explanation: layer.id === 1
                 ? 'Physical layer receives the raw bitstream and converts it back into a frame for the Data Link layer.'
                 : layer.id === 2
-                ? `Data Link layer strips Ethernet header/trailer, verifies FCS checksum. Passes the Packet up (${totalSize} bytes remaining).`
-                : layer.id === 3
-                ? `Network layer strips IP header, checks destination IP matches this host. Passes the Segment up (${totalSize} bytes remaining).`
-                : layer.id === 4
-                ? `Transport layer strips TCP header, reassembles segments in order, verifies checksum. Passes Data up (${totalSize} bytes remaining).`
-                : layer.id === 7
-                ? `Application layer receives the original payload: "${PAYLOAD}" — message delivered successfully!`
-                : `${layer.name} layer processes and passes data upward.`,
+                    ? `Data Link layer strips Ethernet header/trailer, verifies FCS checksum. Passes the Packet up (${totalSize} bytes remaining).`
+                    : layer.id === 3
+                        ? `Network layer strips IP header, checks destination IP matches this host. Passes the Segment up (${totalSize} bytes remaining).`
+                        : layer.id === 4
+                            ? `Transport layer strips TCP header, reassembles segments in order, verifies checksum. Passes Data up (${totalSize} bytes remaining).`
+                            : layer.id === 7
+                                ? `Application layer receives the original payload: "${PAYLOAD}" — message delivered successfully!`
+                                : `${layer.name} layer processes and passes data upward.`,
             insight: layer.id === 7
                 ? `DELIVERY COMPLETE: The original "${PAYLOAD}" message has been fully decapsulated and delivered to the application.`
                 : `Layer ${layer.id} (${layer.name}) removes its header and delivers the ${layer.pdu} to the layer above.`,
@@ -413,12 +413,12 @@ export default function OsiModelSim() {
                     }}
                 >
                     {curStep.phase === 'encapsulate' ? `⬇ Encapsulating at ${curStep.layerName}` :
-                     curStep.phase === 'decapsulate' ? `⬆ Decapsulating at ${curStep.layerName}` :
-                     curStep.phase === 'transit' ? '→ Transmitting on wire...' :
-                     curStep.phase === 'router' ? 'Router — peeking at Layer 3' :
-                     curStep.phase === 'switch' ? 'Switch — peeking at Layer 2' :
-                     curStep.phase === 'arrive' ? 'Arrived at receiver' :
-                     'Delivery Complete!'}
+                        curStep.phase === 'decapsulate' ? `⬆ Decapsulating at ${curStep.layerName}` :
+                            curStep.phase === 'transit' ? '→ Transmitting on wire...' :
+                                curStep.phase === 'router' ? 'Router — peeking at Layer 3' :
+                                    curStep.phase === 'switch' ? 'Switch — peeking at Layer 2' :
+                                        curStep.phase === 'arrive' ? 'Arrived at receiver' :
+                                            'Delivery Complete!'}
                 </motion.div>
 
                 {/* Nested boxes */}
@@ -535,15 +535,15 @@ export default function OsiModelSim() {
             </div>
 
             {/* Main 3-column: sender | packet viz | receiver */}
-            <div style={{ flex: 1, display: 'flex', gap: '0.5rem', minHeight: 0, overflow: 'hidden' }}>
+            <div className="osi-layout-grid" style={{ flex: 1, display: 'flex', gap: '0.5rem', minHeight: 0, overflow: 'hidden' }}>
                 {/* Sender stack */}
-                <div style={{ width: '25%', overflow: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+                <div className="osi-stack-col" style={{ width: '25%', overflow: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
                     {renderStack('sender')}
                     {expandedLayer && activeSide !== 'receiver' && renderProtocolBrowser()}
                 </div>
 
                 {/* Center: packet visualization */}
-                <div style={{
+                <div className="osi-packet-col" style={{
                     flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
                     justifyContent: 'center', border: '2px dashed var(--border)', borderRadius: 0,
                     background: 'rgba(0,0,0,0.02)', position: 'relative', overflow: 'hidden',
@@ -552,7 +552,7 @@ export default function OsiModelSim() {
                 </div>
 
                 {/* Receiver stack */}
-                <div style={{ width: '25%', overflow: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+                <div className="osi-stack-col" style={{ width: '25%', overflow: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
                     {renderStack('receiver')}
                 </div>
             </div>
@@ -631,11 +631,11 @@ export default function OsiModelSim() {
     const TL = steps.map((s, i) => ({
         id: i,
         label: s.phase === 'encapsulate' ? `Encap L${s.layerId}` :
-               s.phase === 'decapsulate' ? `Decap L${s.layerId}` :
-               s.phase === 'transit' ? 'Wire' :
-               s.phase === 'router' ? 'Router' :
-               s.phase === 'switch' ? 'Switch' :
-               s.phase === 'arrive' ? 'Arrive' : 'Done',
+            s.phase === 'decapsulate' ? `Decap L${s.layerId}` :
+                s.phase === 'transit' ? 'Wire' :
+                    s.phase === 'router' ? 'Router' :
+                        s.phase === 'switch' ? 'Switch' :
+                            s.phase === 'arrive' ? 'Arrive' : 'Done',
         done: i < currentStep,
         active: i === currentStep,
     }));

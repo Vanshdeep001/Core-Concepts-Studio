@@ -8,7 +8,7 @@ import {
     CircleShape, SquareShape, RectShape, TriangleShape, PentagonShape, HexagonShape,
     GearIcon, LaptopIcon, ClockIcon, FoodIcon, CoffeeIcon, SleepIcon,
     ClipboardIcon, HandshakeIcon, BlockIcon, CpuIcon, EmailIcon, PhoneIcon,
-    BellIcon, TargetIcon, DiamondIcon, PillarIcon, BuildIcon, LightbulbIcon
+    BellIcon, TargetIcon, DiamondIcon, PillarIcon, BuildIcon, LightbulbIcon, FileIcon
 } from '../../components/Icons';
 
 /* ── PRINCIPLES DATA ── */
@@ -728,7 +728,7 @@ const ISPSim = () => {
 /* ══════════════════════════════════════════════════════════════
    5. DIP — Dependency Flow Diagram
    ══════════════════════════════════════════════════════════════ */
-const DIPSim = () => {
+const DIPSim = ({ isMobile }) => {
     const [applied, setApplied] = useState(false);
     const [activePuppet, setActivePuppet] = useState(0);
     const [shaking, setShaking] = useState(false);
@@ -829,84 +829,103 @@ const DIPSim = () => {
                     </motion.div>
                 ) : (
                     <motion.div key="clean" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
 
-                        {/* High-level module */}
-                        <motion.div initial={{ y: -10 }} animate={{ y: 0 }}
-                            style={{
-                                width: 220, background: 'var(--white)', border: '3px solid #38a169',
-                                borderRadius: '14px', padding: '0.6rem', textAlign: 'center',
-                                boxShadow: '0 0 12px rgba(56,161,105,0.15), 4px 4px 0 var(--border)',
+                        {/* Scrollable Diagram Wrapper on Mobile */}
+                        <div style={{
+                            width: '100%',
+                            overflowX: isMobile ? 'auto' : 'visible',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            paddingBottom: isMobile ? '0.5rem' : 0
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                minWidth: isMobile ? `${Math.max(implementations.length * 100, 320)}px` : '100%',
+                                flexShrink: 0
                             }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.1rem' }}>
-                                <TargetIcon size={24} />
-                            </div>
-                            <div style={{ fontWeight: 900, fontSize: '0.82rem' }}>{highLevelName}</div>
-                            <div style={{ fontSize: '0.55rem', opacity: 0.5, fontWeight: 700, textTransform: 'uppercase' }}>HIGH-LEVEL (STABLE)</div>
-                        </motion.div>
-
-                        {/* Connection to interface */}
-                        <div style={{ width: 2, height: 14, background: '#38a169' }} />
-
-                        {/* Abstraction interface */}
-                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.15, type: 'spring' }}
-                            style={{
-                                background: '#b39ddb20', border: '3px solid #b39ddb', borderRadius: '20px',
-                                padding: '0.4rem 1.2rem', textAlign: 'center', boxShadow: '4px 4px 0 var(--border)',
-                            }}>
-                            <div style={{ fontWeight: 800, fontSize: '0.62rem', color: '#7c3aed' }}>«interface»</div>
-                            <div style={{ fontWeight: 900, fontSize: '0.78rem' }}>{interfaceName}</div>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', opacity: 0.5 }}>+ send(msg): void</div>
-                        </motion.div>
-
-                        {/* Branching lines */}
-                        <svg width={Math.max(implementations.length * 100, 200)} height="20" style={{ overflow: 'visible' }}>
-                            {implementations.map((impl, i) => {
-                                const cx = (Math.max(implementations.length * 100, 200)) / 2;
-                                const spacing = 100;
-                                const startX = cx - ((implementations.length - 1) * spacing) / 2;
-                                const px = startX + i * spacing;
-                                return (
-                                    <motion.line key={impl.id}
-                                        x1={cx} y1={0} x2={px} y2={20}
-                                        stroke={i === activePuppet ? impl.color : '#ccc'}
-                                        strokeWidth={i === activePuppet ? 2.5 : 1.5}
-                                        strokeDasharray={i === activePuppet ? '' : '4 3'}
-                                        initial={{ pathLength: 0 }}
-                                        animate={{ pathLength: 1 }}
-                                        transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
-                                    />
-                                );
-                            })}
-                        </svg>
-
-                        {/* Implementation modules */}
-                        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                            {implementations.map((impl, i) => (
-                                <motion.div key={impl.id}
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.35 + i * 0.1, type: 'spring' }}
-                                    onClick={() => setActivePuppet(i)}
+                                {/* High-level module */}
+                                <motion.div initial={{ y: -10 }} animate={{ y: 0 }}
                                     style={{
-                                        width: 95, background: 'var(--white)',
-                                        border: `3px solid ${i === activePuppet ? impl.color : 'var(--border)'}`,
-                                        borderRadius: '12px', padding: '0.4rem', textAlign: 'center', cursor: 'pointer',
-                                        boxShadow: i === activePuppet ? `0 0 12px ${impl.color}35, 3px 3px 0 var(--border)` : '3px 3px 0 var(--border)',
-                                        transition: 'border-color 0.2s, box-shadow 0.2s',
+                                        width: 220, background: 'var(--white)', border: '3px solid #38a169',
+                                        borderRadius: '14px', padding: '0.6rem', textAlign: 'center',
+                                        boxShadow: '0 0 12px rgba(56,161,105,0.15), 4px 4px 0 var(--border)',
                                     }}>
-                                    <motion.div animate={i === activePuppet ? { y: [0, -3, 0] } : {}}
-                                        transition={{ duration: 1.5, repeat: Infinity }}
-                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 28, margin: '0.2rem 0' }}>
-                                        {impl.icon && <impl.icon size={24} color={i === activePuppet ? impl.color : 'var(--text)'} />}
-                                    </motion.div>
-                                    <div style={{ fontWeight: 800, fontSize: '0.6rem' }}>{impl.name}</div>
-                                    {i === activePuppet && (
-                                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                            style={{ fontSize: '0.48rem', color: '#38a169', fontWeight: 800, marginTop: '0.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.1rem' }}>ACTIVE <CheckIcon size={10} color="#38a169" /></motion.div>
-                                    )}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.1rem' }}>
+                                        <TargetIcon size={24} />
+                                    </div>
+                                    <div style={{ fontWeight: 900, fontSize: '0.82rem' }}>{highLevelName}</div>
+                                    <div style={{ fontSize: '0.55rem', opacity: 0.5, fontWeight: 700, textTransform: 'uppercase' }}>HIGH-LEVEL (STABLE)</div>
                                 </motion.div>
-                            ))}
+
+                                {/* Connection to interface */}
+                                <div style={{ width: 2, height: 14, background: '#38a169' }} />
+
+                                {/* Abstraction interface */}
+                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.15, type: 'spring' }}
+                                    style={{
+                                        background: '#b39ddb20', border: '3px solid #b39ddb', borderRadius: '20px',
+                                        padding: '0.4rem 1.2rem', textAlign: 'center', boxShadow: '4px 4px 0 var(--border)',
+                                    }}>
+                                    <div style={{ fontWeight: 800, fontSize: '0.62rem', color: '#7c3aed' }}>«interface»</div>
+                                    <div style={{ fontWeight: 900, fontSize: '0.78rem' }}>{interfaceName}</div>
+                                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', opacity: 0.5 }}>+ send(msg): void</div>
+                                </motion.div>
+
+                                {/* Branching lines */}
+                                <svg width={Math.max(implementations.length * 100, 200)} height="20" style={{ overflow: 'visible' }}>
+                                    {implementations.map((impl, i) => {
+                                        const cx = (Math.max(implementations.length * 100, 200)) / 2;
+                                        const spacing = 100;
+                                        const startX = cx - ((implementations.length - 1) * spacing) / 2;
+                                        const px = startX + i * spacing;
+                                        return (
+                                            <motion.line key={impl.id}
+                                                x1={cx} y1={0} x2={px} y2={20}
+                                                stroke={i === activePuppet ? impl.color : '#ccc'}
+                                                strokeWidth={i === activePuppet ? 2.5 : 1.5}
+                                                strokeDasharray={i === activePuppet ? '' : '4 3'}
+                                                initial={{ pathLength: 0 }}
+                                                animate={{ pathLength: 1 }}
+                                                transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
+                                            />
+                                        );
+                                    })}
+                                </svg>
+
+                                {/* Implementation modules */}
+                                <div style={{ display: 'flex', gap: '0.6rem', flexWrap: isMobile ? 'nowrap' : 'wrap', justifyContent: 'center' }}>
+                                    {implementations.map((impl, i) => (
+                                        <motion.div key={impl.id}
+                                            initial={{ y: 20, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            transition={{ delay: 0.35 + i * 0.1, type: 'spring' }}
+                                            onClick={() => setActivePuppet(i)}
+                                            style={{
+                                                width: 95, background: 'var(--white)',
+                                                border: `3px solid ${i === activePuppet ? impl.color : 'var(--border)'}`,
+                                                borderRadius: '12px', padding: '0.4rem', textAlign: 'center', cursor: 'pointer',
+                                                boxShadow: i === activePuppet ? `0 0 12px ${impl.color}35, 3px 3px 0 var(--border)` : '3px 3px 0 var(--border)',
+                                                transition: 'border-color 0.2s, box-shadow 0.2s',
+                                            }}>
+                                            <motion.div animate={i === activePuppet ? { y: [0, -3, 0] } : {}}
+                                                transition={{ duration: 1.5, repeat: Infinity }}
+                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 28, margin: '0.2rem 0' }}>
+                                                {impl.icon && <impl.icon size={24} color={i === activePuppet ? impl.color : 'var(--text)'} />}
+                                            </motion.div>
+                                            <div style={{ fontWeight: 800, fontSize: '0.6rem' }}>{impl.name}</div>
+                                            {i === activePuppet && (
+                                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                                    style={{ fontSize: '0.48rem', color: '#38a169', fontWeight: 800, marginTop: '0.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.1rem' }}>ACTIVE <CheckIcon size={10} color="#38a169" /></motion.div>
+                                            )}
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Add custom implementation */}
@@ -941,6 +960,14 @@ export default function SolidPrinciplesSim() {
     const [speed, setSpeed] = useState(700);
     const active = PRINCIPLES.find(p => p.id === activePrinciple);
 
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const descriptions = {
         srp: { title: 'Single Responsibility Principle', text: 'A class should have only ONE reason to change. Each class should have a single, well-defined purpose.', insight: 'The God Class anti-pattern puts everything in one class. SRP splits responsibilities into focused services — easier to test, maintain, and extend.' },
         ocp: { title: 'Open/Closed Principle', text: 'Software entities should be OPEN for extension but CLOSED for modification. Add new behavior without changing existing code.', insight: 'Instead of an ever-growing if/else chain, define an interface. New types simply implement it — zero changes to existing code.' },
@@ -953,10 +980,23 @@ export default function SolidPrinciplesSim() {
 
     const CENTER = (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', borderBottom: '3px solid var(--border)', flexShrink: 0 }}>
+            <div style={{ 
+                display: 'flex', 
+                borderBottom: '3px solid var(--border)', 
+                flexShrink: 0,
+                overflowX: isMobile ? 'auto' : 'visible',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+            }}>
                 {PRINCIPLES.map(p => (
                     <button key={p.id} onClick={() => setActivePrinciple(p.id)} style={{
-                        flex: 1, padding: '0.6rem', fontWeight: 800, fontSize: '0.78rem', cursor: 'pointer',
+                        flex: isMobile ? '1 0 auto' : 1,
+                        minWidth: isMobile ? '80px' : 'auto',
+                        padding: isMobile ? '0.4rem 0.6rem' : '0.6rem',
+                        fontWeight: 800,
+                        fontSize: isMobile ? '0.62rem' : '0.78rem',
+                        cursor: 'pointer',
                         background: activePrinciple === p.id ? p.color : 'var(--white)', border: 'none',
                         borderRight: '2px solid var(--border)', fontFamily: 'var(--font-main)', color: 'var(--text)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem',
@@ -976,7 +1016,7 @@ export default function SolidPrinciplesSim() {
                         {activePrinciple === 'ocp' && <OCPSim />}
                         {activePrinciple === 'lsp' && <LSPSim />}
                         {activePrinciple === 'isp' && <ISPSim />}
-                        {activePrinciple === 'dip' && <DIPSim />}
+                        {activePrinciple === 'dip' && <DIPSim isMobile={isMobile} />}
                     </motion.div>
                 </AnimatePresence>
             </div>

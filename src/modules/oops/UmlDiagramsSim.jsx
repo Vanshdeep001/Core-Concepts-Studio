@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
@@ -157,6 +157,14 @@ public class Course {
     const [parsedClasses, setParsedClasses] = useState([]);
     const canvasRef = useRef(null);
 
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const handleDragStart = (id, e) => {
         if (e.button !== 0) return;
         const rect = canvasRef.current?.getBoundingClientRect();
@@ -221,10 +229,23 @@ public class Course {
     /* ── CENTER ── */
     const CENTER = (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', borderBottom: '3px solid var(--border)', flexShrink: 0 }}>
+            <div style={{
+                display: 'flex',
+                borderBottom: '3px solid var(--border)',
+                flexShrink: 0,
+                overflowX: isMobile ? 'auto' : 'visible',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+            }}>
                 {DIAGRAM_TABS.map(t => (
                     <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
-                        flex: 1, padding: '0.55rem', fontWeight: 800, fontSize: '0.72rem', cursor: 'pointer',
+                        flex: isMobile ? '1 0 auto' : 1,
+                        minWidth: isMobile ? '110px' : 'auto',
+                        padding: isMobile ? '0.4rem 0.2rem' : '0.55rem',
+                        fontWeight: 800,
+                        fontSize: isMobile ? '0.65rem' : '0.72rem',
+                        cursor: 'pointer',
                         background: activeTab === t.id ? '#ff8a65' : 'var(--white)', border: 'none',
                         borderRight: '2px solid var(--border)', fontFamily: 'var(--font-main)', color: 'var(--text)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem',
@@ -244,7 +265,7 @@ public class Course {
                             </div>
                         </div>
                         <div ref={canvasRef} onMouseMove={handleDragMove} onMouseUp={handleDragEnd} onMouseLeave={handleDragEnd}
-                            style={{ width: '100%', height: 500, position: 'relative', background: '#0f172a', backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+                            style={{ width: isMobile ? 650 : '100%', height: 500, position: 'relative', background: '#0f172a', backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
                             <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 5 }}>
                                 {renderRelations()}
                             </svg>
@@ -254,8 +275,8 @@ public class Course {
                 )}
 
                 {activeTab === 'code' && (
-                    <div style={{ padding: '1rem', display: 'flex', gap: '1rem', height: '100%' }}>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ padding: '1rem', display: 'flex', gap: '1rem', height: isMobile ? 'auto' : '100%', flexDirection: isMobile ? 'column' : 'row' }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 220 : 'auto' }}>
                             <div style={{ fontSize: '0.7rem', fontWeight: 800, marginBottom: '0.3rem' }}>Paste Java/Python Code:</div>
                             <textarea value={codeInput} onChange={e => setCodeInput(e.target.value)}
                                 style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: '0.72rem', padding: '0.75rem', border: '3px solid var(--border)', borderRadius: '8px', background: '#0f172a', color: '#a8e6cf', resize: 'none' }} />

@@ -13,18 +13,20 @@ function getBranchColor(name, index) {
     return BRANCH_COLORS[(index + 1) % BRANCH_COLORS.length];
 }
 
-export default function CommitGraph({ commits, branches, HEAD, remote, orphanedHashes = [], highlightHash = null }) {
+export default function CommitGraph({ commits, branches, HEAD, remote, orphanedHashes = [], highlightHash = null, isMobile = false }) {
+    const nodeW = isMobile ? 90 : NODE_W;
+    const nodeH = isMobile ? 55 : NODE_H;
     const { nodes, edges, headHash } = computeDAGLayout(commits, branches, HEAD, remote);
 
     if (!nodes.length) {
         return (
             <div style={{
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexDirection: 'column', gap: '0.5rem', opacity: 0.5, padding: '2rem',
-                minHeight: '240px',
+                flexDirection: 'column', gap: '0.5rem', opacity: 0.5, padding: isMobile ? '1rem' : '2rem',
+                minHeight: isMobile ? '160px' : '240px',
             }}>
-                <div style={{ fontSize: '3rem', display: 'flex', justifyContent: 'center' }}><GitBranchIcon size={48} color="var(--cyan)" /></div>
-                <div style={{ fontWeight: 800, fontSize: '0.85rem', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: isMobile ? '2rem' : '3rem', display: 'flex', justifyContent: 'center' }}><GitBranchIcon size={isMobile ? 36 : 48} color="var(--cyan)" /></div>
+                <div style={{ fontWeight: 800, fontSize: isMobile ? '0.75rem' : '0.85rem', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     No commits in DAG yet
                 </div>
                 <div style={{ fontSize: '0.72rem', color: '#666', textAlign: 'center' }}>
@@ -49,7 +51,7 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
     const headBranch = HEAD.type === 'branch' ? HEAD.ref : null;
 
     return (
-        <div style={{ flex: 1, overflow: 'auto', padding: '1rem', background: 'var(--bg)' }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? '0.5rem' : '1rem', background: 'var(--bg)', WebkitOverflowScrolling: 'touch' }}>
             <svg
                 width={canvasW}
                 height={canvasH}
@@ -83,10 +85,10 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                     const toNode = nodes.find(n => n.id === edge.to);
                     if (!fromNode || !toNode) return null;
 
-                    const x1 = fromNode.x + NODE_W / 2;
-                    const y1 = fromNode.y + NODE_H / 2;
-                    const x2 = toNode.x + NODE_W / 2;
-                    const y2 = toNode.y + NODE_H / 2;
+                    const x1 = fromNode.x + nodeW / 2;
+                    const y1 = fromNode.y + nodeH / 2;
+                    const x2 = toNode.x + nodeW / 2;
+                    const y2 = toNode.y + nodeH / 2;
 
                     const isMerge = edge.isMergeEdge;
                     const isRebase = fromNode.commit?.isRebase;
@@ -122,8 +124,8 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                         const isOrphaned = orphanedHashes.includes(node.id);
                         const isHEAD = node.id === headHash;
                         const isHighlighted = node.id === highlightHash;
-                        const cx = node.x + NODE_W / 2;
-                        const cy = node.y + NODE_H / 2;
+                        const cx = node.x + nodeW / 2;
+                        const cy = node.y + nodeH / 2;
 
                         return (
                             <motion.g
@@ -139,9 +141,9 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                 {/* Pulse ring for newly created nodes */}
                                 {isHighlighted && (
                                     <>
-                                        <circle cx={cx} cy={cy} r={38} fill="none" stroke="#ffd93d" strokeWidth={3} opacity={0.8}
+                                        <circle cx={cx} cy={cy} r={isMobile ? 30 : 38} fill="none" stroke="#ffd93d" strokeWidth={3} opacity={0.8}
                                             style={{ animation: 'git-pulse 1s ease-out infinite' }} />
-                                        <circle cx={cx} cy={cy} r={48} fill="none" stroke="#ffd93d" strokeWidth={1.5} opacity={0.4}
+                                        <circle cx={cx} cy={cy} r={isMobile ? 40 : 48} fill="none" stroke="#ffd93d" strokeWidth={1.5} opacity={0.4}
                                             style={{ animation: 'git-pulse 1s ease-out 0.3s infinite' }} />
                                     </>
                                 )}
@@ -149,9 +151,9 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                 <rect
                                     x={node.x}
                                     y={node.y}
-                                    width={NODE_W}
-                                    height={NODE_H}
-                                    rx={8}
+                                    width={nodeW}
+                                    height={nodeH}
+                                    rx={isMobile ? 6 : 8}
                                     fill={node.isMerge ? '#ffe0f0' : node.isRebase ? '#e0f7ff' : 'var(--white)'}
                                     stroke={isHEAD ? '#000' : 'var(--border)'}
                                     strokeWidth={isHEAD ? 3 : 2}
@@ -160,10 +162,10 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
 
                                 {/* Commit hash */}
                                 <text
-                                    x={node.x + NODE_W / 2}
-                                    y={node.y + 15}
+                                    x={node.x + nodeW / 2}
+                                    y={node.y + (isMobile ? 13 : 15)}
                                     textAnchor="middle"
-                                    fontSize="10"
+                                    fontSize={isMobile ? '8' : '10'}
                                     fontFamily="monospace"
                                     fontWeight="700"
                                     fill="#666"
@@ -175,23 +177,23 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
 
                                 {/* Commit message */}
                                 <text
-                                    x={node.x + NODE_W / 2}
-                                    y={node.y + 30}
+                                    x={node.x + nodeW / 2}
+                                    y={node.y + (isMobile ? 25 : 30)}
                                     textAnchor="middle"
-                                    fontSize="11"
+                                    fontSize={isMobile ? '9' : '11'}
                                     fontFamily="sans-serif"
                                     fontWeight="600"
                                     fill="var(--text)"
                                 >
-                                    {node.commit.message.slice(0, 14)}{node.commit.message.length > 14 ? '…' : ''}
+                                    {node.commit.message.slice(0, isMobile ? 10 : 14)}{node.commit.message.length > (isMobile ? 10 : 14) ? '…' : ''}
                                 </text>
 
                                 {/* Timestamp */}
                                 <text
-                                    x={node.x + NODE_W / 2}
-                                    y={node.y + 44}
+                                    x={node.x + nodeW / 2}
+                                    y={node.y + (isMobile ? 36 : 44)}
                                     textAnchor="middle"
-                                    fontSize="9"
+                                    fontSize={isMobile ? '7' : '9'}
                                     fill="#999"
                                 >
                                     {node.commit.timestamp?.slice(11) || ''}
@@ -226,18 +228,20 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                     const displayStr = changeTexts.join(', ');
 
                                     if (changes.length === 0) return null;
+                                    const maxLen = isMobile ? 12 : 18;
+                                    const sliceLen = isMobile ? 10 : 16;
 
                                     return (
                                         <text
-                                            x={node.x + NODE_W / 2}
-                                            y={node.y + 58}
+                                            x={node.x + nodeW / 2}
+                                            y={node.y + (isMobile ? 47 : 58)}
                                             textAnchor="middle"
-                                            fontSize="9"
+                                            fontSize={isMobile ? '7' : '9'}
                                             fontFamily="monospace"
                                             fontWeight="700"
                                             fill={changes[0].type === 'added' ? '#2e7d32' : changes[0].type === 'modified' ? '#0288d1' : '#c62828'}
                                         >
-                                            {displayStr.length > 18 ? `${displayStr.slice(0, 16)}…` : displayStr}
+                                            {displayStr.length > maxLen ? `${displayStr.slice(0, sliceLen)}…` : displayStr}
                                         </text>
                                     );
                                 })()}
@@ -247,9 +251,12 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                     const isCurrentBranch = bl.name === HEAD.ref && HEAD.type === 'branch';
                                     const color = branchColorMap[bl.name] || '#c3aed6';
                                     const isRemote = bl.type === 'remote';
-                                    const labelY = node.y - 20 - bi * 22;
-                                    const approxWidth = Math.max(bl.name.length * 7 + 16, 60);
-                                    const labelX = node.x + NODE_W / 2 - approxWidth / 2;
+                                    const labelY = node.y - (isMobile ? 16 : 20) - bi * (isMobile ? 18 : 22);
+                                    const charW = isMobile ? 6 : 7;
+                                    const padW = isMobile ? 12 : 16;
+                                    const minW = isMobile ? 48 : 60;
+                                    const approxWidth = Math.max(bl.name.length * charW + padW, minW);
+                                    const labelX = node.x + nodeW / 2 - approxWidth / 2;
 
                                     return (
                                         <g key={bi}>
@@ -257,7 +264,7 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                                 x={labelX}
                                                 y={labelY - 12}
                                                 width={approxWidth}
-                                                height={18}
+                                                height={isMobile ? 16 : 18}
                                                 rx={4}
                                                 fill={color}
                                                 stroke={isCurrentBranch ? '#000' : 'var(--border)'}
@@ -266,9 +273,9 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                             />
                                             <text
                                                 x={labelX + approxWidth / 2}
-                                                y={labelY + 1}
+                                                y={labelY + (isMobile ? 0 : 1)}
                                                 textAnchor="middle"
-                                                fontSize="10"
+                                                fontSize={isMobile ? '8' : '10'}
                                                 fontWeight="900"
                                                 fontFamily="monospace"
                                                 fill="#222"
@@ -282,16 +289,16 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                                     <rect
                                                         x={labelX + approxWidth + 10}
                                                         y={labelY - 12}
-                                                        width={36}
-                                                        height={18}
+                                                        width={isMobile ? 30 : 36}
+                                                        height={isMobile ? 16 : 18}
                                                         rx={3}
                                                         fill="#000"
                                                     />
                                                     <text
-                                                        x={labelX + approxWidth + 28}
-                                                        y={labelY + 1}
+                                                        x={labelX + approxWidth + (isMobile ? 25 : 28)}
+                                                        y={labelY + (isMobile ? 0 : 1)}
                                                         textAnchor="middle"
-                                                        fontSize="9"
+                                                        fontSize={isMobile ? '7' : '9'}
                                                         fontWeight="900"
                                                         fill="white"
                                                     >
@@ -301,9 +308,9 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                             )}
                                             {/* connector line */}
                                             <line
-                                                x1={node.x + NODE_W / 2}
+                                                x1={node.x + nodeW / 2}
                                                 y1={labelY + 6}
-                                                x2={node.x + NODE_W / 2}
+                                                x2={node.x + nodeW / 2}
                                                 y2={node.y}
                                                 stroke="var(--border)"
                                                 strokeWidth={1.5}
@@ -317,19 +324,19 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                                 {isHEAD && HEAD.type !== 'branch' && (
                                     <g>
                                         <rect
-                                            x={node.x + NODE_W - 2}
+                                            x={node.x + nodeW - 2}
                                             y={node.y - 2}
-                                            width={36}
+                                            width={isMobile ? 30 : 36}
                                             height={16}
                                             rx={3}
                                             fill="#000"
                                             stroke="none"
                                         />
                                         <text
-                                            x={node.x + NODE_W + 16}
+                                            x={node.x + nodeW + (isMobile ? 13 : 16)}
                                             y={node.y + 10}
                                             textAnchor="middle"
-                                            fontSize="9"
+                                            fontSize={isMobile ? '7' : '9'}
                                             fontWeight="900"
                                             fill="white"
                                         >

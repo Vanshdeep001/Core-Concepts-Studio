@@ -8,17 +8,17 @@ const ALGOS = ['FCFS', 'SSTF', 'SCAN', 'C-SCAN'];
 const TRACK_MAX = 199;
 
 const ALGO_INFO = {
-    FCFS:     { desc: 'Serves requests in arrival order. Simple but causes large head movement.', trade: 'No starvation, but poor performance when requests are scattered.' },
-    SSTF:     { desc: 'Always serves the closest request next. Minimises each individual seek.', trade: 'Can starve distant requests if nearby ones keep arriving.' },
-    SCAN:     { desc: 'Head sweeps end-to-end like an elevator, serving all requests it passes.', trade: 'No starvation. Requests near the middle are favoured.' },
+    FCFS: { desc: 'Serves requests in arrival order. Simple but causes large head movement.', trade: 'No starvation, but poor performance when requests are scattered.' },
+    SSTF: { desc: 'Always serves the closest request next. Minimises each individual seek.', trade: 'Can starve distant requests if nearby ones keep arriving.' },
+    SCAN: { desc: 'Head sweeps end-to-end like an elevator, serving all requests it passes.', trade: 'No starvation. Requests near the middle are favoured.' },
     'C-SCAN': { desc: 'One-directional SCAN — serves one way, then jumps back to start.', trade: 'More uniform wait times than SCAN.' },
 };
 
 /* one accent colour per algorithm, all from the project palette */
 const ALGO_BG = {
-    FCFS:     'var(--cyan)',
-    SSTF:     'var(--pink)',
-    SCAN:     'var(--green)',
+    FCFS: 'var(--cyan)',
+    SSTF: 'var(--pink)',
+    SCAN: 'var(--green)',
     'C-SCAN': 'var(--yellow)',
 };
 
@@ -28,15 +28,15 @@ export default function DiskSchedulingSim() {
     const [algo, setAlgo] = useState('SSTF');
     const [speed, setSpeed] = useState(600);
 
-    const [steps, setSteps]               = useState([]);
-    const [currentStep, setCurrentStep]   = useState(-1);
-    const [isRunning, setIsRunning]       = useState(false);
-    const [isPaused, setIsPaused]         = useState(false);
-    const [isFinished, setIsFinished]     = useState(false);
-    const [isSimMode, setIsSimMode]       = useState(false);
+    const [steps, setSteps] = useState([]);
+    const [currentStep, setCurrentStep] = useState(-1);
+    const [isRunning, setIsRunning] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
+    const [isFinished, setIsFinished] = useState(false);
+    const [isSimMode, setIsSimMode] = useState(false);
 
     const timerRef = useRef(null);
-    const stepRef  = useRef(-1);
+    const stepRef = useRef(-1);
     const stepsRef = useRef([]);
 
     const parseRequests = () =>
@@ -45,10 +45,10 @@ export default function DiskSchedulingSim() {
 
     const runAlgo = (reqs, head) => {
         switch (algo) {
-            case 'SSTF':   return runDiskSSTF(reqs, head);
-            case 'SCAN':   return runDiskSCAN(reqs, head);
+            case 'SSTF': return runDiskSSTF(reqs, head);
+            case 'SCAN': return runDiskSCAN(reqs, head);
             case 'C-SCAN': return runDiskCSCAN(reqs, head);
-            default:       return runDiskFCFS(reqs, head);
+            default: return runDiskFCFS(reqs, head);
         }
     };
 
@@ -70,17 +70,17 @@ export default function DiskSchedulingSim() {
         clearInterval(timerRef.current);
         timerRef.current = setInterval(() => advanceStep(stepsRef.current, stepRef.current), speed);
     };
-    const handlePause  = () => { setIsRunning(false); setIsPaused(true); clearInterval(timerRef.current); };
+    const handlePause = () => { setIsRunning(false); setIsPaused(true); clearInterval(timerRef.current); };
     const handleResume = () => {
         setIsRunning(true); setIsPaused(false);
         timerRef.current = setInterval(() => advanceStep(stepsRef.current, stepRef.current), speed);
     };
-    const handleReset  = () => {
+    const handleReset = () => {
         clearInterval(timerRef.current); setSteps([]); stepsRef.current = [];
         setCurrentStep(-1); stepRef.current = -1;
         setIsRunning(false); setIsPaused(false); setIsFinished(false); setIsSimMode(false);
     };
-    const handleStep   = () => {
+    const handleStep = () => {
         setIsSimMode(true);
         if (stepsRef.current.length === 0) {
             const reqs = parseRequests();
@@ -90,11 +90,11 @@ export default function DiskSchedulingSim() {
         advanceStep(stepsRef.current, stepRef.current);
     };
 
-    const reqs      = parseRequests();
-    const curStep   = currentStep >= 0 ? steps[currentStep] : null;
-    const headPos   = curStep ? curStep.target : initialHead;
-    const headPct   = (headPos / TRACK_MAX) * 100;
-    const accentBg  = ALGO_BG[algo] || 'var(--cyan)';
+    const reqs = parseRequests();
+    const curStep = currentStep >= 0 ? steps[currentStep] : null;
+    const headPos = curStep ? curStep.target : initialHead;
+    const headPct = (headPos / TRACK_MAX) * 100;
+    const accentBg = ALGO_BG[algo] || 'var(--cyan)';
 
     const visited = [{ pos: initialHead }];
     for (let i = 0; i <= currentStep && i < steps.length; i++) {
@@ -478,9 +478,9 @@ export default function DiskSchedulingSim() {
             centerContent={CENTER} leftContent={LEFT} rightContent={RIGHT}
             timelineItems={TL}
             legend={[
-                { color: accentBg,       label: 'Head' },
-                { color: 'var(--cyan)',   label: 'Pending' },
-                { color: 'var(--green)',  label: 'Served' },
+                { color: accentBg, label: 'Head' },
+                { color: 'var(--cyan)', label: 'Pending' },
+                { color: 'var(--green)', label: 'Served' },
             ]}
         >
             {/* ── CONFIG SCREEN ── */}

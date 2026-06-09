@@ -5,6 +5,12 @@ import { InboxIcon, GlobeIcon, CpuIcon, SignalIcon } from '../../components/Icon
 
 export default function MessageQueueSim() {
     const [queue, setQueue] = useState([]); // Pending messages: { id, content, retries: 0 }
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const h = () => setIsMobile(window.innerWidth < 768);
+        h(); window.addEventListener('resize', h);
+        return () => window.removeEventListener('resize', h);
+    }, []);
     const [dlq, setDlq] = useState([]); // Dead letter queue messages
     
     // Sliders
@@ -474,7 +480,7 @@ export default function MessageQueueSim() {
                 </div>
             }
             centerContent={
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fafafa', overflowY: 'auto', padding: '1rem' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fafafa', overflowY: 'auto', padding: isMobile ? '0.5rem' : '1rem' }}>
                     
                     <style>{`
                         @keyframes marching-ants {
@@ -557,7 +563,7 @@ export default function MessageQueueSim() {
                     </div>
 
                     {/* Canvas containing nodes and wires */}
-                    <div style={{ flex: 1, minHeight: '520px', position: 'relative', background: '#fff', border: '2.5px solid var(--border)', borderRadius: '8px', boxShadow: '4px 4px 0 var(--border)', overflow: 'hidden' }}>
+                    <div style={{ flex: 1, minHeight: isMobile ? '600px' : '520px', position: 'relative', background: '#fff', border: '2.5px solid var(--border)', borderRadius: '8px', boxShadow: '4px 4px 0 var(--border)', overflow: isMobile ? 'auto' : 'hidden', WebkitOverflowScrolling: 'touch' }}>
                         
                         {isFinished && (
                             <div style={{
@@ -591,7 +597,8 @@ export default function MessageQueueSim() {
                         <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
                             {/* Producer -> Queue */}
                             <line 
-                                x1="15%" y1="40%" x2="31%" y2="40%" 
+                                x1={isMobile ? "50%" : "15%"} y1={isMobile ? "18%" : "40%"} 
+                                x2={isMobile ? "50%" : "31%"} y2={isMobile ? "50%" : "40%"} 
                                 stroke="var(--border)" 
                                 strokeWidth="2"
                                 strokeDasharray="4 4"
@@ -600,7 +607,8 @@ export default function MessageQueueSim() {
                             />
                             {isLineActive('producer', 'queue') && (
                                 <line 
-                                    x1="15%" y1="40%" x2="31%" y2="40%" 
+                                    x1={isMobile ? "50%" : "15%"} y1={isMobile ? "18%" : "40%"} 
+                                    x2={isMobile ? "50%" : "31%"} y2={isMobile ? "50%" : "40%"} 
                                     stroke="var(--green)" 
                                     strokeWidth="3.5"
                                     strokeDasharray="6 4"
@@ -610,7 +618,8 @@ export default function MessageQueueSim() {
 
                             {/* Queue -> Consumer */}
                             <line 
-                                x1="69%" y1="40%" x2="85%" y2="40%" 
+                                x1={isMobile ? "50%" : "69%"} y1={isMobile ? "50%" : "40%"} 
+                                x2={isMobile ? "50%" : "85%"} y2={isMobile ? "82%" : "40%"} 
                                 stroke="var(--border)" 
                                 strokeWidth="2"
                                 strokeDasharray="4 4"
@@ -619,7 +628,8 @@ export default function MessageQueueSim() {
                             />
                             {isLineActive('queue', 'consumer') && (
                                 <line 
-                                    x1="69%" y1="40%" x2="85%" y2="40%" 
+                                    x1={isMobile ? "50%" : "69%"} y1={isMobile ? "50%" : "40%"} 
+                                    x2={isMobile ? "50%" : "85%"} y2={isMobile ? "82%" : "40%"} 
                                     stroke="var(--green)" 
                                     strokeWidth="3.5"
                                     strokeDasharray="6 4"
@@ -629,7 +639,8 @@ export default function MessageQueueSim() {
 
                             {/* Consumer -> Queue (Retry Path) */}
                             <line 
-                                x1="85%" y1="44%" x2="31%" y2="44%" 
+                                x1={isMobile ? "46%" : "85%"} y1={isMobile ? "82%" : "44%"} 
+                                x2={isMobile ? "46%" : "31%"} y2={isMobile ? "50%" : "44%"} 
                                 stroke="var(--border)" 
                                 strokeWidth="2"
                                 strokeDasharray="4 4"
@@ -638,7 +649,8 @@ export default function MessageQueueSim() {
                             />
                             {isLineActive('consumer', 'queue') && (
                                 <line 
-                                    x1="85%" y1="44%" x2="31%" y2="44%" 
+                                    x1={isMobile ? "46%" : "85%"} y1={isMobile ? "82%" : "44%"} 
+                                    x2={isMobile ? "46%" : "31%"} y2={isMobile ? "50%" : "44%"} 
                                     stroke="var(--green)" 
                                     strokeWidth="3.5"
                                     strokeDasharray="6 4"
@@ -652,12 +664,12 @@ export default function MessageQueueSim() {
                         {/* Producer Node */}
                         <div style={{
                             position: 'absolute',
-                            left: '15%',
-                            top: '40%',
+                            left: isMobile ? '50%' : '15%',
+                            top: isMobile ? '18%' : '40%',
                             transform: 'translate(-50%, -50%)',
                             border: '3px solid var(--border)',
                             background: 'var(--yellow)',
-                            width: 150,
+                            width: isMobile ? 120 : 150,
                             padding: '0.8rem',
                             borderRadius: '8px',
                             boxShadow: '4px 4px 0 var(--border)',
@@ -685,9 +697,9 @@ export default function MessageQueueSim() {
                         <div style={{
                             position: 'absolute',
                             left: '50%',
-                            top: '40%',
+                            top: isMobile ? '50%' : '40%',
                             transform: 'translate(-50%, -50%)',
-                            width: '38%',
+                            width: isMobile ? '85%' : '38%',
                             zIndex: 2,
                             display: 'flex',
                             flexDirection: 'column',
@@ -752,19 +764,19 @@ export default function MessageQueueSim() {
                         {/* Consumer Node */}
                         <div style={{
                             position: 'absolute',
-                            left: '85%',
-                            top: '40%',
+                            left: isMobile ? '50%' : '85%',
+                            top: isMobile ? '82%' : '40%',
                             transform: 'translate(-50%, -50%)',
                             border: '3px solid var(--border)',
                             background: 'var(--green)',
-                            width: 160,
+                            width: isMobile ? 130 : 160,
                             padding: '0.6rem 0.8rem',
                             borderRadius: '8px',
                             boxShadow: '4px 4px 0 var(--border)',
                             zIndex: 2,
                             textAlign: 'center'
                         }}>
-                            <div style={{ fontWeight: 800, fontSize: '0.72rem', borderBottom: '1.5px solid var(--border)', paddingBottom: '0.2rem', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
+                            <div style={{ fontWeight: 800, fontSize: '0.72rem', borderBottom: '1.5px solid var(--border)', paddingBottom: '0.2rem', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'center' }}>
                                 <CpuIcon size={14} />
                                 CONSUMER
                             </div>
@@ -816,22 +828,22 @@ export default function MessageQueueSim() {
                                 let label = pkt.content;
 
                                 if (pkt.status === 'producer-to-queue') {
-                                    initialX = '15%';
-                                    initialY = '40%';
-                                    animateX = '31%';
-                                    animateY = '40%';
+                                    initialX = isMobile ? '50%' : '15%';
+                                    initialY = isMobile ? '18%' : '40%';
+                                    animateX = isMobile ? '50%' : '31%';
+                                    animateY = isMobile ? '50%' : '40%';
                                     pillColor = 'var(--yellow)';
                                 } else if (pkt.status === 'queue-to-consumer') {
-                                    initialX = '69%';
-                                    initialY = '40%';
-                                    animateX = '85%';
-                                    animateY = '40%';
+                                    initialX = isMobile ? '50%' : '69%';
+                                    initialY = isMobile ? '50%' : '40%';
+                                    animateX = isMobile ? '50%' : '85%';
+                                    animateY = isMobile ? '82%' : '40%';
                                     pillColor = 'var(--cyan)';
                                 } else if (pkt.status === 'consumer-to-queue') {
-                                    initialX = '85%';
-                                    initialY = '44%';
-                                    animateX = '31%';
-                                    animateY = '44%';
+                                    initialX = isMobile ? '46%' : '85%';
+                                    initialY = isMobile ? '82%' : '44%';
+                                    animateX = isMobile ? '46%' : '31%';
+                                    animateY = isMobile ? '50%' : '44%';
                                     pillColor = 'var(--pink)';
                                     textColor = '#fff';
                                     label = `RETRY ${pkt.content}`;

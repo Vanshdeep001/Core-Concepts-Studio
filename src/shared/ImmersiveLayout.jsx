@@ -52,6 +52,14 @@ export default function ImmersiveLayout({
 }) {
     const [leftOpen, setLeftOpen] = useState(false);
     const [rightOpen, setRightOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Lock body scroll in simulation mode
     useEffect(() => {
@@ -79,6 +87,7 @@ export default function ImmersiveLayout({
         <AnimatePresence>
             <motion.div
                 key="immersive"
+                className="immersive-layout-container"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 style={{
@@ -94,102 +103,175 @@ export default function ImmersiveLayout({
                 }}
             >
                 {/* ─── TOP BAR (Fixed height: 72px) ─── */}
-                <header style={{
-                    height: 72,
+                <header className="immersive-header" style={{
+                    height: isMobile ? 'auto' : 72,
                     flexShrink: 0,
                     background: 'var(--yellow)',
                     borderBottom: '3px solid var(--border)',
                     display: 'flex',
-                    alignItems: 'center',
-                    padding: '0 1.25rem',
-                    gap: '1rem',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'stretch' : 'center',
+                    padding: isMobile ? '0.6rem 0.8rem' : '0 1.25rem',
+                    gap: isMobile ? '0.5rem' : '1rem',
                     boxShadow: '0 3px 0 var(--border)',
                     zIndex: 10,
                 }}>
-                    {/* Title & Module */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginRight: '0.5rem' }}>
-                        <div style={{
-                            width: 40, height: 40, background: 'var(--white)',
-                            border: '2px solid var(--border)', borderRadius: '8px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '1.4rem', boxShadow: '2px 2px 0 var(--border)'
-                        }}>
-                            {icon}
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)', lineHeight: 1 }}>{title}</span>
-                            <span style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.2rem' }}>{moduleLabel}</span>
-                        </div>
-                    </div>
-
-                    <div style={{ width: 2, height: 32, background: 'rgba(0,0,0,0.1)', flexShrink: 0 }} />
-
-                    {/* Progress Detail */}
-                    {!hideControls ? (
-                        <div style={{ display: 'flex', flex: 1, alignItems: 'center', gap: '1.5rem', minWidth: 0 }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                                <span style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4 }}>Step Progress</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.9rem' }}>{currentStepNum}/{totalSteps}</span>
-                                    <div style={{ width: 120, height: 10, background: 'rgba(0,0,0,0.1)', border: '2px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
-                                        <motion.div
-                                            animate={{ width: `${progress}%` }}
-                                            style={{ height: '100%', background: 'var(--text)' }}
-                                        />
+                    {isMobile ? (
+                        <>
+                            {/* Mobile Layout */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div className="immersive-brand-group" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                    {icon && (
+                                        <div style={{
+                                            width: 34, height: 34, background: 'var(--white)',
+                                            border: '2px solid var(--border)', borderRadius: '6px',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: '1.1rem', boxShadow: '2px 2px 0 var(--border)', flexShrink: 0
+                                        }}>
+                                            {icon}
+                                        </div>
+                                    )}
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)', lineHeight: 1.1 }}>{title}</span>
+                                        <span style={{ fontSize: '0.55rem', fontWeight: 700, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.1rem' }}>{moduleLabel}</span>
                                     </div>
                                 </div>
+
+                                <button
+                                    className="immersive-exit"
+                                    onClick={onReset}
+                                    style={{
+                                        width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        borderRadius: '50%', background: 'rgba(0,0,0,0.1)', border: 'none', cursor: 'pointer', fontWeight: 900
+                                    }}
+                                >✕</button>
                             </div>
-                        </div>
+
+                            {/* Row 2: Controls & Speeds */}
+                            {!hideControls && (
+                                <div className="immersive-controls" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', width: '100%' }}>
+                                    <div className="immersive-actions" style={{ display: 'flex', background: 'rgba(0,0,0,0.05)', padding: '0.2rem', borderRadius: '8px', border: '2px solid var(--border)' }}>
+                                        {notStarted ? (
+                                            <button className="btn btn-sm" style={{ background: 'var(--green)', color: 'white' }} onClick={onStart}>▶ START</button>
+                                        ) : (
+                                            <>
+                                                <button className="btn btn-sm" style={{ background: isPaused ? 'var(--green)' : 'var(--white)', minWidth: 36, padding: '0.2rem 0.5rem' }} onClick={isPaused ? onResume : onPause}>
+                                                    {isPaused ? '▶' : '⏸'}
+                                                </button>
+                                                <button className="btn btn-sm" style={{ background: 'var(--white)', minWidth: 36, padding: '0.2rem 0.5rem' }} onClick={onStep} disabled={isFinished}>⏭</button>
+                                            </>
+                                        )}
+                                        <button className="btn btn-sm" style={{ background: 'var(--white)', marginLeft: '0.2rem', padding: '0.2rem 0.5rem' }} onClick={onReset}>↺</button>
+                                    </div>
+
+                                    {/* Speed Selection */}
+                                    <div className="immersive-speed" style={{ display: 'flex', border: '2px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
+                                        {SPEED_OPTIONS.map(opt => (
+                                            <button key={opt.ms}
+                                                onClick={() => onSpeedChange(opt.ms)}
+                                                style={{
+                                                    padding: '0.35rem 0.45rem', fontSize: '0.62rem', fontWeight: 700,
+                                                    background: speed === opt.ms ? 'var(--cyan)' : 'var(--white)',
+                                                    border: 'none', borderRight: '1px solid var(--border)',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     ) : (
-                        <div style={{ flex: 1 }} />
-                    )}
-
-                    {/* Scenario Picker (optional) */}
-                    {!hideControls && scenarioPicker}
-
-                    {/* Controls */}
-                    {!hideControls && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-                            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.05)', padding: '0.25rem', borderRadius: '8px', border: '2px solid var(--border)', marginRight: '0.5rem' }}>
-                                {notStarted ? (
-                                    <button className="btn btn-sm" style={{ background: 'var(--green)', color: 'white' }} onClick={onStart}>▶ START</button>
-                                ) : (
-                                    <>
-                                        <button className="btn btn-sm" style={{ background: isPaused ? 'var(--green)' : 'var(--white)', minWidth: 40 }} onClick={isPaused ? onResume : onPause}>
-                                            {isPaused ? '▶' : '⏸'}
-                                        </button>
-                                        <button className="btn btn-sm" style={{ background: 'var(--white)', minWidth: 40 }} onClick={onStep} disabled={isFinished}>⏭</button>
-                                    </>
-                                )}
-                                <button className="btn btn-sm" style={{ background: 'var(--white)', marginLeft: '0.25rem' }} onClick={onReset}>↺</button>
+                        <>
+                            {/* Title & Module */}
+                            <div className="immersive-brand-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginRight: '0.5rem' }}>
+                                <div style={{
+                                    width: 40, height: 40, background: 'var(--white)',
+                                    border: '2px solid var(--border)', borderRadius: '8px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '1.4rem', boxShadow: '2px 2px 0 var(--border)'
+                                }}>
+                                    {icon}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)', lineHeight: 1 }}>{title}</span>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.2rem' }}>{moduleLabel}</span>
+                                </div>
                             </div>
 
-                            {/* Speed Selection */}
-                            <div style={{ display: 'flex', border: '2px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
-                                {SPEED_OPTIONS.map(opt => (
-                                    <button key={opt.ms}
-                                        onClick={() => onSpeedChange(opt.ms)}
-                                        style={{
-                                            padding: '0.35rem 0.6rem', fontSize: '0.7rem', fontWeight: 700,
-                                            background: speed === opt.ms ? 'var(--cyan)' : 'var(--white)',
-                                            border: 'none', borderRight: '1px solid var(--border)',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        {opt.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                            <div className="immersive-divider" style={{ width: 2, height: 32, background: 'rgba(0,0,0,0.1)', flexShrink: 0 }} />
 
-                    <button
-                        onClick={onReset}
-                        style={{
-                            marginLeft: '0.5rem', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            borderRadius: '50%', background: 'rgba(0,0,0,0.1)', border: 'none', cursor: 'pointer', fontWeight: 900
-                        }}
-                    >✕</button>
+                            {/* Progress Detail */}
+                            {!hideControls ? (
+                                <div className="immersive-progress" style={{ display: 'flex', flex: 1, alignItems: 'center', gap: '1.5rem', minWidth: 0 }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                                        <span style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.4 }}>Step Progress</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.9rem' }}>{currentStepNum}/{totalSteps}</span>
+                                            <div className="immersive-progress-bar-wrap" style={{ width: 120, height: 10, background: 'rgba(0,0,0,0.1)', border: '2px solid var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
+                                                <motion.div
+                                                    animate={{ width: `${progress}%` }}
+                                                    style={{ height: '100%', background: 'var(--text)' }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ flex: 1 }} />
+                            )}
+
+                            {/* Scenario Picker (optional) */}
+                            {!hideControls && scenarioPicker}
+
+                            {/* Controls */}
+                            {!hideControls && (
+                                <div className="immersive-controls" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                                    <div className="immersive-actions" style={{ display: 'flex', background: 'rgba(0,0,0,0.05)', padding: '0.25rem', borderRadius: '8px', border: '2px solid var(--border)', marginRight: '0.5rem' }}>
+                                        {notStarted ? (
+                                            <button className="btn btn-sm" style={{ background: 'var(--green)', color: 'white' }} onClick={onStart}>▶ START</button>
+                                        ) : (
+                                            <>
+                                                <button className="btn btn-sm" style={{ background: isPaused ? 'var(--green)' : 'var(--white)', minWidth: 40 }} onClick={isPaused ? onResume : onPause}>
+                                                    {isPaused ? '▶' : '⏸'}
+                                                </button>
+                                                <button className="btn btn-sm" style={{ background: 'var(--white)', minWidth: 40 }} onClick={onStep} disabled={isFinished}>⏭</button>
+                                            </>
+                                        )}
+                                        <button className="btn btn-sm" style={{ background: 'var(--white)', marginLeft: '0.25rem' }} onClick={onReset}>↺</button>
+                                    </div>
+
+                                    {/* Speed Selection */}
+                                    <div className="immersive-speed" style={{ display: 'flex', border: '2px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
+                                        {SPEED_OPTIONS.map(opt => (
+                                            <button key={opt.ms}
+                                                onClick={() => onSpeedChange(opt.ms)}
+                                                style={{
+                                                    padding: '0.35rem 0.6rem', fontSize: '0.7rem', fontWeight: 700,
+                                                    background: speed === opt.ms ? 'var(--cyan)' : 'var(--white)',
+                                                    border: 'none', borderRight: '1px solid var(--border)',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <button
+                                className="immersive-exit"
+                                onClick={onReset}
+                                style={{
+                                    marginLeft: '0.5rem', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    borderRadius: '50%', background: 'rgba(0,0,0,0.1)', border: 'none', cursor: 'pointer', fontWeight: 900
+                                }}
+                            >✕</button>
+                        </>
+                    )}
                 </header>
 
                 {/* ─── MAIN CONTENT AREA ─── */}
@@ -197,12 +279,19 @@ export default function ImmersiveLayout({
 
                     {/* LEFT PANEL: System States */}
                     <motion.aside
-                        animate={{ width: leftOpen ? '22%' : 0 }}
+                        animate={{ width: leftOpen ? (isMobile ? '280px' : '22%') : 0 }}
                         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                         style={{
                             borderRight: leftOpen ? '3px solid var(--border)' : 'none',
                             display: 'flex', flexDirection: 'column', background: 'var(--white)',
                             overflow: 'hidden', flexShrink: 0,
+                            position: isMobile ? 'absolute' : 'relative',
+                            left: 0,
+                            top: 0,
+                            bottom: 0,
+                            height: isMobile ? '100%' : 'auto',
+                            zIndex: 15,
+                            boxShadow: isMobile && leftOpen ? '5px 0 15px rgba(0,0,0,0.3)' : 'none',
                         }}
                     >
                         <div style={{
@@ -268,6 +357,7 @@ export default function ImmersiveLayout({
                         background: 'var(--white)',
                         borderLeft: '1px solid var(--border)',
                         borderRight: '1px solid var(--border)',
+                        position: 'relative'
                     }}>
                         {centerContent}
                     </section>
@@ -306,12 +396,19 @@ export default function ImmersiveLayout({
 
                     {/* RIGHT PANEL: Educational/Explanations */}
                     <motion.aside
-                        animate={{ width: rightOpen ? '22%' : 0 }}
+                        animate={{ width: rightOpen ? (isMobile ? '280px' : '22%') : 0 }}
                         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                         style={{
                             borderLeft: rightOpen ? '3px solid var(--border)' : 'none',
                             display: 'flex', flexDirection: 'column', background: 'var(--white)',
-                            overflow: 'hidden', flexShrink: 0
+                            overflow: 'hidden', flexShrink: 0,
+                            position: isMobile ? 'absolute' : 'relative',
+                            right: 0,
+                            top: 0,
+                            bottom: 0,
+                            height: isMobile ? '100%' : 'auto',
+                            zIndex: 15,
+                            boxShadow: isMobile && rightOpen ? '-5px 0 15px rgba(0,0,0,0.3)' : 'none',
                         }}
                     >
                         <div style={{
@@ -340,8 +437,8 @@ export default function ImmersiveLayout({
                 </main>
 
                 {/* ─── BOTTOM BAR (Fixed height: 80px) ─── */}
-                {!hideFooter && (
-                    <footer style={{
+                {!hideFooter && !isMobile && (
+                    <footer className="immersive-footer" style={{
                         height: 80,
                         flexShrink: 0,
                         background: 'var(--white)',
