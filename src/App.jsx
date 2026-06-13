@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, useLocation, Link } from 'react-router-do
 import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import Loader from './components/Loader';
+import ScrollToTop from './components/ScrollToTop';
+
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -45,6 +47,9 @@ import UmlDiagramsSim from './modules/oops/UmlDiagramsSim';
 import GitLanding from './modules/git/GitLanding';
 import GitSim from './modules/git/GitSim';
 
+// Interview Module
+import InterviewSim from './modules/interview/InterviewSim';
+
 // System Design Module
 import SystemDesignLanding from './modules/systemdesign/SystemDesignLanding';
 import LoadBalancerSim from './modules/systemdesign/LoadBalancerSim';
@@ -60,6 +65,7 @@ const MODULE_LABELS = {
   '/networks': 'Networks',
   '/oops': 'OOP',
   '/git': 'Git',
+  '/interview': 'Interview',
 };
 
 function Footer() {
@@ -127,6 +133,9 @@ function AppContent() {
           <Route path="/oops/solid" element={<SolidPrinciplesSim />} />
           <Route path="/oops/uml" element={<UmlDiagramsSim />} />
 
+          {/* Interview Module */}
+          <Route path="/interview" element={<InterviewSim />} />
+
           {/* Git Module */}
           <Route path="/git" element={<GitLanding />} />
           <Route path="/git/sim" element={<GitSim />} />
@@ -153,6 +162,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <AppContent />
       </BrowserRouter>
     </ThemeProvider>

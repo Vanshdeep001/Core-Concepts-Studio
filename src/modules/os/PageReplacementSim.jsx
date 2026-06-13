@@ -2,8 +2,10 @@ import { useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { runFIFO, runLRU, runOptimal, runLFU } from './pageReplacement';
 import { FileIcon, CircleFilled, TrendUpIcon, AlertIcon, TargetIcon, GearIcon, ClipboardIcon, LightbulbIcon } from '../../components/Icons';
+import DownloadNotes from '../../components/DownloadNotes';
 
 const ALGOS = ['FIFO', 'LRU', 'Optimal', 'LFU'];
 
@@ -40,6 +42,25 @@ export default function PageReplacementSim() {
     const timerRef = useRef(null);
     const stepRef = useRef(-1);
     const stepsRef = useRef([]);
+
+    useSnapshot(useCallback((config, step) => {
+        if (config.refInput !== undefined) setRefInput(config.refInput);
+        if (config.frames !== undefined) setFrames(config.frames);
+        if (config.algo !== undefined) setAlgo(config.algo);
+
+        const refs = config.refInput.trim().split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+        const fn = config.algo === 'FIFO' ? runFIFO : config.algo === 'LRU' ? runLRU : config.algo === 'Optimal' ? runOptimal : runLFU;
+        const result = fn(refs, config.frames);
+        const s = result.steps || [];
+
+        stepsRef.current = s;
+        setSteps(s);
+        setCurrentStep(step);
+        stepRef.current = step;
+        setIsSimMode(true);
+        setIsPaused(true);
+        setIsRunning(false);
+    }, []));
 
     const buildSteps = () => {
         const refs = refInput.trim().split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
@@ -230,6 +251,8 @@ export default function PageReplacementSim() {
             <div style={{ fontWeight: 700, fontSize: '1rem' }}>{algo}</div>
             <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.5 }}>Frames</div>
             <div style={{ fontWeight: 700, fontSize: '1rem' }}>{frames}</div>
+        
+            <DownloadNotes topicKey="os/page-replacement" />
         </div>
     );
 
@@ -308,6 +331,10 @@ export default function PageReplacementSim() {
             legend={LEGEND}
             conceptMode={conceptMode}
             onConceptModeToggle={() => setConceptMode(!conceptMode)}
+            snapshotData={{
+                config: { refInput, frames, algo },
+                step: currentStep
+            }}
         >
             {/* Config Mode */}
             <div className="main-content">

@@ -2,7 +2,9 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { BoxIcon, TerminalIcon, SyncIcon, ChartIcon, LightbulbIcon } from '../../components/Icons';
+import DownloadNotes from '../../components/DownloadNotes';
 
 /* ── CONSTANTS ── */
 const DIAGRAM_TABS = [
@@ -327,6 +329,8 @@ public class Course {
                     </div>
                 ))}
             </div>
+        
+            <DownloadNotes topicKey="oops/uml" />
         </div>
     );
 
@@ -353,8 +357,23 @@ public class Course {
         </div>
     );
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.activeTab !== undefined) setActiveTab(config.activeTab);
+        if (config.selectedPrebuilt !== undefined) setSelectedPrebuilt(config.selectedPrebuilt);
+        if (config.codeInput !== undefined) setCodeInput(config.codeInput);
+
+        setTimeout(() => {
+
+        }, 50);
+    }, []));
+
     return (
-        <ImmersiveLayout isActive={true} title="UML Diagrams" icon={<ChartIcon size={22} />} moduleLabel="OOP MODULE"
+        <ImmersiveLayout isActive={true}
+            snapshotData={{
+                config: { activeTab, selectedPrebuilt, codeInput },
+                step: 0
+            }} title="UML Diagrams" icon={<ChartIcon size={22} />} moduleLabel="OOP MODULE"
             hideControls={true}
             isRunning={false} isPaused={false} isFinished={false} speed={speed} onSpeedChange={setSpeed}
             onStart={() => {}} onPause={() => {}} onResume={() => {}} onStep={() => {}}

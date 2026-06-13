@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import DownloadNotes from '../../components/DownloadNotes';
+
 import {
     DiamondIcon,
     FactoryIcon,
@@ -1774,7 +1776,8 @@ export default function DesignPatternsSim() {
             <div style={{ fontSize: '0.72rem', fontWeight: 700 }}>
                 {activePattern === 'singleton' || activePattern === 'factory' ? 'Creational' : activePattern === 'decorator' ? 'Structural' : 'Behavioral'}
             </div>
-        </div>
+        
+            <DownloadNotes topicKey="oops/patterns" /></div>
     );
 
     const ActiveIcon = active?.icon;

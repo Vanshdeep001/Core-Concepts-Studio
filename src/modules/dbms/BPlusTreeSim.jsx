@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { TreeIcon, SearchIcon, ZapIcon, CrownIcon } from '../../components/Icons';
 
 export default function BPlusTreeSim() {
@@ -294,9 +295,28 @@ export default function BPlusTreeSim() {
         }, 120);
     };
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.keys !== undefined) setKeys(config.keys);
+        if (config.searchKey !== undefined) setSearchKey(config.searchKey);
+        if (config.indexType !== undefined) setIndexType(config.indexType);
+
+        setTimeout(() => {
+            if (step !== undefined) setSearchPath(step);
+            setIsRunning(false);
+            setIsPaused(true);
+            if (config.comparisons !== undefined) setComparisons(config.comparisons);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { keys, searchKey, indexType },
+                step: searchPath
+            }}
             title="B+ Tree Indexing" icon={<TreeIcon size={22} />} moduleLabel="DBMS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WrenchIcon, BlueprintIcon, ChartIcon, BuildIcon } from '../../components/Icons';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
+import DownloadNotes from '../../components/DownloadNotes';
 import {
     LockIcon, EyeIcon, PillarIcon, ShuffleIcon,
     ZapIcon, KeyIcon, CheckIcon, XIcon, UnlockIcon,
@@ -1032,6 +1034,8 @@ export default function FourPillarsSim() {
             <div style={{ borderTop: `1px solid ${CARD_BORDER}`, paddingTop: '0.5rem', marginTop: '0.5rem' }}>
                 <UMLPanel parentClass={parentClass} childClasses={childClasses} activePillar={activePillar} />
             </div>
+        
+            <DownloadNotes topicKey="oops/pillars" />
         </div>
     );
 
@@ -1091,8 +1095,25 @@ export default function FourPillarsSim() {
         </div>
     );
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.activePillar !== undefined) setActivePillar(config.activePillar);
+        if (config.parentClass !== undefined) setParentClass(config.parentClass);
+        if (config.childClasses !== undefined) setChildClasses(config.childClasses);
+        if (config.showGetters !== undefined) setShowGetters(config.showGetters);
+        if (config.codeLang !== undefined) setCodeLang(config.codeLang);
+
+        setTimeout(() => {
+
+        }, 50);
+    }, []));
+
     return (
-        <ImmersiveLayout isActive={true} title="Four Pillars of OOP" icon={<PillarIcon size={22} />} moduleLabel="OOP MODULE"
+        <ImmersiveLayout isActive={true}
+            snapshotData={{
+                config: { activePillar, parentClass, childClasses, showGetters, codeLang },
+                step: 0
+            }} title="Four Pillars of OOP" icon={<PillarIcon size={22} />} moduleLabel="OOP MODULE"
             hideControls={true}
             isRunning={false} isPaused={false} isFinished={false} speed={speed} onSpeedChange={setSpeed}
             onStart={() => {}} onPause={() => {}} onResume={() => {}} onReset={reset}

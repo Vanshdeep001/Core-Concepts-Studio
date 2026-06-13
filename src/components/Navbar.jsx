@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { MonitorIcon, DatabaseIcon, GlobeIcon, CubeIcon, GitBranchIcon, LayersIcon } from './Icons';
+import { MonitorIcon, DatabaseIcon, GlobeIcon, CubeIcon, GitBranchIcon, LayersIcon, UsersIcon } from './Icons';
 
 const MODULE_LABELS = {
     '/os': { label: 'OS', icon: MonitorIcon, color: 'var(--yellow)' },
@@ -8,6 +8,7 @@ const MODULE_LABELS = {
     '/oops': { label: 'OOP', icon: CubeIcon, color: 'var(--green)' },
     '/git': { label: 'Git', icon: GitBranchIcon, color: 'var(--green)' },
     '/systemdesign': { label: 'Sys Design', icon: LayersIcon, color: 'var(--green)' },
+    '/interview': { label: 'Interview', icon: UsersIcon, color: 'var(--purple)' },
 };
 
 export default function Navbar() {
@@ -70,6 +71,9 @@ export default function Navbar() {
                     </NavLink>
                     <NavLink to="/systemdesign" className={({ isActive }) => `nav-link${location.pathname.startsWith('/systemdesign') ? ' active' : ''}`}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>{LayersIcon({ size: 14 })} SD</span>
+                    </NavLink>
+                    <NavLink to="/interview" className={({ isActive }) => `nav-link${location.pathname.startsWith('/interview') ? ' active' : ''}`}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>{UsersIcon({ size: 14 })} Interview</span>
                     </NavLink>
                 </div>
             </div>

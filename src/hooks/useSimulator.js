@@ -69,6 +69,22 @@ export default function useSimulator() {
         intervalRef.current = setInterval(runTick, SPEEDS[speed] ?? 1000);
     }, [speed, runTick]);
 
+    // ── Restore simulation ──
+    const restoreSimulation = useCallback((processList, algorithm, quantum, cores, stepNum) => {
+        clearInterval(intervalRef.current);
+        let current = createInitialState(processList, algorithm, quantum, cores);
+        for (let i = 0; i < stepNum; i++) {
+            if (current.isFinished) break;
+            current = tick(current);
+        }
+        stateRef.current = current;
+        setSimState(current);
+        setFinalMetrics(null);
+        setIsRunning(false);
+        setIsPaused(true);
+        setConfig({ processList, algorithm, quantum, cores });
+    }, []);
+
     // ── Pause ──
     const pauseSimulation = useCallback(() => {
         clearInterval(intervalRef.current);
@@ -128,6 +144,7 @@ export default function useSimulator() {
         speed,
         finalMetrics,
         startSimulation,
+        restoreSimulation,
         pauseSimulation,
         resumeSimulation,
         resetSimulation,

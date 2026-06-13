@@ -2,7 +2,9 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { GlobeIcon, LaptopIcon, SyncIcon, ClipboardIcon, CheckIcon, OutboxIcon, InboxIcon, KeyIcon, LockIcon, AlertIcon, SaveIcon, ChartIcon, BoxIcon, ClockIcon } from '../../components/Icons';
+import DownloadNotes from '../../components/DownloadNotes';
 
 /* ════════════════════════════════════════
    DATA — DNS chain, TLS panels, status codes
@@ -1093,6 +1095,8 @@ export default function HttpDnsSim() {
                     <div style={{ padding: '0.25rem 0.4rem', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>{s.val}</div>
                 </div>
             ))}
+        
+            <DownloadNotes topicKey="networks/http-dns" />
         </div>
     );
 
@@ -1146,9 +1150,28 @@ export default function HttpDnsSim() {
         done: i < currentStep, active: i === currentStep,
     }));
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.url !== undefined) setUrl(config.url);
+        if (config.isHttps !== undefined) setIsHttps(config.isHttps);
+        if (config.httpVersion !== undefined) setHttpVersion(config.httpVersion);
+
+        setTimeout(() => {
+            if (step !== undefined) setCurrentStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+            setIsSimMode(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={isSimMode}
+            snapshotData={{
+                config: { url, isHttps, httpVersion },
+                step: currentStep
+            }}
             title="HTTP/HTTPS & DNS"
             icon={<GlobeIcon size={20} />}
             moduleLabel="CN MODULE"

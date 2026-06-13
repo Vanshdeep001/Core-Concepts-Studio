@@ -2,7 +2,9 @@ import { useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { runDiskFCFS, runDiskSSTF, runDiskSCAN, runDiskCSCAN } from './diskScheduling';
+import DownloadNotes from '../../components/DownloadNotes';
 
 const ALGOS = ['FCFS', 'SSTF', 'SCAN', 'C-SCAN'];
 const TRACK_MAX = 199;
@@ -38,6 +40,32 @@ export default function DiskSchedulingSim() {
     const timerRef = useRef(null);
     const stepRef = useRef(-1);
     const stepsRef = useRef([]);
+
+    useSnapshot(useCallback((config, step) => {
+        if (config.requestInput !== undefined) setRequestInput(config.requestInput);
+        if (config.initialHead !== undefined) setInitialHead(config.initialHead);
+        if (config.algo !== undefined) setAlgo(config.algo);
+        
+        const reqs = config.requestInput.trim().split(/[\s,]+/).map(Number)
+            .filter(n => !isNaN(n) && n >= 0 && n <= TRACK_MAX);
+            
+        const runAlgoConfig = (r, h) => {
+            switch (config.algo) {
+                case 'SSTF': return runDiskSSTF(r, h);
+                case 'SCAN': return runDiskSCAN(r, h);
+                case 'C-SCAN': return runDiskCSCAN(r, h);
+                default: return runDiskFCFS(r, h);
+            }
+        };
+        const { steps: s } = runAlgoConfig(reqs, config.initialHead);
+        stepsRef.current = s;
+        setSteps(s);
+        setCurrentStep(step);
+        stepRef.current = step;
+        setIsSimMode(true);
+        setIsPaused(true);
+        setIsRunning(false);
+    }, []));
 
     const parseRequests = () =>
         requestInput.trim().split(/[\s,]+/).map(Number)
@@ -420,6 +448,8 @@ export default function DiskSchedulingSim() {
                     }}>{s.target}</span>
                 ))}
             </div>
+        
+            <DownloadNotes topicKey="os/disk" />
         </div>
     );
 
@@ -482,6 +512,10 @@ export default function DiskSchedulingSim() {
                 { color: 'var(--cyan)', label: 'Pending' },
                 { color: 'var(--green)', label: 'Served' },
             ]}
+            snapshotData={{
+                config: { requestInput, initialHead, algo },
+                step: currentStep
+            }}
         >
             {/* ── CONFIG SCREEN ── */}
             <div className="main-content">

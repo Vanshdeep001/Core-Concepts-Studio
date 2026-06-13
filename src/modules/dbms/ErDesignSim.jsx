@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { FileIcon, LinkIcon, SyncIcon, KeyIcon, SwirlIcon, ZapIcon, ClipboardIcon, BlueprintIcon, CrownIcon, CheckIcon, WrenchIcon, BuildIcon, GearIcon } from '../../components/Icons';
 
 export default function ErDesignSim() {
@@ -504,9 +505,27 @@ export default function ErDesignSim() {
     // Identify which elements are currently active in the simulation for highlighting
     const activeStepInfo = currentStep >= 0 && currentStep < compSteps.length ? compSteps[currentStep] : null;
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.entities !== undefined) setEntities(config.entities);
+        if (config.relationships !== undefined) setRelationships(config.relationships);
+        if (config.attributes !== undefined) setAttributes(config.attributes);
+
+        setTimeout(() => {
+            if (step !== undefined) setCurrentStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { entities, relationships, attributes },
+                step: currentStep
+            }}
             title="ER Diagram to Relational Schema Mapping" icon={<BuildIcon size={22} />} moduleLabel="DBMS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}

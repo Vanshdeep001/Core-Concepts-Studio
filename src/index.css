@@ -8,6 +8,7 @@
   --green: #a8e6cf;
   --orange: #ffb347;
   --purple: #b39ddb;
+  --blue: #4da6ff;
   --bg: #ffffff;
   --bg-outer: #d0d0d0;
   --text: #000000;
@@ -31,6 +32,7 @@
   --shadow: 4px 4px 0 #a8e6cf;
   --shadow-lg: 8px 8px 0 #a8e6cf;
   --shadow-sm: 2px 2px 0 #a8e6cf;
+  --blue: #3399ff;
 }
 
 /* ===== RESET ===== */
@@ -77,6 +79,26 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--cyan);
 }
+
+/* ===== HIDE SCROLLBAR ===== */
+.hide-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.hide-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+  border: none !important;
+}
+.hide-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent !important;
+  border: none !important;
+}
+
 
 /* ===== PAGE WRAPPER ===== */
 .page-wrapper {
@@ -295,6 +317,18 @@ body {
 
   50% {
     transform: translateY(-18px) rotate(10deg);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
   }
 }
 

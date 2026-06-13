@@ -2,7 +2,9 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { BoxIcon } from '../../components/Icons';
+import DownloadNotes from '../../components/DownloadNotes';
 
 /* ════════════════════════════════════════
    DATA — OSI layers, protocols, PDU fields
@@ -589,6 +591,7 @@ export default function OsiModelSim() {
                     </div>
                 </div>
             )}
+            <DownloadNotes topicKey="networks/osi" />
         </div>
     );
 
@@ -640,9 +643,28 @@ export default function OsiModelSim() {
         active: i === currentStep,
     }));
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.viewMode !== undefined) setViewMode(config.viewMode);
+        if (config.expandedLayer !== undefined) setExpandedLayer(config.expandedLayer);
+        if (config.selectedProtocol !== undefined) setSelectedProtocol(config.selectedProtocol);
+
+        setTimeout(() => {
+            if (step !== undefined) setCurrentStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+            setIsSimMode(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={isSimMode}
+            snapshotData={{
+                config: { viewMode, expandedLayer, selectedProtocol },
+                step: currentStep
+            }}
             title="OSI & TCP/IP Model"
             icon={<BoxIcon size={20} />}
             moduleLabel="CN MODULE"

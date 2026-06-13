@@ -2,6 +2,8 @@ import { useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
+import DownloadNotes from '../../components/DownloadNotes';
 
 /* ══════════════════════════════════════════
    Safety Algorithm — step builder
@@ -109,6 +111,23 @@ export default function BankersAlgorithmSim() {
     const timerRef = useRef(null);
     const stepRef = useRef(-1);
     const stepsRef = useRef([]);
+
+    useSnapshot(useCallback((config, step) => {
+        if (config.n !== undefined) setN(config.n);
+        if (config.m !== undefined) setM(config.m);
+        if (config.allocation !== undefined) setAllocation(config.allocation);
+        if (config.max !== undefined) setMax(config.max);
+        if (config.available !== undefined) setAvailable(config.available);
+        
+        const s = buildBankersSteps(config.allocation, config.max, config.available, config.n, config.m);
+        stepsRef.current = s;
+        setSteps(s);
+        setCurrentStep(step);
+        stepRef.current = step;
+        setIsSimMode(true);
+        setIsPaused(true);
+        setIsRunning(false);
+    }, []));
 
     const advanceStep = useCallback((stepsArr, idx) => {
         const next = idx + 1;
@@ -459,6 +478,8 @@ export default function BankersAlgorithmSim() {
                     P{(curStep?.safeSeq ?? []).join(' → P')}
                 </div>
             }
+        
+            <DownloadNotes topicKey="os/bankers" />
         </div>
     );
 
@@ -539,6 +560,10 @@ export default function BankersAlgorithmSim() {
                 { color: 'var(--cyan)', label: 'Ready' },
                 { color: 'var(--pink)', label: 'Blocked' },
             ]}
+            snapshotData={{
+                config: { n, m, allocation, max, available },
+                step: currentStep
+            }}
         >
             <div className="main-content">
                 <div style={{ marginBottom: '0.4rem' }}>

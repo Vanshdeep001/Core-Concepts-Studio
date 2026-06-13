@@ -2,6 +2,8 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
+import DownloadNotes from '../../components/DownloadNotes';
 import {
     PillarIcon, TerminalIcon, SaveIcon, GearIcon, ShuffleIcon, PlayIcon,
     InfoIcon, ShieldIcon, LightbulbIcon, ZapIcon, AlertIcon, TreeIcon, WrenchIcon, TargetIcon,
@@ -2178,6 +2180,8 @@ export default function InheritanceDeepDiveSim() {
                     </div>
                 </div>
             )}
+        
+            <DownloadNotes topicKey="oops/inheritance" />
         </div>
     );
 
@@ -2345,8 +2349,28 @@ export default function InheritanceDeepDiveSim() {
         </div>
     );
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.treeType !== undefined) setTreeType(config.treeType);
+        if (config.nodes !== undefined) setNodes(config.nodes);
+        if (config.activeNode !== undefined) setActiveNode(config.activeNode);
+        if (config.view !== undefined) setView(config.view);
+        if (config.codeLang !== undefined) setCodeLang(config.codeLang);
+
+        setTimeout(() => {
+            if (step !== undefined) setCurrentStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+
+        }, 50);
+    }, []));
+
     return (
-        <ImmersiveLayout isActive={true} title="Inheritance & Polymorphism Deep Dive" icon={<TreeIcon size={22} />} moduleLabel="OOP MODULE"
+        <ImmersiveLayout isActive={true}
+            snapshotData={{
+                config: { treeType, nodes, activeNode, view, codeLang },
+                step: currentStep
+            }} title="Inheritance & Polymorphism Deep Dive" icon={<TreeIcon size={22} />} moduleLabel="OOP MODULE"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished} speed={speed} onSpeedChange={setSpeed}
             onStart={handleStart} onPause={handlePause} onResume={handleResume} onReset={handleReset} onStep={handleStep}
             currentStepNum={currentStep} totalSteps={totalSteps}

@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { FileIcon, ChartIcon, LightbulbIcon, CrownIcon } from '../../components/Icons';
+import DownloadNotes from '../../components/DownloadNotes';
 
 export default function NormalizationSim() {
     const [step, setStep] = useState(0); // 0: UNF, 1: 1NF, 2: 2NF, 3: 3NF, 4: BCNF
@@ -503,6 +505,8 @@ export default function NormalizationSim() {
                 <div style={{ color: step >= 3 ? 'var(--green)' : 'red' }}>Course → Teacher {step >= 3 ? '✓ [RESOLVED]' : '⚠️ [TRANSITIVE]'}</div>
                 <div style={{ color: step >= 4 ? 'var(--green)' : 'red' }}>Teacher → TeacherPhone {step >= 4 ? '✓ [RESOLVED]' : '⚠️ [BCNF]'}</div>
             </div>
+        
+            <DownloadNotes topicKey="dbms/normalization" />
         </div>
     );
 
@@ -585,9 +589,24 @@ Redundant cells freed!`}
         { label: 'Enforcing Superkey rule (BCNF)', active: step === 4, done: step === 4 }
     ];
 
+    
+    useSnapshot(useCallback((config, step) => {
+
+        setTimeout(() => {
+            if (step !== undefined) setStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: {  },
+                step: step
+            }}
             title="Normalization (1NF to BCNF)" icon={<ChartIcon size={20} />} moduleLabel="DBMS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}

@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { NetworkIcon } from '../../components/Icons';
 
 export default function MicroservicesSim() {
@@ -806,9 +807,27 @@ export default function MicroservicesSim() {
         }
     };
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.mode !== undefined) setMode(config.mode);
+        if (config.placedComponents !== undefined) setPlacedComponents(config.placedComponents);
+        if (config.circuitState !== undefined) setCircuitState(config.circuitState);
+
+        setTimeout(() => {
+            if (step !== undefined) setStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { mode, placedComponents, circuitState },
+                step: step
+            }}
             title="Microservices Discovery & Fault Tolerance"
             icon={<NetworkIcon size={20} />}
             moduleLabel="System Design"

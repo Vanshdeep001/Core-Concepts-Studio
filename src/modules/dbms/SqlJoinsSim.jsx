@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { LinkIcon, ClipboardIcon } from '../../components/Icons';
 
 export default function SqlJoinsSim() {
@@ -224,9 +225,27 @@ export default function SqlJoinsSim() {
         );
     };
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.joinType !== undefined) setJoinType(config.joinType);
+        if (config.employees !== undefined) setEmployees(config.employees);
+        if (config.departments !== undefined) setDepartments(config.departments);
+
+        setTimeout(() => {
+            if (step !== undefined) setCurrentStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { joinType, employees, departments },
+                step: currentStep
+            }}
             title="SQL Joins Simulator" icon={<LinkIcon size={20} />} moduleLabel="DBMS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}

@@ -2,7 +2,9 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { HandshakeIcon } from '../../components/Icons';
+import DownloadNotes from '../../components/DownloadNotes';
 
 /* ════════════════════════════════════════
    DATA — TCP states, scenarios
@@ -340,6 +342,7 @@ export default function TcpUdpSim() {
                     <div style={{ padding: '0.25rem 0.4rem', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>{s.val}</div>
                 </div>
             ))}
+            <DownloadNotes topicKey="networks/tcp-udp" />
         </div>
     );
 
@@ -395,9 +398,30 @@ export default function TcpUdpSim() {
         id: i, label: s.arrow || s.type, done: i < currentStep, active: i === currentStep,
     }));
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.windowSize !== undefined) setWindowSize(config.windowSize);
+        if (config.totalData !== undefined) setTotalData(config.totalData);
+        if (config.dropAt !== undefined) setDropAt(config.dropAt);
+        if (config.enableDrop !== undefined) setEnableDrop(config.enableDrop);
+        if (config.scenario !== undefined) setScenario(config.scenario);
+
+        setTimeout(() => {
+            if (step !== undefined) setCurrentStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+            setIsSimMode(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={isSimMode}
+            snapshotData={{
+                config: { windowSize, totalData, dropAt, enableDrop, scenario },
+                step: currentStep
+            }}
             title="TCP vs UDP & 3-Way Handshake"
             icon={<HandshakeIcon size={20} />}
             moduleLabel="CN MODULE"

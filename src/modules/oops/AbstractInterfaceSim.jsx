@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
+import DownloadNotes from '../../components/DownloadNotes';
 import {
     PillarIcon, TerminalIcon, SaveIcon, GearIcon, ShuffleIcon, PlayIcon,
     InfoIcon, ShieldIcon, LightbulbIcon, ZapIcon, AlertIcon, TreeIcon, WrenchIcon,
@@ -1238,6 +1240,8 @@ export default function AbstractInterfaceSim() {
 
                 </div>
             </div>
+        
+            <DownloadNotes topicKey="oops/abstract-interface" />
         </div>
     );
 
@@ -1296,9 +1300,27 @@ export default function AbstractInterfaceSim() {
         </div>
     );
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.selectedBaseClass !== undefined) setSelectedBaseClass(config.selectedBaseClass);
+        if (config.selectedInterfaces !== undefined) setSelectedInterfaces(config.selectedInterfaces);
+        if (config.concreteClassName !== undefined) setConcreteClassName(config.concreteClassName);
+        if (config.lang !== undefined) setLang(config.lang);
+        if (config.view !== undefined) setView(config.view);
+        if (config.flowHistory !== undefined) setFlowHistory(config.flowHistory);
+
+        setTimeout(() => {
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { selectedBaseClass, selectedInterfaces, concreteClassName, lang, view, flowHistory },
+                step: 0
+            }}
             title="Abstract Class vs Interface"
             icon={<BlueprintIcon size={22} />}
             moduleLabel="OOP MODULE"

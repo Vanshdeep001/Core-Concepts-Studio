@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { SignalIcon } from '../../components/Icons';
 
 export default function ApiLifecycleSim() {
@@ -1019,9 +1020,27 @@ export default function ApiLifecycleSim() {
         }
     };
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.scenario !== undefined) setScenario(config.scenario);
+        if (config.mode !== undefined) setMode(config.mode);
+        if (config.placedComponents !== undefined) setPlacedComponents(config.placedComponents);
+
+        setTimeout(() => {
+            if (step !== undefined) setStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { scenario, mode, placedComponents },
+                step: step
+            }}
             title="API Request Lifecycle Tracer"
             icon={<SignalIcon size={20} />}
             moduleLabel="System Design"

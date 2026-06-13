@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { ShuffleIcon, GlobeIcon, CpuIcon } from '../../components/Icons';
 
 export default function LoadBalancerSim() {
@@ -470,9 +471,27 @@ export default function LoadBalancerSim() {
         return false;
     };
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.algo !== undefined) setAlgo(config.algo);
+        if (config.serverHealth !== undefined) setServerHealth(config.serverHealth);
+        if (config.serverWeights !== undefined) setServerWeights(config.serverWeights);
+        if (config.serverLatencies !== undefined) setServerLatencies(config.serverLatencies);
+
+        setTimeout(() => {
+            setIsRunning(false);
+            setIsPaused(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { algo, serverHealth, serverWeights, serverLatencies },
+                step: 0
+            }}
             title="Load Balancing Simulator"
             icon={<ShuffleIcon size={20} />}
             moduleLabel="System Design"

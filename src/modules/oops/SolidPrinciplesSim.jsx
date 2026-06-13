@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import DownloadNotes from '../../components/DownloadNotes';
+
 import {
     ScissorsIcon, PlugIcon, SyncIcon, PlateIcon, ShuffleIcon,
     XIcon, AlertIcon, LinkIcon, CheckIcon, WrenchIcon, ShieldIcon,
@@ -1036,7 +1038,8 @@ export default function SolidPrinciplesSim() {
                     <div style={{ fontSize: '0.6rem', opacity: 0.5 }}>{p.full} Principle</div>
                 </div>
             ))}
-        </div>
+        
+            <DownloadNotes topicKey="oops/solid" /></div>
     );
 
     const RIGHT = (

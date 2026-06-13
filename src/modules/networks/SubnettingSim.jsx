@@ -2,7 +2,9 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { NetworkIcon, TreeIcon } from '../../components/Icons';
+import DownloadNotes from '../../components/DownloadNotes';
 
 /* ════════════════════════════════════════
    HELPERS — IP math
@@ -824,6 +826,7 @@ export default function SubnettingSim() {
                         marginBottom: '2px'
                     }}>Quiz {i + 1}: Split {q.basePrefix} into {q.expectedCount}</button>
             ))}
+            <DownloadNotes topicKey="networks/subnetting" />
         </div>
     );
 
@@ -873,9 +876,29 @@ export default function SubnettingSim() {
         id: i, label: `/${s.prefix}`, done: i < currentStep, active: i === currentStep,
     }));
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.octets !== undefined) setOctets(config.octets);
+        if (config.prefix !== undefined) setPrefix(config.prefix);
+        if (config.mode !== undefined) setMode(config.mode);
+        if (config.routingIpStr !== undefined) setRoutingIpStr(config.routingIpStr);
+
+        setTimeout(() => {
+            if (step !== undefined) setCurrentStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+            setIsSimMode(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={isSimMode}
+            snapshotData={{
+                config: { octets, prefix, mode, routingIpStr },
+                step: currentStep
+            }}
             title="IP Addressing & Subnetting"
             icon={<NetworkIcon size={20} />}
             moduleLabel="CN MODULE"

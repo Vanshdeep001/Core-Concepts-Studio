@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProcessInputForm from '../components/ProcessInputForm';
 import AlgorithmSelector from '../components/AlgorithmSelector';
@@ -11,9 +11,11 @@ import LiveMetrics from '../components/LiveMetrics';
 import MetricsTable from '../components/MetricsTable';
 import RecommendationCard from '../components/RecommendationCard';
 import useSimulator from '../hooks/useSimulator';
+import useSnapshot from '../hooks/useSnapshot';
 import { validateProcesses, getProcessColor } from '../utils/helpers';
 import { recommend } from '../engine/recommendation';
 import ImmersiveLayout from '../shared/ImmersiveLayout';
+import DownloadNotes from '../components/DownloadNotes';
 
 export default function SimulationPage() {
     const [conceptMode, setConceptMode] = useState(true);
@@ -32,10 +34,19 @@ export default function SimulationPage() {
 
     const {
         simState, isRunning, isPaused, speed, finalMetrics,
-        startSimulation, pauseSimulation, resumeSimulation,
+        startSimulation, restoreSimulation, pauseSimulation, resumeSimulation,
         resetSimulation, stepSimulation, changeSpeed,
         SPEED_OPTIONS,
     } = useSimulator();
+
+    useSnapshot(useCallback((config, step) => {
+        if (config.processes) setProcesses(config.processes);
+        if (config.algorithm) setAlgorithm(config.algorithm);
+        if (config.quantum) setQuantum(config.quantum);
+        if (config.cores) setCores(config.cores);
+        
+        restoreSimulation(config.processes, config.algorithm, config.quantum, config.cores, step);
+    }, [restoreSimulation]));
 
     const isActive = isRunning || isPaused;
     const isFinished = simState?.isFinished ?? false;
@@ -93,6 +104,8 @@ export default function SimulationPage() {
                     ))}
                 </div>
             </div>
+        
+            <DownloadNotes topicKey="os/scheduling" />
         </div>
     );
 
@@ -200,6 +213,10 @@ export default function SimulationPage() {
             ]}
             conceptMode={conceptMode}
             onConceptModeToggle={() => setConceptMode(!conceptMode)}
+            snapshotData={{
+                config: { processes, algorithm, quantum, cores },
+                step: simState ? simState.currentTime : 0
+            }}
         >
             <div className="main-content">
                 {/* Header */}

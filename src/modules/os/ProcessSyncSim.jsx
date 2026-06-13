@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import {
     AlertIcon, GearIcon, OutboxIcon, InboxIcon, SatelliteIcon, RocketIcon,
     UFOIcon, SwirlIcon, ExplosionIcon, LockIcon, UnlockIcon, StopIcon,
@@ -1829,9 +1830,40 @@ Starvation: Priority lockout`}
         active: idx === currentStep
     }));
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.stage !== undefined) setStage(config.stage);
+        if (config.stage4Tab !== undefined) setStage4Tab(config.stage4Tab);
+        if (config.dpMode !== undefined) setDpMode(config.dpMode);
+        if (config.s1InitialVal !== undefined) setS1InitialVal(config.s1InitialVal);
+        if (config.s1StepVal !== undefined) setS1StepVal(config.s1StepVal);
+        if (config.s1Schedule !== undefined) setS1Schedule(config.s1Schedule);
+        if (config.s2P1CsDuration !== undefined) setS2P1CsDuration(config.s2P1CsDuration);
+        if (config.s2P2CsDuration !== undefined) setS2P2CsDuration(config.s2P2CsDuration);
+        if (config.s2Protocol !== undefined) setS2Protocol(config.s2Protocol);
+        if (config.s3ProcessCount !== undefined) setS3ProcessCount(config.s3ProcessCount);
+        if (config.s3SemCapacity !== undefined) setS3SemCapacity(config.s3SemCapacity);
+        if (config.s4PCBufferSize !== undefined) setS4PCBufferSize(config.s4PCBufferSize);
+        if (config.s4DPPhilCount !== undefined) setS4DPPhilCount(config.s4DPPhilCount);
+        if (config.s4RWReadersCount !== undefined) setS4RWReadersCount(config.s4RWReadersCount);
+        if (config.s4RWWritersCount !== undefined) setS4RWWritersCount(config.s4RWWritersCount);
+        if (config.s4RWPreference !== undefined) setS4RWPreference(config.s4RWPreference);
+
+        setTimeout(() => {
+            if (step !== undefined) setCurrentStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { stage, stage4Tab, dpMode, s1InitialVal, s1StepVal, s1Schedule, s2P1CsDuration, s2P2CsDuration, s2Protocol, s3ProcessCount, s3SemCapacity, s4PCBufferSize, s4DPPhilCount, s4RWReadersCount, s4RWWritersCount, s4RWPreference },
+                step: currentStep
+            }}
             title="Process Synchronization" icon={<SyncIcon size={22} />} moduleLabel="OS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={handleSpeedChange}

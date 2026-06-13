@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { InboxIcon, GlobeIcon, CpuIcon, SignalIcon } from '../../components/Icons';
 
 export default function MessageQueueSim() {
@@ -384,9 +385,29 @@ export default function MessageQueueSim() {
 
     const totalOps = metrics.processed + dlq.length;
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.queue !== undefined) setQueue(config.queue);
+        if (config.dlq !== undefined) setDlq(config.dlq);
+        if (config.producerRate !== undefined) setProducerRate(config.producerRate);
+        if (config.consumerDelay !== undefined) setConsumerDelay(config.consumerDelay);
+        if (config.failureRate !== undefined) setFailureRate(config.failureRate);
+        if (config.maxRetries !== undefined) setMaxRetries(config.maxRetries);
+
+        setTimeout(() => {
+            setIsRunning(false);
+            setIsPaused(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { queue, dlq, producerRate, consumerDelay, failureRate, maxRetries },
+                step: 0
+            }}
             title="Message Queue Visualizer (MQ)"
             icon={<InboxIcon size={20} />}
             moduleLabel="System Design"

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { VaultIcon, LaptopIcon, LockIcon, UnlockIcon, AlertIcon } from '../../components/Icons';
 
 export default function TransactionsSim() {
@@ -508,9 +509,35 @@ export default function TransactionsSim() {
 
     const sbAcid = getSandboxACID();
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.activeTab !== undefined) setActiveTab(config.activeTab);
+        if (config.balanceA !== undefined) setBalanceA(config.balanceA);
+        if (config.balanceB !== undefined) setBalanceB(config.balanceB);
+        if (config.isoLevel !== undefined) setIsoLevel(config.isoLevel);
+        if (config.t1State !== undefined) setT1State(config.t1State);
+        if (config.t2State !== undefined) setT2State(config.t2State);
+        if (config.dbAlice !== undefined) setDbAlice(config.dbAlice);
+        if (config.bufferAlice !== undefined) setBufferAlice(config.bufferAlice);
+        if (config.charlieInserted !== undefined) setCharlieInserted(config.charlieInserted);
+        if (config.charlieCommitted !== undefined) setCharlieCommitted(config.charlieCommitted);
+        if (config.locks !== undefined) setLocks(config.locks);
+
+        setTimeout(() => {
+            if (step !== undefined) setPipeStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { activeTab, balanceA, balanceB, isoLevel, t1State, t2State, dbAlice, bufferAlice, charlieInserted, charlieCommitted, locks },
+                step: pipeStep
+            }}
             title="Database Transactions & ACID Sandbox" icon={<VaultIcon size={20} />} moduleLabel="DBMS Module"
             isRunning={isRunning} isPaused={isPaused} isFinished={isFinished}
             speed={speed} onSpeedChange={setSpeed}

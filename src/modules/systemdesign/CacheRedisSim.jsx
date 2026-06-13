@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { ZapIcon, GlobeIcon, DatabaseIcon } from '../../components/Icons';
 
 export default function CacheRedisSim() {
@@ -563,9 +564,28 @@ export default function CacheRedisSim() {
         return false;
     };
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.cache !== undefined) setCache(config.cache);
+        if (config.db !== undefined) setDb(config.db);
+        if (config.formKeyId !== undefined) setFormKeyId(config.formKeyId);
+        if (config.formName !== undefined) setFormName(config.formName);
+        if (config.formTtl !== undefined) setFormTtl(config.formTtl);
+
+        setTimeout(() => {
+            setIsRunning(false);
+            setIsPaused(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { cache, db, formKeyId, formName, formTtl },
+                step: 0
+            }}
             title="Caching & Redis Lab"
             icon={<ZapIcon size={20} />}
             moduleLabel="System Design"

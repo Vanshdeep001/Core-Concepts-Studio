@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { CodeIcon, DatabaseIcon } from '../../components/Icons';
 
 // Initial Mock Database Schema
@@ -1451,9 +1452,27 @@ export default function SqlQueryVisualizerSim() {
     const isSimActive = isRunning || isPaused || isFinished;
     const activeLineIdx = isSimActive ? getActiveLineIndex(activeStepObj, clauses) : -1;
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.query !== undefined) setQuery(config.query);
+        if (config.tables !== undefined) setTables(config.tables);
+
+        setTimeout(() => {
+            if (step !== undefined) setCurrentStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+            if (config.steps !== undefined) setSteps(config.steps);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { query, tables },
+                step: currentStep
+            }}
             title="SQL Query Visualizer"
             icon={<CodeIcon size={20} />}
             moduleLabel="DBMS Module"

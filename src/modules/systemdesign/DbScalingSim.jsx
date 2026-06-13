@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import { ScaleIcon, DatabaseIcon, GlobeIcon, SignalIcon } from '../../components/Icons';
 
 export default function DbScalingSim() {
@@ -643,9 +644,29 @@ export default function DbScalingSim() {
 
     const totalOps = metrics.reads + metrics.writes;
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.mode !== undefined) setMode(config.mode);
+        if (config.replicaCount !== undefined) setReplicaCount(config.replicaCount);
+        if (config.shardingStrategy !== undefined) setShardingStrategy(config.shardingStrategy);
+        if (config.syncLag !== undefined) setSyncLag(config.syncLag);
+        if (config.userId !== undefined) setUserId(config.userId);
+        if (config.userName !== undefined) setUserName(config.userName);
+
+        setTimeout(() => {
+            setIsRunning(false);
+            setIsPaused(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { mode, replicaCount, shardingStrategy, syncLag, userId, userName },
+                step: 0
+            }}
             title="Database Scaling & Sharding Sandbox"
             icon={<ScaleIcon size={20} />}
             moduleLabel="System Design"

@@ -2,6 +2,8 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
+import DownloadNotes from '../../components/DownloadNotes';
 
 /* ════════════════════════════════════════
    PRESET TOPOLOGIES
@@ -495,6 +497,8 @@ export default function RoutingAlgoSim() {
             <div style={{ fontSize: '0.6rem', opacity: 0.4, fontWeight: 700, marginTop: '0.25rem' }}>
                 Click an edge to cut it. Click a table row to highlight path.
             </div>
+        
+            <DownloadNotes topicKey="networks/routing" />
         </div>
     );
 
@@ -542,9 +546,32 @@ export default function RoutingAlgoSim() {
         done: i < currentStep, active: i === currentStep,
     }));
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.preset !== undefined) setPreset(config.preset);
+        if (config.nodes !== undefined) setNodes(config.nodes);
+        if (config.edges !== undefined) setEdges(config.edges);
+        if (config.srcNode !== undefined) setSrcNode(config.srcNode);
+        if (config.algorithm !== undefined) setAlgorithm(config.algorithm);
+        if (config.cutEdges !== undefined) setCutEdges(config.cutEdges);
+        if (config.selectedDest !== undefined) setSelectedDest(config.selectedDest);
+
+        setTimeout(() => {
+            if (step !== undefined) setCurrentStep(step);
+            setIsRunning(false);
+            setIsPaused(true);
+            setIsSimMode(true);
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={isSimMode}
+            snapshotData={{
+                config: { preset, nodes, edges, srcNode, algorithm, cutEdges, selectedDest },
+                step: currentStep
+            }}
             title="Routing Algorithms"
             icon="🗺"
             moduleLabel="CN MODULE"

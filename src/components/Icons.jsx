@@ -617,4 +617,30 @@ export const CodeIcon = ({ size = d.size, color = d.color } = {}) => S(size, col
     <polyline points="8 6 2 12 8 18" />
 </>);
 
+export const MicIcon = ({ size = d.size, color = d.color } = {}) => S(size, color, <>
+    <rect x="9" y="2" width="6" height="12" rx="3" />
+    <path d="M5 10v1a7 7 0 0 0 14 0v-1" />
+    <line x1="12" y1="18" x2="12" y2="22" />
+    <line x1="8" y1="22" x2="16" y2="22" />
+</>);
+
+export const SpeakerIcon = ({ size = d.size, color = d.color } = {}) => S(size, color, <>
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+</>);
+
+export const SpeakerOffIcon = ({ size = d.size, color = d.color } = {}) => S(size, color, <>
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <line x1="23" y1="9" x2="17" y2="15" />
+    <line x1="17" y1="9" x2="23" y2="15" />
+</>);
+
+export const BookIcon = ({ size = d.size, color = d.color } = {}) => S(size, color, <>
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+</>);
+
 // Trigger HMR rebuild
+
+

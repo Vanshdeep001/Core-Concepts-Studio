@@ -3,6 +3,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
+import useSnapshot from '../../hooks/useSnapshot';
 import CommitGraph from './CommitGraph';
 import GitStatePanel from './GitStatePanel';
 import GitExplainPanel from './GitExplainPanel';
@@ -503,9 +504,24 @@ export default function GitSim() {
 
 
 
+    
+    useSnapshot(useCallback((config, step) => {
+        if (config.state !== undefined) setState(config.state);
+        if (config.editorFilename !== undefined) setEditorFilename(config.editorFilename);
+        if (config.editorContent !== undefined) setEditorContent(config.editorContent);
+
+        setTimeout(() => {
+
+        }, 50);
+    }, []));
+
     return (
         <ImmersiveLayout
             isActive={true}
+            snapshotData={{
+                config: { state, editorFilename, editorContent },
+                step: 0
+            }}
             title="Git Internals Simulator"
             icon={<GitBranchIcon size={20} />}
             moduleLabel={`Module 5 · Git & GitHub`}
