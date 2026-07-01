@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
 import { BoxIcon } from '../../components/Icons';
-import DownloadNotes from '../../components/DownloadNotes';
 
 /* ════════════════════════════════════════
    DATA — OSI layers, protocols, PDU fields
@@ -591,7 +590,7 @@ export default function OsiModelSim() {
                     </div>
                 </div>
             )}
-            <DownloadNotes topicKey="networks/osi" />
+            
         </div>
     );
 

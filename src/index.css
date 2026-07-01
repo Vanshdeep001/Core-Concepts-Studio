@@ -1478,3 +1478,104 @@ body.sim-mode {
     padding: 0.7rem 0.5rem;
   }
 }
+
+/* ── Mobile optimization for AI Interview & Questions Explorer (max-width: 768px) ── */
+@media (max-width: 768px) {
+  /* AI Interview Header Bar */
+  .interview-header-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 0.6rem 0.8rem !important;
+    gap: 0.5rem !important;
+    height: auto !important;
+  }
+  .interview-header-bar > span:first-child {
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+  .interview-header-bar > span:last-child {
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+
+  /* Active Interview Mobile Tab Switcher */
+  .interview-mobile-tabs {
+    display: flex !important;
+    background: var(--white);
+    border-bottom: 3px solid var(--border);
+    flex-shrink: 0;
+  }
+  .mobile-tab-btn {
+    flex: 1;
+    padding: 0.65rem;
+    font-family: var(--font-main);
+    font-weight: 700;
+    font-size: 0.82rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    text-align: center;
+    text-transform: uppercase;
+    transition: all 0.15s ease;
+  }
+  .mobile-tab-btn.active {
+    background: var(--yellow);
+    border-bottom: 3px solid var(--border);
+    color: #000000;
+  }
+  [data-theme="dark"] .mobile-tab-btn.active {
+    background: var(--cyan);
+    color: #000000;
+  }
+
+  /* Active Interview Panels */
+  .interview-workspace-panel {
+    width: 100% !important;
+    border-right: none !important;
+    display: none !important;
+  }
+  .interview-workspace-panel.mobile-active {
+    display: flex !important;
+  }
+  .interview-chat-panel {
+    width: 100% !important;
+    display: none !important;
+  }
+  .interview-chat-panel.mobile-active {
+    display: flex !important;
+  }
+
+  /* Questions Explorer Reading Layout overlaying sidebar */
+  .explorer-read-view {
+    position: relative !important;
+  }
+  .explorer-sidebar {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    z-index: 1010 !important;
+    width: 290px !important;
+    max-width: 85% !important;
+    box-shadow: var(--shadow-lg) !important;
+    border-right: 3px solid var(--border) !important;
+  }
+  .explorer-pane {
+    width: 100% !important;
+    flex: 1 !important;
+  }
+  
+  /* Questions Explorer Directory adjustments */
+  .explorer-directory {
+    padding: 0.75rem !important;
+  }
+  .explorer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+  .explorer-notepad-card {
+    padding: 1.25rem 1rem !important;
+  }
+}

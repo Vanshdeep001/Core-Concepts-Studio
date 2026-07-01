@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
-import DownloadNotes from '../../components/DownloadNotes';
 import {
     PillarIcon, TerminalIcon, SaveIcon, GearIcon, ShuffleIcon, PlayIcon,
     InfoIcon, ShieldIcon, LightbulbIcon, ZapIcon, AlertIcon, TreeIcon, WrenchIcon,
@@ -487,454 +486,352 @@ export default function AbstractInterfaceSim() {
 
             {/* Inner Content Workspace */}
             <div style={{ flex: 1, overflow: 'auto', padding: '1.5rem', position: 'relative' }}>
-                
-                {/* 1. WHAT YOU INHERIT TAB — Visual flow: Parent + Interfaces → Your Class */}
+                {/* 1. CLASS BLUEPRINT TAB */}
                 {view === 'blueprint' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 640 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
                         
-                        {/* Compact Config Bar */}
-                        <div style={{ border: '4px solid var(--border)', background: 'var(--white)', padding: '0.8rem 1rem', boxShadow: '6px 6px 0 #000' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                                {/* Class Name + Parent */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                                    <label style={{ fontSize: '0.62rem', fontWeight: 900, color: 'var(--text)' }}>YOUR NEW CLASS NAME</label>
-                                    <input
-                                        type="text"
-                                        value={concreteClassName}
-                                        onChange={e => setConcreteClassName(e.target.value.replace(/\s+/g, ''))}
-                                        style={{ border: '3px solid var(--border)', padding: '0.35rem', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: 800, background: 'var(--bg)', color: 'var(--text)', outline: 'none' }}
-                                    />
-                                    <label style={{ fontSize: '0.62rem', fontWeight: 900, color: 'var(--text)', marginTop: '0.2rem' }}>PARENT CLASS (CHOOSE 1)</label>
-                                    <select
-                                        value={selectedBaseClass}
-                                        onChange={e => setSelectedBaseClass(e.target.value)}
-                                        style={{ border: '3px solid var(--border)', padding: '0.35rem', fontSize: '0.7rem', fontWeight: 800, background: 'var(--bg)', color: 'var(--text)', cursor: 'pointer', outline: 'none' }}
+                        {/* Preset Selector Bar */}
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            {[
+                                { name: 'Quadcopter', base: 'Vehicle', ifaces: ['Flyable', 'Swimmable'], label: 'Quadcopter' },
+                                { name: 'BioDrone', base: 'Animal', ifaces: ['Flyable', 'Runnable'], label: 'BioDrone' },
+                                { name: 'SmartRobot', base: 'None', ifaces: ['Runnable', 'Swimmable'], label: 'SmartRobot' }
+                            ].map(p => {
+                                const active = selectedBaseClass === p.base && selectedInterfaces.length === p.ifaces.length && p.ifaces.every(x => selectedInterfaces.includes(x)) && concreteClassName === p.name;
+                                return (
+                                    <button
+                                        key={p.name}
+                                        onClick={() => {
+                                            setSelectedBaseClass(p.base);
+                                            setSelectedInterfaces(p.ifaces);
+                                            setConcreteClassName(p.name);
+                                            addLog(`Preset: ${p.name}`);
+                                        }}
+                                        style={{
+                                            padding: '0.4rem 0.8rem',
+                                            fontSize: '0.68rem',
+                                            fontWeight: 900,
+                                            fontFamily: 'var(--font-main)',
+                                            border: 'var(--border-width) solid var(--border)',
+                                            borderRadius: 'var(--radius)',
+                                            background: active ? 'var(--yellow)' : 'var(--white)',
+                                            color: 'var(--text)',
+                                            boxShadow: active ? 'var(--shadow-sm)' : 'none',
+                                            cursor: 'pointer',
+                                            transform: active ? 'translate(-1px, -1px)' : 'none',
+                                            transition: 'all 0.1s'
+                                        }}
                                     >
-                                        <option value="Shape">Shape</option>
-                                        <option value="Vehicle">Vehicle</option>
-                                        <option value="Animal">Animal</option>
-                                        <option value="None">None (No Parent)</option>
-                                    </select>
-                                </div>
-                                {/* Interfaces */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                                    <label style={{ fontSize: '0.62rem', fontWeight: 900, color: 'var(--text)' }}>INTERFACES (CHOOSE MANY)</label>
-                                    {Object.keys(ALL_INTERFACES).map(name => {
-                                        const active = selectedInterfaces.includes(name);
-                                        const iColor = ALL_INTERFACES[name].color;
-                                        return (
-                                            <div key={name} onClick={() => { setSelectedInterfaces(prev => active ? prev.filter(n => n !== name) : [...prev, name]); addLog(`Toggled: ${name}`); }}
-                                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0.5rem', border: `3px solid ${active ? iColor : 'var(--border)'}`, background: active ? 'var(--white)' : 'var(--bg)', cursor: 'pointer', transition: 'all 0.15s' }}>
-                                                <div style={{ width: 12, height: 12, border: `2.5px solid ${active ? iColor : 'var(--text)'}`, background: active ? iColor : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                    {active && <span style={{ color: '#fff', fontSize: '0.5rem', fontWeight: 900 }}>✓</span>}
-                                                </div>
-                                                <span style={{ fontSize: '0.68rem', fontWeight: 900, color: active ? iColor : 'var(--text)', opacity: active ? 1 : 0.6 }}>{name}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* Add custom methods */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    <label style={{ fontSize: '0.62rem', fontWeight: 900, color: 'var(--text)' }}>ADD YOUR OWN METHODS</label>
-                                    <div style={{ display: 'flex', gap: '0.3rem', flexDirection: 'column' }}>
-                                        <div style={{ display: 'flex', gap: '0.3rem' }}>
-                                            <input type="text" placeholder="newParentMethod()" value={newBaseMethodName} onChange={e => setNewBaseMethodName(e.target.value)}
-                                                style={{ border: '2px solid var(--border)', padding: '0.2rem 0.3rem', fontSize: '0.6rem', flex: 1, fontFamily: 'var(--font-mono)', background: 'var(--bg)', color: 'var(--text)', outline: 'none' }} />
-                                            <button onClick={handleAddBaseMethod} style={{ background: '#ecc94b', border: '2px solid #000', fontWeight: 900, fontSize: '0.55rem', padding: '0 0.4rem', cursor: 'pointer', color: '#000' }}>+ Parent</button>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '0.3rem' }}>
-                                            <input type="text" placeholder="newInterfaceMethod()" value={newInterfaceMethodName} onChange={e => setNewInterfaceMethodName(e.target.value)}
-                                                style={{ border: '2px solid var(--border)', padding: '0.2rem 0.3rem', fontSize: '0.6rem', flex: 1, fontFamily: 'var(--font-mono)', background: 'var(--bg)', color: 'var(--text)', outline: 'none' }} />
-                                            <button onClick={handleAddInterfaceMethod} style={{ background: '#3182ce', border: '2px solid #000', fontWeight: 900, fontSize: '0.55rem', padding: '0 0.4rem', cursor: 'pointer', color: '#fff' }}>+ Interface</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                        {p.label}
+                                    </button>
+                                );
+                            })}
                         </div>
 
-                        {/* ─── VISUAL FLOW: Sources → Arrow → Your Class ─── */}
-                        <div className="no-mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1.4fr', gap: '0', alignItems: 'stretch', minHeight: 300 }}>
+                        {/* 2-Column Layout */}
+                        <div style={{ display: 'flex', gap: '1.2rem', flexDirection: isMobile ? 'column' : 'row', alignItems: 'stretch' }}>
                             
-                            {/* LEFT COLUMN: Source blocks (parent + interfaces) */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {/* Left — Settings Panel */}
+                            <div style={{ flex: 1, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+                                <div style={{ background: 'var(--yellow)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                    <WrenchIcon size={16} color="var(--text)" /> Class Configuration
+                                </div>
+                                <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    {/* Class Name */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                                        <span style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Class Name</span>
+                                        <input
+                                            type="text"
+                                            value={concreteClassName}
+                                            onChange={e => setConcreteClassName(e.target.value.replace(/\s+/g, ''))}
+                                            style={{ border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', padding: '0.4rem 0.6rem', fontSize: '0.72rem', fontFamily: 'var(--font-mono)', fontWeight: 'bold', background: 'var(--bg)', color: 'var(--text)', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+                                        />
+                                    </div>
+
+                                    {/* Parent Class */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                                        <span style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Extends (Max 1)</span>
+                                        <select
+                                            value={selectedBaseClass}
+                                            onChange={e => setSelectedBaseClass(e.target.value)}
+                                            style={{ border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', padding: '0.4rem 0.6rem', fontSize: '0.72rem', fontWeight: 'bold', background: 'var(--bg)', color: 'var(--text)', cursor: 'pointer', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+                                        >
+                                            <option value="Shape">Shape</option>
+                                            <option value="Vehicle">Vehicle</option>
+                                            <option value="Animal">Animal</option>
+                                            <option value="None">None</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Interfaces */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                        <span style={{ fontSize: '0.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Implements (Unlimited)</span>
+                                        {Object.keys(ALL_INTERFACES).map(name => {
+                                            const active = selectedInterfaces.includes(name);
+                                            return (
+                                                <div key={name} onClick={() => { setSelectedInterfaces(prev => active ? prev.filter(n => n !== name) : [...prev, name]); addLog(`Toggled: ${name}`); }}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                                        padding: '0.4rem 0.6rem', cursor: 'pointer',
+                                                        border: `var(--border-width) solid ${active ? ALL_INTERFACES[name].color : 'var(--border)'}`,
+                                                        borderRadius: 'var(--radius)',
+                                                        background: active ? `${ALL_INTERFACES[name].color}15` : 'var(--bg)',
+                                                        boxShadow: active ? 'var(--shadow-sm)' : 'none',
+                                                        transform: active ? 'translate(-1px, -1px)' : 'none',
+                                                        transition: 'all 0.1s'
+                                                    }}>
+                                                    <div style={{ width: 14, height: 14, border: `2px solid ${active ? ALL_INTERFACES[name].color : 'var(--border)'}`, background: active ? ALL_INTERFACES[name].color : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                        {active && <span style={{ color: '#fff', fontSize: '0.6rem', fontWeight: 900 }}>✓</span>}
+                                                    </div>
+                                                    <span style={{ fontSize: '0.7rem', fontWeight: 800, color: active ? ALL_INTERFACES[name].color : 'var(--text)' }}>{name}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right — Composition Visualizer + Code */}
+                            <div style={{ flex: 1.4, display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                                 
-                                {/* PARENT CLASS BLOCK */}
-                                <div style={{ border: '4px solid #d69e2e', background: 'var(--white)', boxShadow: '6px 6px 0 #000' }}>
-                                    <div style={{ background: '#fef08a', padding: '0.5rem 0.8rem', borderBottom: '4px solid #d69e2e', fontWeight: 900, fontSize: '0.75rem', color: '#854d0e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><BuildIcon size={14} /> Parent: {selectedBaseClass !== 'None' ? selectedBaseClass : 'None Selected'}</span>
-                                        <span style={{ fontSize: '0.5rem', padding: '2px 6px', background: '#d69e2e', color: '#fff', fontWeight: 900 }}>PARENT</span>
+                                {/* Wiring Diagram */}
+                                <div style={{ border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+                                    <div style={{ background: 'var(--cyan)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                        <GearIcon size={16} color="var(--text)" /> Composition Diagram
                                     </div>
-                                    <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                                        {selectedBaseClass === 'None' && customBaseAbstracts.length === 0 ? (
-                                            <div style={{ fontSize: '0.62rem', color: '#718096', textAlign: 'center', padding: '0.5rem' }}>No parent selected</div>
-                                        ) : (
-                                            <>
-                                                {baseConcrete.map(m => (
-                                                    <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', background: '#fef9c3', border: '2px solid #eab308' }}>
-                                                        <div style={{ width: 8, height: 8, background: '#48bb78', border: '1.5px solid #000', flexShrink: 0 }} />
-                                                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 900, color: '#854d0e' }}>{m.name} (Code Written)</span>
+                                    <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem' }}>
+                                        {/* Source nodes row */}
+                                        <div style={{ display: 'flex', gap: '0.8rem', width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                            {selectedBaseClass !== 'None' ? (
+                                                <div style={{ flex: 1, minWidth: 120, border: 'var(--border-width) solid var(--border)', background: 'var(--orange)', borderRadius: 'var(--radius)', padding: '1.2rem', textAlign: 'center', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <div style={{ fontSize: '0.65rem', fontWeight: 900, background: 'var(--text)', color: 'var(--orange)', padding: '2px 8px', display: 'inline-block', marginBottom: '0.4rem', letterSpacing: '0.05em' }}>EXTENDS</div>
+                                                    <div style={{ fontWeight: 900, fontSize: '1.1rem', fontFamily: 'var(--font-mono)' }}>{selectedBaseClass}</div>
+                                                </div>
+                                            ) : (
+                                                <div style={{ flex: 1, minWidth: 120, border: 'var(--border-width) dashed var(--border)', borderRadius: 'var(--radius)', padding: '0.5rem', textAlign: 'center', opacity: 0.35 }}>
+                                                    <div style={{ fontSize: '0.6rem', fontWeight: 800 }}>No Parent</div>
+                                                </div>
+                                            )}
+
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flex: 1, minWidth: 120 }}>
+                                                {selectedInterfaces.map(name => (
+                                                    <div key={name} style={{ border: `var(--border-width) solid ${ALL_INTERFACES[name].color}`, background: `${ALL_INTERFACES[name].color}20`, borderRadius: 'var(--radius)', padding: '0.4rem', textAlign: 'center', boxShadow: `2px 2px 0 ${ALL_INTERFACES[name].color}` }}>
+                                                        <div style={{ fontSize: '0.5rem', fontWeight: 900, background: ALL_INTERFACES[name].color, color: '#fff', padding: '1px 5px', display: 'inline-block', marginBottom: '0.1rem' }}>IMPLEMENTS</div>
+                                                        <div style={{ fontWeight: 900, fontSize: '0.68rem', fontFamily: 'var(--font-mono)', color: ALL_INTERFACES[name].color }}>{name}</div>
                                                     </div>
                                                 ))}
-                                                {baseAbstract.map(m => (
-                                                    <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', background: 'var(--bg)', border: '2px dashed #ca8a04' }}>
-                                                        <div style={{ width: 8, height: 8, background: 'transparent', border: '2px dashed #ca8a04', flexShrink: 0 }} />
-                                                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 900, color: '#a16207' }}>{m.name} (Empty/Abstract)</span>
+                                                {selectedInterfaces.length === 0 && (
+                                                    <div style={{ border: 'var(--border-width) dashed var(--border)', borderRadius: 'var(--radius)', padding: '0.5rem', textAlign: 'center', opacity: 0.35 }}>
+                                                        <div style={{ fontSize: '0.6rem', fontWeight: 800 }}>No Interfaces</div>
                                                     </div>
-                                                ))}
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* INTERFACE BLOCKS */}
-                                {activeInterfaceData.map(iface => (
-                                    <div key={iface.name} style={{ border: `4px solid ${iface.color}`, background: 'var(--white)', boxShadow: '6px 6px 0 #000' }}>
-                                        <div style={{ background: iface.color === '#2563eb' ? '#dbeafe' : iface.color === '#db2777' ? '#fce7f3' : '#ede9fe', padding: '0.4rem 0.8rem', borderBottom: `4px solid ${iface.color}`, fontWeight: 900, fontSize: '0.7rem', color: iface.color, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><PlugIcon size={14} /> Interface: {iface.name}</span>
-                                            <span style={{ fontSize: '0.5rem', padding: '2px 6px', background: iface.color, color: '#fff', fontWeight: 900 }}>INTERFACE</span>
-                                        </div>
-                                        <div style={{ padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                            {iface.methods.map(m => (
-                                                <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0.4rem', border: `2px dashed ${iface.color}`, background: 'var(--bg)' }}>
-                                                    <div style={{ width: 8, height: 8, background: 'transparent', border: `2px dashed ${iface.color}`, flexShrink: 0 }} />
-                                                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', fontWeight: 900, color: iface.color }}>{m.name}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                                {customInterfaceMethods.length > 0 && (
-                                    <div style={{ border: '4px solid #6366f1', background: 'var(--white)', boxShadow: '6px 6px 0 #000' }}>
-                                        <div style={{ background: '#e0e7ff', padding: '0.4rem 0.8rem', borderBottom: '4px solid #6366f1', fontWeight: 900, fontSize: '0.7rem', color: '#4338ca', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><PlugIcon size={14} /> Custom Interfaces</span>
-                                            <span style={{ fontSize: '0.5rem', padding: '2px 6px', background: '#6366f1', color: '#fff', fontWeight: 900 }}>CUSTOM</span>
-                                        </div>
-                                        <div style={{ padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                            {customInterfaceMethods.map(m => (
-                                                <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0.4rem', border: '2px dashed #6366f1', background: 'var(--bg)' }}>
-                                                    <div style={{ width: 8, height: 8, background: 'transparent', border: '2px dashed #6366f1', flexShrink: 0 }} />
-                                                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', fontWeight: 900, color: '#4338ca' }}>{m.name}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* CENTER: SVG flow arrows */}
-                            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '0 0.6rem', minWidth: 70 }}>
-                                <svg width="50" height="140" viewBox="0 0 50 140">
-                                    <defs>
-                                        <marker id="arrowY" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#d69e2e" /></marker>
-                                        <marker id="arrowC" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2563eb" /></marker>
-                                    </defs>
-                                    <line x1="3" y1="25" x2="43" y2="65" stroke="#d69e2e" strokeWidth="3" markerEnd="url(#arrowY)" />
-                                    <line x1="3" y1="115" x2="43" y2="75" stroke="#2563eb" strokeWidth="3" strokeDasharray="5 3" markerEnd="url(#arrowC)" />
-                                    <text x="25" y="10" fill="#d69e2e" fontSize="7" fontWeight="900" textAnchor="middle">extends</text>
-                                    <text x="25" y="136" fill="#2563eb" fontSize="7" fontWeight="900" textAnchor="middle">implements</text>
-                                </svg>
-                            </div>
-
-                            {/* RIGHT: Your assembled class */}
-                            <div style={{
-                                border: '5px solid var(--border)',
-                                background: 'var(--white)', boxShadow: '8px 8px 0 #000', display: 'flex', flexDirection: 'column'
-                            }}>
-                                <div style={{
-                                    background: blueprintCompleted ? '#48bb78' : '#f97316', padding: '0.6rem 1rem',
-                                    borderBottom: '4px solid #000', fontWeight: 900, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                    color: '#000', fontSize: '0.82rem'
-                                }}>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><BoxIcon size={16} /> Class: {concreteClassName}</span>
-                                    <span style={{ fontSize: '0.55rem', padding: '2px 8px', background: '#000', color: blueprintCompleted ? '#48bb78' : '#f97316', fontWeight: 900 }}>
-                                        {blueprintCompleted ? 'COMPLETE ✓' : `${Object.keys(craftedImplementations).length}/${requiredMethods.length} DONE`}
-                                    </span>
-                                </div>
-                                <div style={{ padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1, overflowY: 'auto' }}>
-                                    
-                                    {/* Inherited ready methods — solid green blocks */}
-                                    {baseConcrete.map(m => (
-                                        <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.5rem', background: '#dcfce7', border: '2px solid #22c55e' }}>
-                                            <div style={{ width: 10, height: 10, background: '#22c55e', border: '1.5px solid #000', flexShrink: 0 }} />
-                                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 900, color: '#15803d' }}>{m.name}</span>
-                                            <span style={{ marginLeft: 'auto', fontSize: '0.5rem', fontWeight: 900, background: '#22c55e', color: '#fff', padding: '1px 5px', border: '1.5px solid #000' }}>INHERITED</span>
-                                        </div>
-                                    ))}
-
-                                    {/* Methods you must write — clickable slots */}
-                                    {requiredMethods.map(name => {
-                                        const returnVal = craftedImplementations[name];
-                                        const isDone = !!returnVal;
-                                        const isActive = activeCraftingMethod === name;
-                                        return (
-                                            <div
-                                                key={name}
-                                                onClick={() => { setActiveCraftingMethod(name); setCraftingInput(craftedImplementations[name] || ''); }}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.5rem',
-                                                    background: isActive ? '#eff6ff' : isDone ? '#dcfce7' : '#fef2f2',
-                                                    border: `3.5px ${isDone ? 'solid' : 'dashed'} ${isActive ? '#3b82f6' : isDone ? '#22c55e' : '#ef4444'}`,
-                                                    cursor: 'pointer', transition: 'all 0.15s'
-                                                }}
-                                            >
-                                                <div style={{ width: 10, height: 10, background: isDone ? '#22c55e' : 'transparent', border: `2px ${isDone ? 'solid' : 'dashed'} ${isDone ? '#000' : '#ef4444'}`, flexShrink: 0 }} />
-                                                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 900, color: isActive ? '#1d4ed8' : isDone ? '#15803d' : '#b91c1c' }}>{name}</span>
-                                                {isDone ? (
-                                                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                                        <span style={{ fontSize: '0.55rem', fontFamily: 'var(--font-mono)', color: '#15803d', fontWeight: 700 }}>= {returnVal}</span>
-                                                        <button onClick={(e) => { e.stopPropagation(); handleRemoveCraft(name); }}
-                                                            style={{ background: '#ef4444', border: '2px solid #000', color: '#fff', fontSize: '0.5rem', fontWeight: 900, cursor: 'pointer', padding: '0px 4px', lineHeight: 1.3 }}>✕</button>
-                                                    </div>
-                                                ) : (
-                                                    <span style={{ marginLeft: 'auto', fontSize: '0.55rem', fontWeight: 900, color: '#b91c1c' }}>CLICK TO CODE</span>
                                                 )}
                                             </div>
-                                        );
-                                    })}
+                                        </div>
 
-                                    {requiredMethods.length === 0 && baseConcrete.length === 0 && (
-                                        <div style={{ fontSize: '0.62rem', color: '#718096', textAlign: 'center', padding: '1rem' }}>Pick a parent or interface to see methods</div>
-                                    )}
+                                        {/* Arrow connector */}
+                                        <div style={{ width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: '12px solid var(--border)' }} />
+
+                                        {/* Result node */}
+                                        <div style={{ width: '100%', maxWidth: 240, border: 'var(--border-width) solid var(--border)', background: 'var(--green)', borderRadius: 'var(--radius)', padding: '0.6rem', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
+                                            <div style={{ fontSize: '0.5rem', fontWeight: 900, background: 'var(--text)', color: 'var(--green)', padding: '1px 6px', display: 'inline-block', marginBottom: '0.15rem' }}>ASSEMBLED</div>
+                                            <div style={{ fontWeight: 900, fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>class {concreteClassName}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Code Output */}
+                                <div style={{ border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
+                                    <div style={{ background: '#21222c', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.45rem 0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ff5555', border: '2px solid var(--border)' }} />
+                                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f1fa8c', border: '2px solid var(--border)' }} />
+                                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#50fa7b', border: '2px solid var(--border)' }} />
+                                            <span style={{ fontSize: '0.6rem', color: '#8b949e', fontFamily: 'var(--font-mono)', marginLeft: '0.5rem' }}>{concreteClassName}.java</span>
+                                        </div>
+                                        <span style={{ color: '#50fa7b', fontWeight: 900, fontSize: '0.52rem', letterSpacing: '0.05em', border: '2px solid #50fa7b', padding: '1px 6px' }}>COMPILED</span>
+                                    </div>
+                                    <div style={{ padding: '0.8rem', background: '#282a36', color: '#f8f8f2', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', lineHeight: 1.6, overflowX: 'auto' }}>
+                                        <div><span style={{ color: '#ff79c6' }}>public class</span> <span style={{ color: '#8be9fd' }}>{concreteClassName}</span></div>
+                                        {selectedBaseClass !== 'None' && <div style={{ paddingLeft: '1rem' }}><span style={{ color: '#ff79c6' }}>extends</span> <span style={{ color: '#f1fa8c' }}>{selectedBaseClass}</span></div>}
+                                        {selectedInterfaces.length > 0 && <div style={{ paddingLeft: '1rem' }}><span style={{ color: '#ff79c6' }}>implements</span> <span style={{ color: '#bd93f9' }}>{selectedInterfaces.join(', ')}</span></div>}
+                                        <div>{'{'}</div>
+                                        {selectedBaseClass !== 'None' && (
+                                            <div style={{ paddingLeft: '1.2rem', color: '#6272a4', fontStyle: 'italic' }}>
+                                                {'// Inherited fields & methods'}
+                                            </div>
+                                        )}
+                                        {requiredMethods.map(m => (
+                                            <div key={m} style={{ paddingLeft: '1.2rem', margin: '0.3rem 0' }}>
+                                                <span style={{ color: '#ffb86c' }}>@Override</span>
+                                                <div><span style={{ color: '#ff79c6' }}>public double</span> <span style={{ color: '#50fa7b' }}>{m.replace('()', '')}</span>() {'{'}</div>
+                                                <div style={{ paddingLeft: '1.2rem' }}><span style={{ color: '#ff79c6' }}>return</span> <span style={{ color: '#bd93f9' }}>1.0</span>;</div>
+                                                <div>{'}'}</div>
+                                            </div>
+                                        ))}
+                                        <div>{'}'}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
-                        {/* LEGEND BAR */}
-                        <div style={{ display: 'flex', gap: '1.5rem', padding: '0.5rem 0.8rem', border: '3px solid var(--border)', background: 'var(--white)', justifyContent: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                <div style={{ width: 10, height: 10, background: '#48bb78', border: '2px solid #000' }} />
-                                <span style={{ fontSize: '0.58rem', fontWeight: 900, color: '#15803d' }}>Ready (Code already written)</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                <div style={{ width: 10, height: 10, background: 'transparent', border: '2px dashed #ef4444' }} />
-                                <span style={{ fontSize: '0.58rem', fontWeight: 900, color: '#b91c1c' }}>Empty (You must write code)</span>
-                            </div>
-                        </div>
-
-                        {/* CRAFTING CONSOLE */}
-                        <AnimatePresence>
-                            {activeCraftingMethod && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    style={{ border: '4px solid var(--border)', background: 'var(--white)', boxShadow: '6px 6px 0 #000', padding: '1rem' }}
-                                >
-                                    <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--text)', marginBottom: '0.6rem' }}>
-                                        Implementing: <span style={{ color: '#2563eb' }}>{activeCraftingMethod}</span>
-                                    </div>
-                                    <div style={{ background: 'var(--bg)', border: '3px solid var(--border)', padding: '0.6rem', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text)', borderRadius: '4px', marginBottom: '0.8rem' }}>
-                                        <div>public double {activeCraftingMethod.replace('()', '')}() &#123;</div>
-                                        <div style={{ paddingLeft: '1.2rem', margin: '0.3rem 0', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                            <span style={{ color: '#db2777', fontWeight: 700 }}>return</span>
-                                            <input type="text" value={craftingInput} onChange={e => setCraftingInput(e.target.value)} placeholder="3.14"
-                                                style={{ background: 'var(--white)', border: '2px solid var(--border)', padding: '0.2rem 0.4rem', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: '#15803d', width: '140px', outline: 'none', borderRadius: '3px', fontWeight: 'bold' }} />
-                                            <span>;</span>
-                                        </div>
-                                        <div>&#125;</div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <button onClick={handleSaveCraft} style={{ flex: 1, padding: '0.5rem', background: '#48bb78', border: '3px solid #000', fontWeight: 900, fontSize: '0.72rem', cursor: 'pointer', color: '#000' }}>Save ✓</button>
-                                        <button onClick={() => { setActiveCraftingMethod(null); setCraftingInput(''); }} style={{ padding: '0.5rem 1rem', background: '#e2e8f0', border: '3px solid #000', fontWeight: 900, fontSize: '0.72rem', cursor: 'pointer', color: '#000' }}>Cancel</button>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
                     </div>
                 )}
 
-                {/* 2. MIX & MATCH — visual puzzle: 1 parent + many interfaces */}
+                {/* 2. COMBINE RULES TAB */}
                 {view === 'multi' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 640 }}>
-
-                        {/* 3-column visual grid */}
-                        <div className="no-mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1.8fr 1fr', gap: '1.2rem', alignItems: 'start', minHeight: 380 }}>
-
-                            {/* LEFT: Parent Class Chassis Selection */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                                <div style={{ background: '#ecc94b', padding: '0.4rem 0.8rem', fontWeight: 900, fontSize: '0.65rem', color: '#000', textAlign: 'center', border: '3px solid #000' }}>
-                                    CORE CHASSIS (PICK MAX 1)
-                                </div>
-                                
-                                {['Machine', 'Organism'].map(name => {
-                                    const active = extendedClassMulti === name;
-                                    return (
-                                        <div key={name} onClick={() => handleExtendClassMulti(name)}
-                                            style={{
-                                                border: `4px solid ${active ? '#d69e2e' : 'var(--border)'}`,
-                                                background: active ? '#fef08a' : 'var(--white)',
-                                                boxShadow: active ? 'none' : '5px 5px 0 #000',
-                                                transition: 'all 0.15s',
-                                                cursor: 'pointer',
-                                                transform: active ? 'translate(3px, 3px)' : 'none'
-                                            }}>
-                                            <div style={{
-                                                background: active ? '#fef08a' : '#f1f5f9',
-                                                padding: '0.5rem 0.8rem',
-                                                borderBottom: `3px solid ${active ? '#d69e2e' : '#cbd5e1'}`,
-                                                fontWeight: 900, fontSize: '0.72rem',
-                                                color: active ? '#854d0e' : '#475569',
-                                                display: 'flex', alignItems: 'center', gap: '0.4rem'
-                                            }}>
-                                                <div style={{ width: 14, height: 14, border: `3px solid ${active ? '#854d0e' : '#64748b'}`, background: active ? '#854d0e' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                    {active && <span style={{ color: '#fff', fontSize: '0.6rem', fontWeight: 900 }}>✓</span>}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
+                        <div style={{ display: 'flex', gap: '1.2rem', flexDirection: isMobile ? 'column' : 'row', alignItems: 'stretch' }}>
+                            
+                            {/* Left — Selection Panel */}
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {/* Base Class */}
+                                <div style={{ border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+                                    <div style={{ background: 'var(--orange)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                        <BuildIcon size={16} color="var(--text)" /> 1. Base Chassis (Extends)
+                                    </div>
+                                    <div style={{ padding: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        {['Machine', 'Organism'].map(name => {
+                                            const active = extendedClassMulti === name;
+                                            return (
+                                                <div key={name} onClick={() => handleExtendClassMulti(name)}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                                        padding: '0.45rem 0.6rem', cursor: 'pointer',
+                                                        border: `var(--border-width) solid ${active ? '#d97706' : 'var(--border)'}`,
+                                                        borderRadius: 'var(--radius)',
+                                                        background: active ? 'var(--orange)' : 'var(--bg)',
+                                                        boxShadow: active ? 'var(--shadow-sm)' : 'none',
+                                                        transform: active ? 'translate(-1px, -1px)' : 'none',
+                                                        transition: 'all 0.1s'
+                                                    }}>
+                                                    <div style={{ width: 14, height: 14, border: '2px solid var(--border)', borderRadius: '50%', background: active ? 'var(--text)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        {active && <span style={{ color: 'var(--orange)', fontSize: '0.55rem', fontWeight: 900 }}>✓</span>}
+                                                    </div>
+                                                    <span style={{ fontSize: '0.72rem', fontWeight: 800 }}>{name}</span>
+                                                    <span style={{ marginLeft: 'auto', fontSize: '0.5rem', fontWeight: 900, opacity: 0.5 }}>MAX 1</span>
                                                 </div>
-                                                {name} Parent
-                                            </div>
-                                            <div style={{ padding: '0.4rem 0.8rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                                                {(name === 'Machine' ? ['powerStatus', 'turnOn()'] : ['healthBar', 'consumeFood()']).map(m => (
-                                                    <div key={m} style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', color: active ? '#854d0e' : '#64748b', fontWeight: 800 }}>+ {m}</div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                            );
+                                        })}
+                                        <AnimatePresence>
+                                            {showInheritanceError && (
+                                                <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
+                                                    style={{ border: 'var(--border-width) solid #d73a49', background: '#d73a4920', borderRadius: 'var(--radius)', padding: '0.4rem 0.6rem', fontSize: '0.62rem', fontWeight: 900, color: '#d73a49', textAlign: 'center' }}>
+                                                    Single Inheritance Rule: Only ONE parent allowed!
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                </div>
 
-                                <AnimatePresence>
-                                    {showInheritanceError && (
-                                        <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                            style={{ border: '4px solid #ef4444', background: '#fee2e2', padding: '0.5rem', fontSize: '0.62rem', fontWeight: 900, color: '#b91c1c', textAlign: 'center', boxShadow: '4px 4px 0 #000' }}>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}><AlertIcon size={12} color="#b91c1c" /> Single Inheritance: You can only extend ONE parent class!</span>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                                {/* Interfaces */}
+                                <div style={{ border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+                                    <div style={{ background: 'var(--cyan)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                        <PlugIcon size={16} color="var(--text)" /> 2. Plug-ins (Implements)
+                                    </div>
+                                    <div style={{ padding: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        {INTERFACES.map(iface => {
+                                            const active = activeInterfacesMulti.includes(iface.name);
+                                            return (
+                                                <div key={iface.name} onClick={() => toggleInterfaceMulti(iface.name)}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                                        padding: '0.45rem 0.6rem', cursor: 'pointer',
+                                                        border: `var(--border-width) solid ${active ? iface.color : 'var(--border)'}`,
+                                                        borderRadius: 'var(--radius)',
+                                                        background: active ? `${iface.color}20` : 'var(--bg)',
+                                                        boxShadow: active ? `2px 2px 0 ${iface.color}` : 'none',
+                                                        transform: active ? 'translate(-1px, -1px)' : 'none',
+                                                        transition: 'all 0.1s'
+                                                    }}>
+                                                    <div style={{ width: 14, height: 14, border: `2px solid ${active ? iface.color : 'var(--border)'}`, background: active ? iface.color : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        {active && <span style={{ color: '#fff', fontSize: '0.55rem', fontWeight: 900 }}>✓</span>}
+                                                    </div>
+                                                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: active ? iface.color : 'var(--text)' }}>{iface.name}</span>
+                                                    <span style={{ marginLeft: 'auto', fontSize: '0.5rem', fontWeight: 900, opacity: 0.5 }}>UNLIMITED</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                             </div>
 
-                            {/* CENTER: Assembled class Board */}
-                            <div style={{ border: '5px solid var(--border)', background: 'var(--white)', boxShadow: '8px 8px 0 #000', display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ background: '#f1f5f9', borderBottom: '4px solid var(--border)', padding: '0.6rem 1rem', fontWeight: 900, fontSize: '0.82rem', color: 'var(--text)', textAlign: 'center' }}>
-                                    Your Assembled Class: SmartRobot
+                            {/* Right — Socket Visualizer */}
+                            <div style={{ flex: 1.3, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ background: 'var(--green)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><GearIcon size={16} /> Assembly Board</span>
+                                    <span style={{ fontSize: '0.58rem', fontFamily: 'var(--font-mono)', opacity: 0.7 }}>class SmartRobot</span>
                                 </div>
-                                
-                                <div style={{ padding: '0.7rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', flex: 1 }}>
-                                    
-                                    {/* Visual parent slot */}
+                                <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', flex: 1 }}>
+                                    {/* Chassis socket */}
                                     <div style={{
-                                        border: `3px solid ${extendedClassMulti ? '#d69e2e' : '#cbd5e1'}`,
-                                        padding: '0.6rem',
-                                        background: extendedClassMulti ? '#fef08a' : 'var(--bg)',
-                                        display: 'flex', flexDirection: 'column', gap: '0.3rem',
-                                        transition: 'all 0.2s'
+                                        border: `var(--border-width) ${extendedClassMulti ? 'solid' : 'dashed'} var(--border)`,
+                                        borderRadius: 'var(--radius)', padding: '0.5rem 0.8rem',
+                                        background: extendedClassMulti ? 'var(--orange)' : 'var(--bg)',
+                                        display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.15s'
                                     }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <span style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>{extendedClassMulti ? <BuildIcon size={16} /> : <PlugIcon size={16} />}</span>
-                                            <span style={{ fontSize: '0.65rem', fontWeight: 900, color: extendedClassMulti ? '#854d0e' : '#94a3b8' }}>
-                                                {extendedClassMulti ? `extends ${extendedClassMulti} (Parent Chassis)` : 'Chassis Slot Empty'}
-                                            </span>
-                                        </div>
-                                        {extendedClassMulti && (
-                                            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', paddingLeft: '1.4rem' }}>
-                                                {(extendedClassMulti === 'Machine' ? ['powerStatus', 'turnOn()'] : ['healthBar', 'consumeFood()']).map(m => (
-                                                    <span key={m} style={{ fontSize: '0.55rem', fontFamily: 'var(--font-mono)', padding: '1px 5px', background: 'var(--white)', border: '1.5px solid #d69e2e', color: '#854d0e', fontWeight: 700 }}>
-                                                        {m}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
+                                        <div style={{ width: 8, height: 8, background: extendedClassMulti ? 'var(--text)' : 'var(--border)', opacity: extendedClassMulti ? 1 : 0.3 }} />
+                                        <span style={{ fontSize: '0.7rem', fontWeight: 900, fontFamily: 'var(--font-mono)', opacity: extendedClassMulti ? 1 : 0.4 }}>
+                                            {extendedClassMulti ? `extends ${extendedClassMulti}` : 'Base Class Slot (empty)'}
+                                        </span>
+                                        <span style={{
+                                            marginLeft: 'auto', fontSize: '0.5rem', fontWeight: 900,
+                                            background: extendedClassMulti ? 'var(--text)' : 'transparent',
+                                            color: extendedClassMulti ? 'var(--orange)' : 'var(--text)',
+                                            border: 'var(--border-width) solid var(--border)',
+                                            padding: '0px 5px', opacity: extendedClassMulti ? 1 : 0.3
+                                        }}>
+                                            {extendedClassMulti ? 'WIRED' : 'EMPTY'}
+                                        </span>
                                     </div>
 
-                                    {/* Visual interface slots */}
+                                    {/* Interface sockets */}
                                     {INTERFACES.map(iface => {
                                         const active = activeInterfacesMulti.includes(iface.name);
                                         return (
                                             <div key={iface.name} style={{
-                                                border: `2px ${active ? 'solid' : 'dashed'} ${active ? iface.color : '#cbd5e1'}`,
-                                                padding: '0.5rem 0.6rem',
-                                                background: active ? 'var(--bg)' : 'var(--white)',
-                                                display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s'
+                                                border: `var(--border-width) ${active ? 'solid' : 'dashed'} ${active ? iface.color : 'var(--border)'}`,
+                                                borderRadius: 'var(--radius)', padding: '0.5rem 0.8rem',
+                                                background: active ? `${iface.color}20` : 'var(--bg)',
+                                                display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.15s'
                                             }}>
-                                                <span style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center' }}><PlugIcon size={16} color={active ? iface.color : '#cbd5e1'} /></span>
-                                                <span style={{ fontSize: '0.6rem', fontWeight: 900, color: active ? iface.color : '#94a3b8' }}>
-                                                    {active ? `implements ${iface.name}` : `Slot for ${iface.name}`}
+                                                <div style={{ width: 8, height: 8, background: active ? iface.color : 'var(--border)', opacity: active ? 1 : 0.3 }} />
+                                                <span style={{ fontSize: '0.68rem', fontWeight: 900, fontFamily: 'var(--font-mono)', color: active ? iface.color : 'var(--text)', opacity: active ? 1 : 0.4 }}>
+                                                    {active ? `implements ${iface.name}` : `${iface.name} Slot (empty)`}
                                                 </span>
-                                                {active ? (
-                                                    <span style={{ marginLeft: 'auto', fontSize: '0.48rem', fontWeight: 900, color: '#fff', background: iface.color, padding: '2px 6px', border: '1px solid #000' }}>CONNECTED</span>
-                                                ) : (
-                                                    <span style={{ marginLeft: 'auto', fontSize: '0.48rem', fontWeight: 700, color: '#cbd5e1' }}>EMPTY</span>
-                                                )}
+                                                <span style={{
+                                                    marginLeft: 'auto', fontSize: '0.5rem', fontWeight: 900,
+                                                    background: active ? iface.color : 'transparent',
+                                                    color: active ? '#fff' : 'var(--text)',
+                                                    border: `var(--border-width) solid ${active ? iface.color : 'var(--border)'}`,
+                                                    padding: '0px 5px', opacity: active ? 1 : 0.3
+                                                }}>
+                                                    {active ? 'WIRED' : 'EMPTY'}
+                                                </span>
                                             </div>
                                         );
                                     })}
 
-                                    {/* Required methods checklist */}
-                                    <div style={{ borderTop: '3px solid var(--border)', paddingTop: '0.5rem', marginTop: '0.2rem' }}>
-                                        <div style={{ fontSize: '0.58rem', fontWeight: 900, color: 'var(--text)', marginBottom: '0.4rem', textTransform: 'uppercase' }}>Checklist: Methods You Must Write:</div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', maxHeight: 130, overflowY: 'auto' }}>
+                                    {/* Compiler checklist */}
+                                    <div style={{ borderTop: 'var(--border-width) solid var(--border)', paddingTop: '0.8rem', marginTop: '0.4rem' }}>
+                                        <div style={{ fontSize: '0.6rem', fontWeight: 900, marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><TerminalIcon size={14} /> Required Methods</div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', maxHeight: 150, overflowY: 'auto' }}>
                                             {activeInterfacesMulti.length === 0 ? (
-                                                <div style={{ fontSize: '0.62rem', color: '#94a3b8', padding: '0.4rem', textAlign: 'center', border: '2px dashed #cbd5e1' }}>
-                                                    Plug in interface modules on the right to build your checklist!
+                                                <div style={{ fontSize: '0.65rem', opacity: 0.4, padding: '0.6rem', textAlign: 'center', border: 'var(--border-width) dashed var(--border)', fontStyle: 'italic' }}>
+                                                    Wire interfaces to see required methods
                                                 </div>
                                             ) : (
                                                 activeInterfacesMulti.flatMap(ifaceName => {
                                                     const iface = INTERFACES.find(i => i.name === ifaceName);
                                                     return iface ? iface.methods.map(m => ({ ...m, color: iface.color, from: iface.name })) : [];
                                                 }).map(m => (
-                                                    <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', border: `2px solid ${m.color}`, background: 'var(--white)' }}>
-                                                        <div style={{ width: 10, height: 10, border: `2px solid ${m.color}`, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                            <span style={{ color: m.color, fontSize: '0.5rem', fontWeight: 900 }}>☐</span>
-                                                        </div>
-                                                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', fontWeight: 900, color: 'var(--text)' }}>{m.name}</span>
-                                                        <span style={{ marginLeft: 'auto', fontSize: '0.5rem', fontWeight: 900, color: m.color, background: 'var(--bg)', padding: '1px 5px', border: `1.5px solid ${m.color}` }}>{m.from}</span>
+                                                    <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.5rem', border: `2px solid ${m.color}`, background: `${m.color}10` }}>
+                                                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', fontWeight: 800 }}>{m.name}</span>
+                                                        <span style={{ marginLeft: 'auto', fontSize: '0.5rem', fontWeight: 900, color: m.color }}>{m.from}</span>
                                                     </div>
                                                 ))
                                             )}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* RIGHT: Interface Modules selection */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                                <div style={{ background: '#3182ce', padding: '0.4rem 0.8rem', fontWeight: 900, fontSize: '0.65rem', color: '#fff', textAlign: 'center', border: '3px solid #000' }}>
-                                    PLUG-INS (PICK UNLIMITED)
-                                </div>
-                                {INTERFACES.map(iface => {
-                                    const active = activeInterfacesMulti.includes(iface.name);
-                                    return (
-                                        <div key={iface.name} onClick={() => toggleInterfaceMulti(iface.name)}
-                                            style={{
-                                                border: `4px solid ${active ? iface.color : 'var(--border)'}`,
-                                                background: active ? 'var(--white)' : 'var(--bg)',
-                                                boxShadow: active ? 'none' : '5px 5px 0 #000',
-                                                transition: 'all 0.15s',
-                                                cursor: 'pointer',
-                                                transform: active ? 'translate(3px, 3px)' : 'none'
-                                            }}>
-                                            <div style={{
-                                                background: active ? iface.color : '#f1f5f9',
-                                                padding: '0.5rem 0.8rem',
-                                                borderBottom: `3px solid ${active ? '#000' : '#cbd5e1'}`,
-                                                fontWeight: 900, fontSize: '0.72rem',
-                                                color: active ? '#fff' : '#475569',
-                                                display: 'flex', alignItems: 'center', gap: '0.4rem'
-                                            }}>
-                                                <div style={{ width: 14, height: 14, border: `3px solid ${active ? '#fff' : '#cbd5e1'}`, background: active ? '#fff' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                    {active && <span style={{ color: iface.color, fontSize: '0.65rem', fontWeight: 900 }}>✓</span>}
-                                                </div>
-                                                {iface.name}
-                                            </div>
-                                            <div style={{ padding: '0.35rem 0.8rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                                                {iface.methods.map(m => (
-                                                    <div key={m.name} style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', color: active ? iface.color : '#64748b', fontWeight: 800 }}>+ {m.name}</div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                        </div>
-
-                        {/* VISUAL LEGEND */}
-                        <div style={{ display: 'flex', gap: '2rem', padding: '0.5rem 1rem', border: '3px solid var(--border)', background: 'var(--white)', justifyContent: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <svg width="24" height="12"><rect x="1" y="1" width="22" height="10" fill="#e6a817" stroke="#000" strokeWidth="2"/></svg>
-                                <span style={{ fontSize: '0.58rem', fontWeight: 900, color: '#854d0e' }}>Parent Class (Max 1)</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <svg width="24" height="12"><rect x="1" y="1" width="22" height="10" fill="#2563eb" stroke="#000" strokeWidth="2"/></svg>
-                                <span style={{ fontSize: '0.58rem', fontWeight: 900, color: '#2563eb' }}>Interfaces (Unlimited)</span>
                             </div>
                         </div>
                     </div>
@@ -1241,7 +1138,7 @@ export default function AbstractInterfaceSim() {
                 </div>
             </div>
         
-            <DownloadNotes topicKey="oops/abstract-interface" />
+            
         </div>
     );
 

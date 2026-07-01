@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
-import DownloadNotes from '../../components/DownloadNotes';
 
 /* ══════════════════════════════════════════
    Safety Algorithm — step builder
@@ -479,7 +478,7 @@ export default function BankersAlgorithmSim() {
                 </div>
             }
         
-            <DownloadNotes topicKey="os/bankers" />
+            
         </div>
     );
 

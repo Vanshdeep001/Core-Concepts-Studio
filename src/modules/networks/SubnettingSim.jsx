@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
 import { NetworkIcon, TreeIcon } from '../../components/Icons';
-import DownloadNotes from '../../components/DownloadNotes';
 
 /* ════════════════════════════════════════
    HELPERS — IP math
@@ -826,7 +825,7 @@ export default function SubnettingSim() {
                         marginBottom: '2px'
                     }}>Quiz {i + 1}: Split {q.basePrefix} into {q.expectedCount}</button>
             ))}
-            <DownloadNotes topicKey="networks/subnetting" />
+            
         </div>
     );
 

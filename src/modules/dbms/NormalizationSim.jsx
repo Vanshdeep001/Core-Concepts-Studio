@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
 import { FileIcon, ChartIcon, LightbulbIcon, CrownIcon } from '../../components/Icons';
-import DownloadNotes from '../../components/DownloadNotes';
 
 export default function NormalizationSim() {
     const [step, setStep] = useState(0); // 0: UNF, 1: 1NF, 2: 2NF, 3: 3NF, 4: BCNF
@@ -506,7 +505,7 @@ export default function NormalizationSim() {
                 <div style={{ color: step >= 4 ? 'var(--green)' : 'red' }}>Teacher → TeacherPhone {step >= 4 ? '✓ [RESOLVED]' : '⚠️ [BCNF]'}</div>
             </div>
         
-            <DownloadNotes topicKey="dbms/normalization" />
+            
         </div>
     );
 

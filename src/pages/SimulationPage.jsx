@@ -15,7 +15,7 @@ import useSnapshot from '../hooks/useSnapshot';
 import { validateProcesses, getProcessColor } from '../utils/helpers';
 import { recommend } from '../engine/recommendation';
 import ImmersiveLayout from '../shared/ImmersiveLayout';
-import DownloadNotes from '../components/DownloadNotes';
+import { MonitorIcon } from '../components/Icons';
 
 export default function SimulationPage() {
     const [conceptMode, setConceptMode] = useState(true);
@@ -105,7 +105,7 @@ export default function SimulationPage() {
                 </div>
             </div>
         
-            <DownloadNotes topicKey="os/scheduling" />
+            
         </div>
     );
 
@@ -187,7 +187,7 @@ export default function SimulationPage() {
         <ImmersiveLayout
             isActive={isActive}
             title={`${algorithm} Scheduler`}
-            icon={null}
+            icon={<MonitorIcon size={22} color="var(--text)" />}
             moduleLabel="OS Module"
             isRunning={isRunning}
             isPaused={isPaused}

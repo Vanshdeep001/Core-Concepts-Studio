@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
 import { HandshakeIcon } from '../../components/Icons';
-import DownloadNotes from '../../components/DownloadNotes';
 
 /* ════════════════════════════════════════
    DATA — TCP states, scenarios
@@ -342,7 +341,7 @@ export default function TcpUdpSim() {
                     <div style={{ padding: '0.25rem 0.4rem', fontWeight: 700, fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>{s.val}</div>
                 </div>
             ))}
-            <DownloadNotes topicKey="networks/tcp-udp" />
+            
         </div>
     );
 

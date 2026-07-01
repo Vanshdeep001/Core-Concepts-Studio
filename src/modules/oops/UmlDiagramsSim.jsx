@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
 import { BoxIcon, TerminalIcon, SyncIcon, ChartIcon, LightbulbIcon } from '../../components/Icons';
-import DownloadNotes from '../../components/DownloadNotes';
 
 /* ── CONSTANTS ── */
 const DIAGRAM_TABS = [
@@ -330,7 +329,7 @@ public class Course {
                 ))}
             </div>
         
-            <DownloadNotes topicKey="oops/uml" />
+            
         </div>
     );
 

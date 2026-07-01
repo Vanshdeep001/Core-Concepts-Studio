@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
-import DownloadNotes from '../../components/DownloadNotes';
 
 /* ════════════════════════════════════════
    PRESET TOPOLOGIES
@@ -498,7 +497,7 @@ export default function RoutingAlgoSim() {
                 Click an edge to cut it. Click a table row to highlight path.
             </div>
         
-            <DownloadNotes topicKey="networks/routing" />
+            
         </div>
     );
 

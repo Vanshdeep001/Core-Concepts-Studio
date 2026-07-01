@@ -1,10 +1,23 @@
-// Thin client for the interview backend (proxied to localhost:3001 in dev).
+// Thin client for the interview backend.
+// In dev, requests go to relative /api (proxied to localhost:3001 by Vite).
+// In production, set VITE_API_BASE_URL to the deployed backend origin.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
 
-const TIMEOUT_MS = 35_000; // 35s — backend hedge fires at 4s, provider cap at 30s
+// 65s — Render free tier can cold-start in 50-60s after sleeping; allow for that.
+const TIMEOUT_MS = 65_000;
 const MAX_RETRIES = 1;
 
+// Fire a lightweight health check to wake a sleeping Render instance, so the
+// first real turn doesn't hit a cold start. Safe to call repeatedly; failures
+// are ignored (it's only a best-effort warm-up).
+export function warmUpBackend() {
+    try {
+        fetch(`${API_BASE_URL}/api/health`, { method: 'GET' }).catch(() => {});
+    } catch { /* ignore */ }
+}
+
 async function doFetch(payload, signal) {
-    const res = await fetch('/api/interview/turn', {
+    const res = await fetch(`${API_BASE_URL}/api/interview/turn`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

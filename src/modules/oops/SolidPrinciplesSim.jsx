@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
-import DownloadNotes from '../../components/DownloadNotes';
 
 import {
     ScissorsIcon, PlugIcon, SyncIcon, PlateIcon, ShuffleIcon,
@@ -45,6 +44,7 @@ const DOT_BG = (id) => (
     </svg>
 );
 const MINI_INPUT = { border: '2px solid var(--border)', padding: '0.25rem 0.4rem', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', fontWeight: 700, background: 'var(--white)', color: 'var(--text)', outline: 'none', borderRadius: '6px', width: '100%' };
+const FULL = { width: '100%', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' };
 
 /* ══════════════════════════════════════════════════════════════
    HELPER: Particle burst effect
@@ -72,7 +72,7 @@ const Particles = ({ active, color = '#ffd93d', count = 12, cx = 200, cy = 200 }
 /* ══════════════════════════════════════════════════════════════
    1. SRP — Swiss Army Knife to Specialized Tools
    ══════════════════════════════════════════════════════════════ */
-const SRPSim = () => {
+const SRPSim = ({ isMobile }) => {
     const [phase, setPhase] = useState('violation');
     const [hoveredTool, setHoveredTool] = useState(null);
     const [particles, setParticles] = useState(false);
@@ -121,98 +121,169 @@ const SRPSim = () => {
     const allMethods = responsibilities.flatMap(r => r.methods.map(m => ({ ...r, method: m })));
 
     return (
-        <div style={SIM_WRAP}>
+        <div style={{ ...FULL, padding: isMobile ? '0.6rem 0.6rem 2.5rem 0.6rem' : '1.2rem', gap: isMobile ? '0.7rem' : '1rem', overflowY: isMobile ? 'auto' : 'hidden' }}>
             {DOT_BG('srpGrid')}
-            <Particles active={particles} cx={300} cy={250} color="#ffd93d" count={20} />
+            <Particles active={particles} cx={isMobile ? 180 : 300} cy={isMobile ? 200 : 250} color="#ffd93d" count={20} />
 
-            <AnimatePresence mode="wait">
-                {phase === 'violation' || phase === 'exploding' ? (
-                    <motion.div key="knife" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem' }}>
-                        {/* God class box */}
-                        <motion.div
-                            animate={phase === 'exploding' ? { scale: [1, 1.1, 0], opacity: [1, 1, 0] } : { rotate: [0, -0.3, 0.3, 0] }}
-                            transition={phase === 'exploding' ? { duration: 0.8 } : { duration: 4, repeat: Infinity }}
-                            style={{ border: '4px solid #e53e3e', borderRadius: '16px', overflow: 'hidden', maxWidth: 500, boxShadow: '0 0 25px rgba(229,62,62,0.25), 5px 5px 0 var(--border)' }}>
-                            <div style={{ background: '#e53e3e', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ fontWeight: 900, fontSize: '0.85rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><XIcon size={14} color="#fff" /> {className} (GOD CLASS)</span>
-                                <span style={{ fontSize: '0.6rem', color: '#ffcece', fontWeight: 700 }}>{allMethods.length} methods • {responsibilities.length} responsibilities</span>
+            {/* Top Control Bar */}
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.6rem', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, zIndex: 2 }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase' }}>Single Responsibility Principle (SRP)</span>
+                <button className="btn btn-sm" style={{ background: phase === 'clean' ? '#a8e6cf' : '#ffd93d', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                    onClick={handleApply}>
+                    {phase === 'clean' ? (<><SyncIcon size={14} /> Show God Class</>) : (<><ScissorsIcon size={14} /> Split Responsibilities</>)}
+                </button>
+            </div>
+
+            {/* Main Content Layout */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1.2rem', minHeight: 0, zIndex: 1 }}>
+                
+                {/* Left Panel: Class Configurator */}
+                <div style={{
+                    flex: 1, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%'
+                }}>
+                    <div style={{ background: 'var(--cyan)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem' }}>
+                        Class Configurator & Responsibility Manager
+                    </div>
+                    <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {/* Class name edit */}
+                        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.65rem', fontWeight: 800, width: 80 }}>Class Name:</span>
+                            <input value={className} onChange={e => setClassName(e.target.value)} style={MINI_INPUT} placeholder="Employee" />
+                        </div>
+
+                        {/* Add Responsibility form */}
+                        <div style={{ border: '2px solid var(--border)', borderRadius: '8px', padding: '0.5rem', background: 'var(--bg-light)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <div style={{ fontSize: '0.6rem', fontWeight: 900, opacity: 0.5 }}>ADD RESPONSIBILITY (REASON TO CHANGE)</div>
+                            <div style={{ display: 'flex', gap: '0.35rem' }}>
+                                <input value={newResp} onChange={e => setNewResp(e.target.value)} placeholder="e.g. Database Storage" style={MINI_INPUT} onKeyDown={e => e.key === 'Enter' && addResponsibility()} />
+                                <button className="btn btn-sm" style={{ background: 'var(--green)', fontSize: '0.62rem' }} onClick={addResponsibility}>+ Add</button>
                             </div>
-                            <div style={{ padding: '0.6rem', display: 'flex', flexWrap: 'wrap', gap: '4px', background: 'var(--white)' }}>
-                                {responsibilities.map(resp => resp.methods.map((m, mi) => (
-                                    <motion.span key={`${resp.id}-${mi}`}
-                                        animate={{ opacity: [0.7, 1, 0.7] }}
-                                        transition={{ duration: 2, delay: mi * 0.1, repeat: Infinity }}
-                                        style={{ padding: '0.2rem 0.5rem', background: resp.color + '30', border: `1.5px solid ${resp.color}`, borderRadius: '5px', fontSize: '0.62rem', fontFamily: 'var(--font-mono)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
-                                        {m} <XIcon size={10} color="#e53e3e" />
-                                    </motion.span>
-                                )))}
-                            </div>
-                        </motion.div>
-                        <motion.div animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.02, 1] }} transition={{ duration: 1.5, repeat: Infinity }}
-                            style={{ background: '#fff5f5', border: '2px solid #e53e3e', borderRadius: '8px', padding: '0.35rem 0.8rem', fontSize: '0.68rem', fontWeight: 800, color: '#e53e3e', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                            <AlertIcon size={14} color="#e53e3e" /> {responsibilities.length} different reasons to change — violates SRP!
-                        </motion.div>
-                    </motion.div>
-                ) : (
-                    <motion.div key="stations" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', width: '100%', maxWidth: 600 }}>
-                        {/* Central hub label */}
-                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }}
-                            style={{ background: '#ffd93d', border: '2px solid var(--border)', borderRadius: '20px', padding: '0.3rem 1rem', fontWeight: 900, fontSize: '0.72rem', boxShadow: '3px 3px 0 var(--border)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                            <LinkIcon size={14} /> {className} — Decomposed
-                        </motion.div>
-                        {/* Split services grid */}
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
-                            {responsibilities.map((resp, i) => (
-                                <motion.div key={resp.id}
-                                    initial={{ scale: 0, rotate: -10 }}
-                                    animate={{ scale: 1, rotate: 0 }}
-                                    transition={{ delay: 0.1 + i * 0.1, type: 'spring', stiffness: 200 }}
-                                    onMouseEnter={() => setHoveredTool(resp.id)}
-                                    onMouseLeave={() => setHoveredTool(null)}
-                                    style={{
-                                        width: 155, background: 'var(--white)',
-                                        border: `3px solid ${hoveredTool === resp.id ? resp.color : 'var(--border)'}`,
-                                        borderRadius: '12px', overflow: 'hidden',
-                                        boxShadow: hoveredTool === resp.id ? `0 0 18px ${resp.color}40, 4px 4px 0 var(--border)` : '4px 4px 0 var(--border)',
-                                        transition: 'border-color 0.2s, box-shadow 0.2s',
-                                    }}>
-                                    <div style={{ background: resp.color, padding: '0.3rem 0.5rem', borderBottom: '2px solid var(--border)', fontWeight: 800, fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                        <CheckIcon size={12} /> {resp.name}
+                        </div>
+
+                        {/* Responsibilities list */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <div style={{ fontSize: '0.6rem', fontWeight: 900, opacity: 0.5 }}>ACTIVE RESPONSIBILITIES & METHODS</div>
+                            {responsibilities.map(resp => (
+                                <div key={resp.id} style={{ border: '2px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
+                                    <div style={{ background: resp.color, padding: '0.3rem 0.5rem', borderBottom: '2px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontWeight: 800, fontSize: '0.65rem' }}>{resp.name}</span>
+                                        <button onClick={() => removeResponsibility(resp.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Delete"><XIcon size={10} /></button>
                                     </div>
-                                    <div style={{ padding: '0.35rem 0.4rem' }}>
+                                    <div style={{ padding: '0.4rem', display: 'flex', flexWrap: 'wrap', gap: '4px', background: 'var(--bg-light)' }}>
                                         {resp.methods.map((m, mi) => (
-                                            <div key={mi} style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', fontWeight: 600, padding: '0.1rem 0.25rem', borderRadius: '3px', marginBottom: '2px', background: `${resp.color}18` }}>
-                                                {m}
-                                            </div>
+                                            <span key={`${resp.id}-${mi}`} style={{ padding: '0.15rem 0.35rem', background: 'var(--white)', border: '1.5px solid var(--border)', borderRadius: '4px', fontSize: '0.58rem', fontFamily: 'var(--font-mono)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                                                {m} <XIcon size={8} color="#e53e3e" style={{ cursor: 'pointer' }} onClick={() => removeMethod(resp.id, mi)} />
+                                            </span>
                                         ))}
-                                        {resp.methods.length === 0 && <div style={{ fontSize: '0.55rem', opacity: 0.4, fontStyle: 'italic' }}>No methods</div>}
+                                        {editingResp === resp.id ? (
+                                            <div style={{ display: 'flex', gap: '0.2rem', width: '100%', marginTop: '0.2rem' }}>
+                                                <input value={newMethod} onChange={e => setNewMethod(e.target.value)} placeholder="methodName()" style={{ ...MINI_INPUT, padding: '0.15rem 0.3rem' }} onKeyDown={e => e.key === 'Enter' && addMethodToResp(resp.id)} />
+                                                <button style={{ fontSize: '0.55rem', padding: '0.15rem 0.3rem', background: 'var(--green)', border: '1.5px solid var(--border)', borderRadius: '4px', fontWeight: 800, cursor: 'pointer' }} onClick={() => addMethodToResp(resp.id)}>Save</button>
+                                                <button style={{ fontSize: '0.55rem', padding: '0.15rem 0.3rem', background: 'var(--white)', border: '1.5px solid var(--border)', borderRadius: '4px', fontWeight: 800, cursor: 'pointer' }} onClick={() => setEditingResp(null)}>Cancel</button>
+                                            </div>
+                                        ) : (
+                                            <button onClick={() => { setEditingResp(resp.id); setNewMethod(''); }} style={{ fontSize: '0.55rem', padding: '0.15rem 0.4rem', background: 'var(--white)', border: '1.5px dashed var(--border)', borderRadius: '4px', fontWeight: 800, cursor: 'pointer' }}>+ Add Method</button>
+                                        )}
                                     </div>
-                                </motion.div>
+                                </div>
                             ))}
                         </div>
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-                            style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.3rem 0.8rem', fontSize: '0.66rem', fontWeight: 800, color: '#38a169', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                            <CheckIcon size={14} color="#38a169" /> Each class has exactly ONE reason to change
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
-            <button className="btn btn-sm" style={{ background: phase === 'clean' ? '#a8e6cf' : '#ffd93d', marginTop: '0.75rem', zIndex: 2, display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                onClick={handleApply}>
-                {phase === 'clean' ? (<><SyncIcon size={14} /> Show God Class</>) : (<><ScissorsIcon size={14} /> Split Responsibilities</>)}
-            </button>
+                    </div>
+                </div>
+
+                {/* Right Panel: Class Status & Decomposition Visualizer */}
+                <div style={{
+                    flex: 1.2, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%',
+                    minHeight: isMobile ? '320px' : 'auto'
+                }}>
+                    <div style={{ background: 'var(--yellow)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem' }}>
+                        Memory & Assembly Visualization
+                    </div>
+                    <div style={{ flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', position: 'relative' }}>
+                        
+                        <AnimatePresence mode="wait">
+                            {phase === 'violation' || phase === 'exploding' ? (
+                                <motion.div key="knife" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem', width: '100%' }}>
+                                    {/* God class box */}
+                                    <motion.div
+                                        animate={phase === 'exploding' ? { scale: [1, 1.1, 0], opacity: [1, 1, 0] } : { rotate: [0, -0.3, 0.3, 0] }}
+                                        transition={phase === 'exploding' ? { duration: 0.8 } : { duration: 4, repeat: Infinity }}
+                                        style={{ border: '4px solid #e53e3e', borderRadius: '16px', overflow: 'hidden', width: '100%', maxWidth: 350, boxShadow: '0 0 25px rgba(229,62,62,0.15), 5px 5px 0 var(--border)' }}>
+                                        <div style={{ background: '#e53e3e', padding: '0.5rem 0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <span style={{ fontWeight: 900, fontSize: '0.78rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><XIcon size={14} color="#fff" /> {className}</span>
+                                            <span style={{ fontSize: '0.55rem', color: '#ffcece', fontWeight: 700 }}>GOD CLASS</span>
+                                        </div>
+                                        <div style={{ padding: '0.6rem', display: 'flex', flexWrap: 'wrap', gap: '4px', background: 'var(--white)', minHeight: 120, alignContent: 'flex-start' }}>
+                                            {responsibilities.flatMap(resp => resp.methods.map((m, mi) => (
+                                                <span key={`${resp.id}-${mi}`}
+                                                    style={{ padding: '0.2rem 0.4rem', background: resp.color + '20', border: `1.5px solid ${resp.color}`, borderRadius: '5px', fontSize: '0.6rem', fontFamily: 'var(--font-mono)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.15rem' }}>
+                                                    {m}
+                                                </span>
+                                            )))}
+                                            {allMethods.length === 0 && <div style={{ fontSize: '0.65rem', opacity: 0.4, fontStyle: 'italic', margin: 'auto' }}>No methods in class</div>}
+                                        </div>
+                                    </motion.div>
+                                    
+                                    <div style={{ background: '#fff5f5', border: '2px solid #e53e3e', borderRadius: '8px', padding: '0.4rem 0.8rem', fontSize: '0.65rem', fontWeight: 800, color: '#e53e3e', display: 'flex', alignItems: 'center', gap: '0.3rem', width: '100%', maxWidth: 350, justifyContent: 'center' }}>
+                                        <AlertIcon size={14} color="#e53e3e" /> <span>{responsibilities.length} reasons to change — violates SRP!</span>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <motion.div key="stations" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', width: '100%' }}>
+                                    
+                                    {/* Split services grid */}
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', justifyContent: 'center', width: '100%', maxWidth: 400 }}>
+                                        {responsibilities.map((resp, i) => (
+                                            <motion.div key={resp.id}
+                                                initial={{ scale: 0, rotate: -10 }}
+                                                animate={{ scale: 1, rotate: 0 }}
+                                                transition={{ delay: 0.05 + i * 0.05, type: 'spring', stiffness: 200 }}
+                                                onMouseEnter={() => setHoveredTool(resp.id)}
+                                                onMouseLeave={() => setHoveredTool(null)}
+                                                style={{
+                                                    width: isMobile ? '100%' : '140px', maxWidth: isMobile ? '100%' : '140px', background: 'var(--white)',
+                                                    border: `3px solid ${hoveredTool === resp.id ? resp.color : 'var(--border)'}`,
+                                                    borderRadius: '12px', overflow: 'hidden',
+                                                    boxShadow: hoveredTool === resp.id ? `0 0 15px ${resp.color}30, 3px 3px 0 var(--border)` : '3px 3px 0 var(--border)',
+                                                    transition: 'all 0.2s',
+                                                }}>
+                                                <div style={{ background: resp.color, padding: '0.3rem 0.5rem', borderBottom: '2px solid var(--border)', fontWeight: 800, fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                    <CheckIcon size={12} /> {resp.name}
+                                                </div>
+                                                <div style={{ padding: '0.4rem', minHeight: 60 }}>
+                                                    {resp.methods.map((m, mi) => (
+                                                        <div key={mi} style={{ fontFamily: 'var(--font-mono)', fontSize: '0.58rem', fontWeight: 600, padding: '1px 5px', borderRadius: '3px', marginBottom: '2px', background: `${resp.color}15`, border: `1px solid ${resp.color}30` }}>
+                                                            {m}
+                                                        </div>
+                                                    ))}
+                                                    {resp.methods.length === 0 && <div style={{ fontSize: '0.55rem', opacity: 0.4, fontStyle: 'italic' }}>No methods</div>}
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                    <div style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.4rem 0.8rem', fontSize: '0.65rem', fontWeight: 800, color: '#38a169', display: 'flex', alignItems: 'center', gap: '0.3rem', width: '100%', maxWidth: 350, justifyContent: 'center' }}>
+                                        <CheckIcon size={14} color="#38a169" /> <span>Single Responsibility achieved!</span>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
     );
 };
 
-
-/* ══════════════════════════════════════════════════════════════
-   2. OCP — Plug & Play Interface Extension
-   ══════════════════════════════════════════════════════════════ */
-const OCPSim = () => {
+const OCPSim = ({ isMobile }) => {
     const [applied, setApplied] = useState(false);
     const [drilling, setDrilling] = useState(false);
     const [pluggedExtras, setPluggedExtras] = useState([]);
@@ -256,141 +327,190 @@ const OCPSim = () => {
     };
 
     return (
-        <div style={SIM_WRAP}>
+        <div style={{ ...FULL, padding: isMobile ? '0.6rem 0.6rem 2.5rem 0.6rem' : '1.2rem', gap: isMobile ? '0.7rem' : '1rem', overflowY: isMobile ? 'auto' : 'hidden' }}>
             {DOT_BG('ocpGrid')}
 
-            <AnimatePresence mode="wait">
-                {!applied ? (
-                    <motion.div key="violation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem' }}>
-                        {/* Hardcoded calculator */}
-                        <motion.div
-                            animate={drilling ? { x: [-2, 2, -2, 2, 0] } : {}}
-                            transition={{ duration: 0.3 }}
-                            style={{
-                                border: `3px solid ${drilling ? '#e53e3e' : 'var(--border)'}`, borderRadius: '14px',
-                                overflow: 'hidden', width: 400, background: 'var(--white)',
-                                boxShadow: drilling ? '0 0 25px rgba(229,62,62,0.3), 5px 5px 0 var(--border)' : '5px 5px 0 var(--border)',
-                                transition: 'border-color 0.3s',
-                            }}>
-                            <div style={{ background: drilling ? '#e53e3e' : '#f8f9fa', padding: '0.5rem 0.8rem', borderBottom: '2px solid var(--border)', fontWeight: 900, fontSize: '0.78rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: drilling ? '#fff' : 'var(--text)' }}>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><XIcon size={14} /> AreaCalculator</span>
-                                {drilling && <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.3, repeat: 4 }} style={{ fontSize: '0.65rem' }}>CRACKING OPEN!</motion.span>}
+            {/* Top Control Bar */}
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.6rem', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, zIndex: 2 }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase' }}>Open / Closed Principle (OCP)</span>
+                <button className="btn btn-sm" style={{ background: applied ? '#a8e6cf' : '#66d9ef', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                    onClick={() => { setApplied(!applied); setPluggedExtras([]); }}>
+                    {applied ? (<><SyncIcon size={14} /> Show Violation</>) : (<><PlugIcon size={14} /> Apply OCP</>)}
+                </button>
+            </div>
+
+            {/* Main Content Layout */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1.2rem', minHeight: 0, zIndex: 1 }}>
+                
+                {/* Left Panel: Extensions Manager */}
+                <div style={{
+                    flex: 1, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%'
+                }}>
+                    <div style={{ background: 'var(--cyan)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem' }}>
+                        OCP Plugin Manager
+                    </div>
+                    <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        
+                        {!applied ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <div style={{ fontSize: '0.65rem', fontWeight: 800, opacity: 0.6 }}>Static Area Calculator (OCP Violating)</div>
+                                <div style={{ fontSize: '0.62rem', opacity: 0.7, lineHeight: 1.5 }}>
+                                    In this mode, adding any new shape requires modification of the core <code>AreaCalculator</code> class, violating OCP. Try adding a shape to see it shake and fail!
+                                </div>
+                                <button className="btn btn-sm" style={{ background: '#e53e3e', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.3rem', width: '100%', justifyContent: 'center', marginTop: '0.5rem' }} onClick={handleDrill}>
+                                    <WrenchIcon size={14} /> Simulate Adding New Shape
+                                </button>
                             </div>
-                            <pre style={{ padding: '0.7rem 0.9rem', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', margin: 0, background: '#0f172a', color: '#e2e8f0', lineHeight: 1.7, position: 'relative' }}>
-                                {drilling && <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
-                                    style={{ position: 'absolute', top: '40%', left: 10, right: 10, height: 2, background: '#e53e3e', transformOrigin: 'left', opacity: 0.7 }} />}
-{`calculateArea(shape) {
-  if (shape == "Circle")   → π * r²
-  else if (shape == "Square")    → s * s
-  else if (shape == "Rect")      → l * w`}
-                                <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }}
-                                    style={{ color: '#e53e3e' }}>{`
-  // Adding Triangle = MODIFY this! `}</motion.span>
-                                <span style={{ color: '#e53e3e', display: 'inline-flex', verticalAlign: 'middle' }}><XIcon size={10} color="#e53e3e" /></span>
-{`
-}`}
-                            </pre>
-                        </motion.div>
+                        ) : (
+                            <>
+                                {/* Plug presets */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                    <div style={{ fontSize: '0.6rem', fontWeight: 900, opacity: 0.5 }}>AVAILABLE SHAPE EXTENSIONS</div>
+                                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                        {presetExtras.map(s => {
+                                            const active = pluggedExtras.some(p => p.id === s.id);
+                                            const ShapeIcon = s.icon;
+                                            return (
+                                                <button key={s.id} onClick={() => handlePlugShape(s)} disabled={active}
+                                                    style={{
+                                                        background: active ? '#eaeaea' : `${s.color}15`,
+                                                        border: `2px solid ${active ? '#ccc' : s.color}`,
+                                                        borderRadius: '8px', padding: '0.35rem 0.6rem', cursor: active ? 'default' : 'pointer',
+                                                        fontWeight: 700, fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem'
+                                                    }}>
+                                                    {ShapeIcon && <ShapeIcon size={14} color={active ? '#999' : s.color} />}
+                                                    {active ? `${s.name} (Plugged)` : `Plug ${s.name}`}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
 
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button className="btn btn-sm" style={{ background: '#e53e3e', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.3rem' }} onClick={handleDrill}>
-                                <WrenchIcon size={14} /> Try Adding Shape
-                            </button>
-                            <button className="btn btn-sm" style={{ background: '#66d9ef', display: 'flex', alignItems: 'center', gap: '0.3rem' }} onClick={() => setApplied(true)}>
-                                <PlugIcon size={14} /> Apply OCP
-                            </button>
-                        </div>
-                    </motion.div>
-                ) : (
-                    <motion.div key="clean" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', width: '100%', maxWidth: 560 }}>
-
-                        {/* Interface header */}
-                        <motion.div initial={{ y: -10 }} animate={{ y: 0 }}
-                            style={{ background: '#f0fff4', border: '3px solid #38a169', borderRadius: '12px', padding: '0.4rem 1.2rem', textAlign: 'center', boxShadow: '4px 4px 0 var(--border)' }}>
-                            <div style={{ fontWeight: 900, fontSize: '0.75rem', color: '#38a169' }}>«interface» Shape</div>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', opacity: 0.7 }}>+ area(): double</div>
-                        </motion.div>
-
-                        {/* Connector lines */}
-                        <div style={{ width: 2, height: 16, background: '#38a169' }} />
-
-                        {/* Shape implementations */}
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', justifyContent: 'center' }}>
-                            {[...baseShapes, ...pluggedExtras].map((s, i) => {
-                                const ShapeIcon = s.icon;
-                                return (
-                                    <motion.div key={s.id}
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ delay: i * 0.08, type: 'spring', stiffness: 250 }}
-                                        style={{
-                                            width: 90, background: 'var(--white)', border: `3px solid ${s.color}`,
-                                            borderRadius: '12px', padding: '0.5rem', textAlign: 'center',
-                                            boxShadow: '3px 3px 0 var(--border)', position: 'relative',
-                                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-                                        }}>
-                                        <span style={{ color: s.color, display: 'inline-flex', marginBottom: '0.3rem' }}>
-                                            {ShapeIcon && <ShapeIcon size={24} />}
-                                        </span>
-                                        <div style={{ fontWeight: 800, fontSize: '0.68rem' }}>{s.name}</div>
-                                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', opacity: 0.5 }}>{s.formula}</div>
-                                        {i >= baseShapes.length && (
-                                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-                                                style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, background: '#38a169', borderRadius: '50%', fontSize: '0.55rem', color: '#fff', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid var(--border)' }}><CheckIcon size={10} color="#fff" /></motion.div>
-                                        )}
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Plug in presets */}
-                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                            {presetExtras.filter(s => !pluggedExtras.find(p => p.id === s.id)).map(s => {
-                                const ShapeIcon = s.icon;
-                                return (
-                                    <motion.button key={s.id} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                                        onClick={() => handlePlugShape(s)}
-                                        style={{ background: `${s.color}15`, border: `2px solid ${s.color}`, borderRadius: '8px', padding: '0.3rem 0.6rem', cursor: 'pointer', fontWeight: 700, fontSize: '0.68rem', fontFamily: 'var(--font-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                        {ShapeIcon && <ShapeIcon size={16} color={s.color} />} + {s.name}
-                                    </motion.button>
-                                );
-                            })}
-                        </div>
-
-                        {/* Custom shape input */}
-                        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', background: 'var(--white)', border: '2px solid var(--border)', borderRadius: '8px', padding: '0.35rem 0.5rem' }}>
-                            <input value={customName} onChange={e => setCustomName(e.target.value)} placeholder="Shape name"
-                                style={{ ...MINI_INPUT, width: 100 }} onKeyDown={e => e.key === 'Enter' && handleAddCustom()} />
-                            <input value={customFormula} onChange={e => setCustomFormula(e.target.value)} placeholder="formula"
-                                style={{ ...MINI_INPUT, width: 80 }} onKeyDown={e => e.key === 'Enter' && handleAddCustom()} />
-                            <button className="btn btn-sm" style={{ background: '#38a169', color: '#fff', fontSize: '0.65rem' }} onClick={handleAddCustom}>+ Plug In</button>
-                        </div>
-
-                        {pluggedExtras.length > 0 && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.3rem 0.8rem', fontSize: '0.65rem', fontWeight: 800, color: '#38a169', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                <ShieldIcon size={14} color="#38a169" /> {pluggedExtras.length} new shape{pluggedExtras.length > 1 ? 's' : ''} added — ZERO existing code modified!
-                            </motion.div>
+                                {/* Custom Shape Plug-in form */}
+                                <div style={{ border: '2px solid var(--border)', borderRadius: '8px', padding: '0.5rem', background: 'var(--bg-light)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                    <div style={{ fontSize: '0.6rem', fontWeight: 900, opacity: 0.5 }}>CREATE CUSTOM PLUGGABLE SHAPE</div>
+                                    <div style={{ display: 'flex', gap: '0.3rem' }}>
+                                        <input value={customName} onChange={e => setCustomName(e.target.value)} placeholder="Hexagon" style={MINI_INPUT} onKeyDown={e => e.key === 'Enter' && handleAddCustom()} />
+                                        <input value={customFormula} onChange={e => setCustomFormula(e.target.value)} placeholder="3√3/2·s²" style={{ ...MINI_INPUT, width: 80 }} onKeyDown={e => e.key === 'Enter' && handleAddCustom()} />
+                                        <button className="btn btn-sm" style={{ background: '#38a169', color: '#fff', fontSize: '0.62rem' }} onClick={handleAddCustom}>+ Plug</button>
+                                    </div>
+                                </div>
+                            </>
                         )}
 
-                        <button className="btn btn-sm" style={{ background: '#a8e6cf', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                            onClick={() => { setApplied(false); setPluggedExtras([]); }}>
-                            <SyncIcon size={14} /> Show Violation
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    </div>
+                </div>
+
+                {/* Right Panel: Engine Visualization */}
+                <div style={{
+                    flex: 1.2, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%',
+                    minHeight: isMobile ? '320px' : 'auto'
+                }}>
+                    <div style={{ background: 'var(--yellow)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem' }}>
+                        Area Calculator Architecture
+                    </div>
+                    <div style={{ flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+                        
+                        <AnimatePresence mode="wait">
+                            {!applied ? (
+                                <motion.div key="violation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', width: '100%' }}>
+                                    {/* Hardcoded calculator */}
+                                    <motion.div
+                                        animate={drilling ? { x: [-2, 2, -2, 2, 0] } : {}}
+                                        transition={{ duration: 0.3 }}
+                                        style={{
+                                            border: `3px solid ${drilling ? '#e53e3e' : 'var(--border)'}`, borderRadius: '14px',
+                                            overflow: 'hidden', width: '100%', maxWidth: 350, background: 'var(--white)',
+                                            boxShadow: drilling ? '0 0 20px rgba(229,62,62,0.15), 4px 4px 0 var(--border)' : '4px 4px 0 var(--border)',
+                                            transition: 'all 0.3s',
+                                        }}>
+                                        <div style={{ background: drilling ? '#e53e3e' : '#f8f9fa', padding: '0.5rem 0.8rem', borderBottom: '2px solid var(--border)', fontWeight: 900, fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: drilling ? '#fff' : 'var(--text)' }}>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><XIcon size={14} /> AreaCalculator</span>
+                                            {drilling && <motion.span animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.3, repeat: 4 }} style={{ fontSize: '0.6rem' }}>MODIFYING CORE!</motion.span>}
+                                        </div>
+                                        <pre style={{ padding: '0.6rem 0.8rem', fontFamily: 'var(--font-mono)', fontSize: '0.62rem', margin: 0, background: '#0f172a', color: '#e2e8f0', lineHeight: 1.6, position: 'relative' }}>
+                                            {drilling && <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
+                                                style={{ position: 'absolute', top: '55%', left: 10, right: 10, height: 2, background: '#e53e3e', transformOrigin: 'left', opacity: 0.7 }} />}
+{`calculateArea(shape) {
+  if (shape == "Circle")   → π*r²
+  else if (shape == "Square")  → s²
+  else if (shape == "Rect")    → l*w`}
+                                            <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }}
+                                                style={{ color: '#e53e3e' }}>{`
+  // Violates OCP: MUST modify code! `}</motion.span>
+                                            <span style={{ color: '#e53e3e', display: 'inline-flex', verticalAlign: 'middle' }}><XIcon size={10} color="#e53e3e" /></span>
+{`
+}`}
+                                        </pre>
+                                    </motion.div>
+                                </motion.div>
+                            ) : (
+                                <motion.div key="clean" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', width: '100%' }}>
+
+                                    {/* Interface header */}
+                                    <motion.div initial={{ y: -10 }} animate={{ y: 0 }}
+                                        style={{ background: '#f0fff4', border: '3px solid #38a169', borderRadius: '12px', padding: '0.4rem 1rem', textAlign: 'center', boxShadow: '3px 3px 0 var(--border)', width: '100%', maxWidth: 260 }}>
+                                        <div style={{ fontWeight: 900, fontSize: '0.72rem', color: '#38a169' }}>«interface» Shape</div>
+                                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.58rem', opacity: 0.7 }}>+ area(): double</div>
+                                    </motion.div>
+
+                                    {/* Connector lines */}
+                                    <div style={{ width: 2, height: 12, background: '#38a169' }} />
+
+                                    {/* Shape implementations */}
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center', width: '100%', maxWidth: 360 }}>
+                                        {[...baseShapes, ...pluggedExtras].map((s, i) => {
+                                            const ShapeIcon = s.icon;
+                                            return (
+                                                <motion.div key={s.id}
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    transition={{ delay: i * 0.05, type: 'spring', stiffness: 250 }}
+                                                    style={{
+                                                        width: 75, background: 'var(--white)', border: `2.5px solid ${s.color}`,
+                                                        borderRadius: '10px', padding: '0.4rem', textAlign: 'center',
+                                                        boxShadow: '2px 2px 0 var(--border)', position: 'relative',
+                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                                                    }}>
+                                                    <span style={{ color: s.color, display: 'inline-flex', marginBottom: '0.2rem' }}>
+                                                        {ShapeIcon && <ShapeIcon size={18} />}
+                                                    </span>
+                                                    <div style={{ fontWeight: 800, fontSize: '0.62rem' }}>{s.name}</div>
+                                                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.45rem', opacity: 0.5 }}>{s.formula}</div>
+                                                    {i >= baseShapes.length && (
+                                                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                                            style={{ position: 'absolute', top: -5, right: -5, width: 14, height: 14, background: '#38a169', borderRadius: '50%', fontSize: '0.5rem', color: '#fff', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' }}><CheckIcon size={8} color="#fff" /></motion.div>
+                                                    )}
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {pluggedExtras.length > 0 && (
+                                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                            style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.35rem 0.6rem', fontSize: '0.62rem', fontWeight: 800, color: '#38a169', display: 'flex', alignItems: 'center', gap: '0.3rem', width: '100%', maxWidth: 300, justifyContent: 'center' }}>
+                                            <ShieldIcon size={12} color="#38a169" /> <span>{pluggedExtras.length} plugins added without code modification!</span>
+                                        </motion.div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
     );
 };
 
-
-/* ══════════════════════════════════════════════════════════════
-   3. LSP — Substitutability Tester
-   ══════════════════════════════════════════════════════════════ */
-const LSPSim = () => {
+const LSPSim = ({ isMobile }) => {
     const [showClean, setShowClean] = useState(false);
     const [testResults, setTestResults] = useState([]);
     const [testing, setTesting] = useState(false);
@@ -405,7 +525,6 @@ const LSPSim = () => {
     useEffect(() => () => timers.current.forEach(t => clearTimeout(t)), []);
 
     const expectedArea = parentW * parentH; // parent contract
-    const childArea = showClean ? (childSize * childSize) : (childSize * childSize); // in violation, square forces both dims equal
     const violationChildArea = childSize * childSize; // square always squares it
     const isViolation = !showClean && violationChildArea !== expectedArea;
 
@@ -420,148 +539,172 @@ const LSPSim = () => {
 
         // Test child
         timers.current.push(setTimeout(() => {
-            const childActualArea = showClean ? childSize * childSize : childSize * childSize;
+            const childActualArea = childSize * childSize;
             const passes = showClean || childActualArea === expectedArea;
-            setTestResults(prev => [...prev, { name: childName, w: showClean ? childSize : childSize, h: showClean ? childSize : childSize, area: childActualArea, expected: expectedArea, pass: passes }]);
+            setTestResults(prev => [...prev, { name: childName, w: childSize, h: childSize, area: childActualArea, expected: expectedArea, pass: passes }]);
         }, 1800));
 
         timers.current.push(setTimeout(() => setTesting(false), 2200));
     };
 
     return (
-        <div style={SIM_WRAP}>
+        <div style={{ ...FULL, padding: isMobile ? '0.6rem 0.6rem 2.5rem 0.6rem' : '1.2rem', gap: isMobile ? '0.7rem' : '1rem', overflowY: isMobile ? 'auto' : 'hidden' }}>
             {DOT_BG('lspGrid')}
 
-            <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center' }}>
-                {/* Test configuration */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', width: 200 }}>
-                    <div style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.5 }}>Configure Test</div>
-                    {/* Parent */}
-                    <div style={{ border: '2px solid var(--border)', borderRadius: '10px', overflow: 'hidden', background: 'var(--white)', boxShadow: '3px 3px 0 var(--border)' }}>
-                        <div style={{ background: '#66d9ef', padding: '0.3rem 0.6rem', borderBottom: '2px solid var(--border)', fontWeight: 800, fontSize: '0.68rem' }}>Parent Class</div>
-                        <div style={{ padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                            <input value={parentName} onChange={e => setParentName(e.target.value)} style={MINI_INPUT} placeholder="Class name" />
-                            <div style={{ display: 'flex', gap: '0.3rem' }}>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontSize: '0.55rem', fontWeight: 700, opacity: 0.5 }}>Width</div>
-                                    <input type="number" value={parentW} onChange={e => setParentW(Number(e.target.value) || 1)} style={{ ...MINI_INPUT, width: '100%' }} />
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontSize: '0.55rem', fontWeight: 700, opacity: 0.5 }}>Height</div>
-                                    <input type="number" value={parentH} onChange={e => setParentH(Number(e.target.value) || 1)} style={{ ...MINI_INPUT, width: '100%' }} />
-                                </div>
-                            </div>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', background: '#f8f9fa', padding: '0.2rem 0.4rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
-                                area() = {parentW} × {parentH} = <strong>{parentW * parentH}</strong>
-                            </div>
-                        </div>
+            {/* Top Control Bar */}
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.6rem', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, zIndex: 2 }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase' }}>Liskov Substitution Tester</span>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn btn-sm" style={{ background: showClean ? 'var(--yellow)' : '#a8e6cf', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                        onClick={() => { setShowClean(!showClean); setTestResults([]); }}>
+                        {showClean ? (<><SyncIcon size={14} /> Show Violation</>) : (<><CheckIcon size={14} /> Fix Design</>)}
+                    </button>
+                    <button className="btn btn-sm" style={{ background: '#66d9ef', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                        onClick={runTest} disabled={testing}>
+                        <SyncIcon size={14} /> Run Test
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Content Layout */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1.2rem', minHeight: 0, zIndex: 1 }}>
+                
+                {/* Left Panel: Class Configurator */}
+                <div style={{
+                    flex: 1, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%'
+                }}>
+                    <div style={{ background: 'var(--cyan)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem' }}>
+                        Inheritance Configuration
                     </div>
-                    {/* Child */}
-                    <div style={{ border: `2px solid ${showClean ? '#38a169' : '#e53e3e'}`, borderRadius: '10px', overflow: 'hidden', background: 'var(--white)', boxShadow: '3px 3px 0 var(--border)', transition: 'border-color 0.3s' }}>
-                        <div style={{ background: showClean ? '#a8e6cf' : '#ffd93d', padding: '0.3rem 0.6rem', borderBottom: '2px solid var(--border)', fontWeight: 800, fontSize: '0.68rem' }}>
-                            Child: {showClean ? 'implements Shape' : `extends ${parentName}`}
-                        </div>
-                        <div style={{ padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                            <input value={childName} onChange={e => setChildName(e.target.value)} style={MINI_INPUT} placeholder="Child name" />
-                            <div>
-                                <div style={{ fontSize: '0.55rem', fontWeight: 700, opacity: 0.5 }}>Side (forces w=h)</div>
-                                <input type="number" value={childSize} onChange={e => setChildSize(Number(e.target.value) || 1)} style={MINI_INPUT} />
+                    <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {/* Parent Class */}
+                        <div style={{ border: '2px solid var(--border)', borderRadius: '10px', overflow: 'hidden', background: 'var(--bg-light)' }}>
+                            <div style={{ background: '#e2e8f0', padding: '0.35rem 0.6rem', borderBottom: '2px solid var(--border)', fontWeight: 800, fontSize: '0.68rem' }}>Parent Class (Supertype)</div>
+                            <div style={{ padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 800, width: 80 }}>Class Name:</span>
+                                    <input value={parentName} onChange={e => setParentName(e.target.value)} style={MINI_INPUT} placeholder="Rectangle" />
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 800, width: 80 }}>Test Width:</span>
+                                    <input type="number" value={parentW} onChange={e => setParentW(Number(e.target.value) || 1)} style={MINI_INPUT} />
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 800, width: 80 }}>Test Height:</span>
+                                    <input type="number" value={parentH} onChange={e => setParentH(Number(e.target.value) || 1)} style={MINI_INPUT} />
+                                </div>
+                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', background: 'var(--white)', padding: '0.25rem 0.4rem', borderRadius: '4px', border: '1.5px solid var(--border)', marginTop: '0.2rem' }}>
+                                    area() Contract: width × height = {parentW} × {parentH} = <strong>{parentW * parentH}</strong>
+                                </div>
                             </div>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', background: '#f8f9fa', padding: '0.2rem 0.4rem', borderRadius: '4px', border: `1px solid ${showClean ? '#38a169' : isViolation ? '#e53e3e' : 'var(--border)'}` }}>
-                                area() = {childSize} × {childSize} = <strong style={{ color: !showClean && isViolation ? '#e53e3e' : '#38a169' }}>{childSize * childSize}</strong>
+                        </div>
+
+                        {/* Child Class */}
+                        <div style={{ border: `2px solid ${showClean ? '#38a169' : '#e53e3e'}`, borderRadius: '10px', overflow: 'hidden', background: 'var(--bg-light)', transition: 'all 0.3s' }}>
+                            <div style={{ background: showClean ? '#a8e6cf' : '#ffd93d', padding: '0.35rem 0.6rem', borderBottom: '2px solid var(--border)', fontWeight: 800, fontSize: '0.68rem' }}>
+                                Child Class: {showClean ? 'Independent Class' : `Subtype (extends ${parentName})`}
+                            </div>
+                            <div style={{ padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 800, width: 80 }}>Class Name:</span>
+                                    <input value={childName} onChange={e => setChildName(e.target.value)} style={MINI_INPUT} placeholder="Square" />
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 800, width: 80 }}>Side Length:</span>
+                                    <input type="number" value={childSize} onChange={e => setChildSize(Number(e.target.value) || 1)} style={MINI_INPUT} />
+                                </div>
+                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', background: 'var(--white)', padding: '0.25rem 0.4rem', borderRadius: '4px', border: `1.5px solid ${showClean ? '#38a169' : isViolation ? '#e53e3e' : 'var(--border)'}`, marginTop: '0.2rem' }}>
+                                    area() Outcome: side × side = {childSize} × {childSize} = <strong style={{ color: !showClean && isViolation ? '#e53e3e' : '#38a169' }}>{childSize * childSize}</strong>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Test machine visualization */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', flex: 1, minWidth: 260 }}>
-                    {/* The substitutability test machine */}
-                    <div style={{
-                        width: 280, border: `3px solid ${testing ? '#66d9ef' : 'var(--border)'}`, borderRadius: '16px',
-                        overflow: 'hidden', background: 'var(--white)', boxShadow: '5px 5px 0 var(--border)',
-                        transition: 'border-color 0.3s',
-                    }}>
-                        <div style={{ background: testing ? '#66d9ef' : '#f8f9fa', padding: '0.5rem 0.8rem', borderBottom: '2px solid var(--border)', fontWeight: 900, fontSize: '0.78rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
-                            {testing && <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ display: 'inline-flex' }}><GearIcon size={14} /></motion.span>}
-                            <SyncIcon size={16} /> Substitutability Checker
-                            {testing && <motion.span animate={{ rotate: -360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ display: 'inline-flex' }}><GearIcon size={14} /></motion.span>}
-                        </div>
-                        <div style={{ padding: '0.6rem', textAlign: 'center' }}>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', opacity: 0.6, marginBottom: '0.3rem' }}>Contract: area() must return</div>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.3rem', fontWeight: 900, color: '#66d9ef' }}>{expectedArea}</div>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', opacity: 0.4 }}>({parentW} × {parentH})</div>
-                        </div>
+                {/* Right Panel: Verification Engine */}
+                <div style={{
+                    flex: 1.2, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%',
+                    minHeight: isMobile ? '320px' : 'auto'
+                }}>
+                    <div style={{ background: 'var(--yellow)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem' }}>
+                        Substitutability Verification Engine
                     </div>
+                    <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+                        
+                        {/* Checker Device */}
+                        <div style={{
+                            width: '100%', maxWidth: 300, border: `3px solid ${testing ? '#66d9ef' : 'var(--border)'}`, borderRadius: '16px',
+                            overflow: 'hidden', background: 'var(--white)', boxShadow: '4px 4px 0 var(--border)',
+                            transition: 'border-color 0.3s',
+                        }}>
+                            <div style={{ background: testing ? '#66d9ef' : '#f1f5f9', padding: '0.5rem 0.8rem', borderBottom: '2px solid var(--border)', fontWeight: 900, fontSize: '0.75rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                                {testing && <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ display: 'inline-flex' }}><GearIcon size={14} /></motion.span>}
+                                <SyncIcon size={16} /> Substitutability Checker
+                            </div>
+                            <div style={{ padding: '0.8rem', textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', opacity: 0.6, marginBottom: '0.3rem' }}>Contract: area() must return</div>
+                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.6rem', fontWeight: 900, color: '#2563eb' }}>{expectedArea}</div>
+                                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', opacity: 0.4 }}>({parentW} × {parentH})</div>
+                            </div>
+                        </div>
 
-                    {/* Test results */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', width: 280 }}>
-                        <AnimatePresence>
-                            {testResults.map((r, i) => (
-                                <motion.div key={i}
-                                    initial={{ x: -30, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    transition={{ type: 'spring' }}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                        padding: '0.5rem 0.7rem', borderRadius: '10px',
-                                        border: `2px solid ${r.pass ? '#38a169' : '#e53e3e'}`,
-                                        background: r.pass ? '#f0fff4' : '#fff5f5',
-                                        boxShadow: '3px 3px 0 var(--border)',
-                                    }}>
-                                    <motion.div
-                                        animate={r.pass ? { scale: [1, 1.2, 1] } : { rotate: [0, 10, -10, 10, -10, 0] }}
-                                        transition={{ duration: r.pass ? 0.4 : 0.5 }}
-                                        style={{ fontSize: '1.2rem', display: 'inline-flex', alignItems: 'center' }}>
-                                        {r.pass ? <CheckIcon size={20} color="#38a169" /> : <AlertIcon size={20} color="#e53e3e" />}
-                                    </motion.div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontWeight: 800, fontSize: '0.72rem' }}>{r.name}</div>
-                                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', opacity: 0.7 }}>
-                                            area() → {r.area} {r.pass ? '= ' : '≠ '} expected {r.expected}
+                        {/* Test Results Feed */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%', maxWidth: 300 }}>
+                            <AnimatePresence>
+                                {testResults.map((r, i) => (
+                                    <motion.div key={i}
+                                        initial={{ x: -20, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ type: 'spring' }}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                            padding: '0.5rem 0.7rem', borderRadius: '10px',
+                                            border: `2px solid ${r.pass ? '#38a169' : '#e53e3e'}`,
+                                            background: r.pass ? '#f0fff4' : '#fff5f5',
+                                            boxShadow: '2px 2px 0 var(--border)',
+                                        }}>
+                                        <div style={{ fontSize: '1.2rem', display: 'inline-flex', alignItems: 'center' }}>
+                                            {r.pass ? <CheckIcon size={18} color="#38a169" /> : <AlertIcon size={18} color="#e53e3e" />}
                                         </div>
-                                    </div>
-                                    <span style={{ fontWeight: 900, fontSize: '0.7rem', color: r.pass ? '#38a169' : '#e53e3e' }}>
-                                        {r.pass ? 'PASS' : 'FAIL'}
-                                    </span>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: 800, fontSize: '0.72rem' }}>{r.name}</div>
+                                            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', opacity: 0.7 }}>
+                                                area() → {r.area} {r.pass ? '==' : '!='} expected {r.expected}
+                                            </div>
+                                        </div>
+                                        <span style={{ fontWeight: 900, fontSize: '0.7rem', color: r.pass ? '#38a169' : '#e53e3e' }}>
+                                            {r.pass ? 'PASS' : 'FAIL'}
+                                        </span>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+
+                            {testResults.length >= 2 && !testResults[1].pass && (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                    style={{ background: '#fff5f5', border: '2px solid #e53e3e', borderRadius: '8px', padding: '0.4rem 0.6rem', fontSize: '0.62rem', color: '#c53030', fontWeight: 700, textAlign: 'center', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
+                                    <AlertIcon size={14} color="#e53e3e" /> <span>{childName} breaks Liskov rules! Width change forces height change, violating parent contract.</span>
                                 </motion.div>
-                            ))}
-                        </AnimatePresence>
+                            )}
+                            {testResults.length >= 2 && testResults[1].pass && showClean && (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                    style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.4rem 0.6rem', fontSize: '0.62rem', color: '#38a169', fontWeight: 700, textAlign: 'center', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
+                                    <CheckIcon size={14} color="#38a169" /> <span>Valid design! Independent classes implement Shape contract correctly.</span>
+                                </motion.div>
+                            )}
+                        </div>
 
-                        {testResults.length >= 2 && !testResults[1].pass && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                style={{ background: '#fff5f5', border: '2px solid #e53e3e', borderRadius: '8px', padding: '0.4rem 0.6rem', fontSize: '0.62rem', color: '#c53030', fontWeight: 700, textAlign: 'center', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
-                                <AlertIcon size={14} color="#e53e3e" /> <span>{childName} cannot substitute {parentName} — setting width also sets height, breaking contract!</span>
-                            </motion.div>
-                        )}
-                        {testResults.length >= 2 && testResults[1].pass && showClean && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.4rem 0.6rem', fontSize: '0.62rem', color: '#38a169', fontWeight: 700, textAlign: 'center', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
-                                <CheckIcon size={14} color="#38a169" /> <span>Both implement Shape independently — no forced inheritance!</span>
-                            </motion.div>
-                        )}
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="btn btn-sm" style={{ background: showClean ? '#ffd93d' : '#a8e6cf', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                            onClick={() => { setShowClean(!showClean); setTestResults([]); }}>
-                            {showClean ? (<><SyncIcon size={14} /> Show Violation</>) : (<><CheckIcon size={14} /> Fix Design</>)}
-                        </button>
-                        <button className="btn btn-sm" style={{ background: '#66d9ef', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                            onClick={runTest} disabled={testing}>
-                            <SyncIcon size={14} /> Run Test
-                        </button>
                     </div>
                 </div>
+
             </div>
         </div>
     );
 };
 
-
-/* ══════════════════════════════════════════════════════════════
-   4. ISP — Restaurant Menu 🍽️
-   ══════════════════════════════════════════════════════════════ */
 const DEFAULT_MENU_ITEMS = [
     { id: 'work', name: 'work()', cat: 'workable', icon: GearIcon, canRobot: true },
     { id: 'code', name: 'code()', cat: 'workable', icon: LaptopIcon, canRobot: true },
@@ -573,7 +716,7 @@ const DEFAULT_MENU_ITEMS = [
     { id: 'meetClient', name: 'meetClient()', cat: 'manageable', icon: HandshakeIcon, canRobot: false },
 ];
 
-const ISPSim = () => {
+const ISPSim = ({ isMobile }) => {
     const [applied, setApplied] = useState(false);
     const [robotReaction, setRobotReaction] = useState(null);
     const [menuItems, setMenuItems] = useState(DEFAULT_MENU_ITEMS);
@@ -597,139 +740,246 @@ const ISPSim = () => {
     const cats = [...new Set(menuItems.map(i => i.cat))];
     const catLabels = { workable: 'IWorkable', eatable: 'IEatable', sleepable: 'ISleepable', manageable: 'IManageable' };
     const catColors = { workable: '#a8e6cf', eatable: '#ffd93d', sleepable: '#66d9ef', manageable: '#b39ddb' };
-    const catFor = { workable: 'Robot', eatable: 'Human', sleepable: 'Human', manageable: 'Manager' };
 
     return (
-        <div style={SIM_WRAP}>
+        <div style={{ ...FULL, padding: isMobile ? '0.6rem 0.6rem 2.5rem 0.6rem' : '1.2rem', gap: isMobile ? '0.7rem' : '1rem', overflowY: isMobile ? 'auto' : 'hidden' }}>
             {DOT_BG('ispGrid')}
 
-            <AnimatePresence mode="wait">
-                {!applied ? (
-                    <motion.div key="fat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        style={{ display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        {/* Fat menu */}
-                        <motion.div animate={{ rotate: [0, -0.3, 0.3, 0] }} transition={{ duration: 5, repeat: Infinity }}
-                            style={{ width: 230, background: 'var(--white)', border: '3px solid #d69e2e', borderRadius: '14px', overflow: 'hidden', boxShadow: '5px 5px 0 var(--border)' }}>
-                            <div style={{ background: '#d69e2e', padding: '0.45rem 0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', fontWeight: 900, fontSize: '0.78rem', color: '#fff', borderBottom: '2px solid #b7791f' }}>
-                                <FileIcon size={16} /> IWorker — MEGA MENU
+            {/* Top Control Bar */}
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.6rem', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, zIndex: 2 }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase' }}>Interface Segregation Principle (ISP)</span>
+                <button className="btn btn-sm" style={{ background: applied ? '#a8e6cf' : '#ff6b9d', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                    onClick={() => { setApplied(!applied); setRobotReaction(null); }}>
+                    {applied ? (<><SyncIcon size={14} /> Show Fat Interface</>) : (<><ScissorsIcon size={14} /> Split Interfaces (Apply ISP)</>)}
+                </button>
+            </div>
+
+            {/* Main Content Layout */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1.2rem', minHeight: 0, zIndex: 1 }}>
+                
+                {/* Left Panel: Capabilities Editor */}
+                <div style={{
+                    flex: 1, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%'
+                }}>
+                    <div style={{ background: 'var(--cyan)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem' }}>
+                        Worker Specification & Menu Builder
+                    </div>
+                    <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        
+                        {/* Define Interface Capabilities */}
+                        <div style={{ border: '2px solid var(--border)', borderRadius: '8px', padding: '0.5rem', background: 'var(--bg-light)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <div style={{ fontSize: '0.6rem', fontWeight: 900, opacity: 0.5 }}>ADD INTERFACE CAPABILITY METHOD</div>
+                            <input value={newMethod} onChange={e => setNewMethod(e.target.value)} placeholder="e.g. debugCode()" style={MINI_INPUT} onKeyDown={e => e.key === 'Enter' && addMethod()} />
+                            
+                            <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', marginTop: '0.1rem' }}>
+                                <select value={newCat} onChange={e => setNewCat(e.target.value)} style={{ ...MINI_INPUT, flex: 1.2, height: 28, padding: '0 0.3rem' }}>
+                                    <option value="workable">Workable (IWorkable)</option>
+                                    <option value="eatable">Eatable (IEatable)</option>
+                                    <option value="sleepable">Sleepable (ISleepable)</option>
+                                    <option value="manageable">Manageable (IManageable)</option>
+                                </select>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.58rem', fontWeight: 800, cursor: 'pointer', userSelect: 'none' }}>
+                                    <input type="checkbox" checked={newCanRobot} onChange={e => setNewCanRobot(e.target.checked)} />
+                                    Robot Can Do
+                                </label>
+                                <button className="btn btn-sm" style={{ background: '#ff6b9d', fontSize: '0.62rem', height: 28, padding: '0 0.6rem' }} onClick={addMethod}>+ Add</button>
                             </div>
-                            <div style={{ padding: '0.4rem', maxHeight: 280, overflowY: 'auto' }}>
+                        </div>
+
+                        {/* Interactive methods grid */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <div style={{ fontSize: '0.6rem', fontWeight: 900, opacity: 0.5 }}>CAPABILITIES (HOVER TO TEST CLIENTS)</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: 220, overflowY: 'auto', paddingRight: '2px' }}>
                                 {menuItems.map(item => {
                                     const ItemIcon = item.icon;
                                     return (
-                                        <motion.div key={item.id}
+                                        <div key={item.id}
                                             onMouseEnter={() => handleMenuItemHover(item)}
                                             onMouseLeave={() => setRobotReaction(null)}
-                                            whileHover={{ x: 3 }}
                                             style={{
-                                                padding: '0.25rem 0.45rem', marginBottom: '3px', borderRadius: '6px',
+                                                padding: '0.3rem 0.5rem', borderRadius: '6px',
                                                 display: 'flex', alignItems: 'center', gap: '0.35rem',
-                                                fontSize: '0.68rem', fontWeight: 700, fontFamily: 'var(--font-mono)',
+                                                fontSize: '0.65rem', fontWeight: 700, fontFamily: 'var(--font-mono)',
                                                 background: item.canRobot ? '#c6f6d520' : '#fed7d720',
                                                 border: `1.5px solid ${item.canRobot ? '#38a16940' : '#e53e3e40'}`,
                                                 cursor: 'default',
                                             }}>
-                                            {ItemIcon && <ItemIcon size={14} />}
+                                            {ItemIcon && <ItemIcon size={13} color="var(--text)" />}
                                             <span style={{ flex: 1 }}>{item.name}</span>
-                                            {!item.canRobot && <span style={{ fontSize: '0.5rem', color: '#e53e3e', fontWeight: 900 }}>N/A</span>}
-                                        </motion.div>
+                                            <span style={{ fontSize: '0.52rem', padding: '1px 5px', borderRadius: '3px', fontWeight: 800, color: 'var(--text)', background: catColors[item.cat] }}>
+                                                {catLabels[item.cat]}
+                                            </span>
+                                        </div>
                                     );
                                 })}
                             </div>
-                            <div style={{ background: '#fff5f5', padding: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', fontSize: '0.55rem', fontWeight: 800, color: '#e53e3e', borderTop: '2px solid #e53e3e40' }}>
-                                <AlertIcon size={12} color="#e53e3e" /> {menuItems.length} items — Robot can only use {menuItems.filter(i => i.canRobot).length}!
-                            </div>
-                        </motion.div>
-
-                        {/* Robot */}
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
-                            <motion.div
-                                animate={robotReaction === 'confused' ? { rotate: [0, -8, 8, -4, 4, 0] } : {}}
-                                transition={{ duration: 0.5 }}
-                                style={{
-                                    width: 90, height: 110, background: '#e2e8f0', borderRadius: '18px',
-                                    border: '3px solid var(--border)', display: 'flex', flexDirection: 'column',
-                                    alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: '4px 4px 0 var(--border)', position: 'relative',
-                                }}>
-                                <CpuIcon size={36} color="var(--text)" />
-                                <AnimatePresence>
-                                    {robotReaction === 'confused' && (
-                                        <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
-                                            style={{ position: 'absolute', top: -12, right: -12, display: 'inline-flex' }}>
-                                            <AlertIcon size={16} color="#e53e3e" />
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </motion.div>
-                            <span style={{ fontWeight: 800, fontSize: '0.72rem' }}>Robot</span>
-                            <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2.5, repeat: Infinity }}
-                                style={{ fontSize: '0.58rem', fontWeight: 700, color: '#e53e3e', textAlign: 'center', maxWidth: 110 }}>
-                                "Why must I implement sleep() and eat()?"
-                            </motion.div>
                         </div>
-                    </motion.div>
-                ) : (
-                    <motion.div key="split" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        style={{ display: 'flex', gap: '0.8rem', alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        {cats.map((cat, i) => (
-                            <motion.div key={cat}
-                                initial={{ scale: 0, y: 20 }}
-                                animate={{ scale: 1, y: 0 }}
-                                transition={{ delay: i * 0.1, type: 'spring', stiffness: 200 }}
-                                style={{
-                                    width: 135, background: 'var(--white)', borderRadius: '12px', overflow: 'hidden',
-                                    border: `3px solid ${catColors[cat] || '#ccc'}`, boxShadow: '4px 4px 0 var(--border)',
-                                }}>
-                                <div style={{ background: catColors[cat] || '#ddd', padding: '0.3rem 0.5rem', borderBottom: '2px solid var(--border)', fontWeight: 800, fontSize: '0.65rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
-                                    <ScissorsIcon size={14} /> {catLabels[cat] || `I${cat.charAt(0).toUpperCase() + cat.slice(1)}`}
-                                </div>
-                                <div style={{ padding: '0.3rem' }}>
-                                    {menuItems.filter(i => i.cat === cat).map(item => {
-                                        const ItemIcon = item.icon;
-                                        return (
-                                            <div key={item.id} style={{
-                                                padding: '0.15rem 0.3rem', marginBottom: '2px', borderRadius: '4px',
-                                                background: `${catColors[cat] || '#ddd'}18`, fontSize: '0.6rem', fontWeight: 700,
-                                                fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '0.25rem',
+
+                    </div>
+                </div>
+
+                {/* Right Panel: Client Execution Simulator */}
+                <div style={{
+                    flex: 1.2, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%',
+                    minHeight: isMobile ? '320px' : 'auto'
+                }}>
+                    <div style={{ background: 'var(--yellow)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem' }}>
+                        Client Interface Compliance Simulator
+                    </div>
+                    <div style={{ flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+                        
+                        <AnimatePresence mode="wait">
+                            {!applied ? (
+                                <motion.div key="fat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', width: '100%' }}>
+                                    {/* Fat menu */}
+                                    <motion.div animate={{ rotate: [0, -0.3, 0.3, 0] }} transition={{ duration: 5, repeat: Infinity }}
+                                        style={{ width: '100%', maxWidth: 280, background: 'var(--white)', border: '3px solid #d69e2e', borderRadius: '14px', overflow: 'hidden', boxShadow: '4px 4px 0 var(--border)' }}>
+                                        <div style={{ background: '#d69e2e', padding: '0.4rem 0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', fontWeight: 900, fontSize: '0.72rem', color: '#fff', borderBottom: '2px solid #b7791f' }}>
+                                            <FileIcon size={14} color="#fff" /> IWorker (FAT INTERFACE)
+                                        </div>
+                                        <div style={{ padding: '0.4rem', maxHeight: 150, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                            {menuItems.map(item => (
+                                                <span key={item.id} style={{ padding: '1px 5px', borderRadius: '3px', fontSize: '0.55rem', fontWeight: 800, fontFamily: 'var(--font-mono)', border: '1px solid var(--border)', background: 'var(--bg-light)' }}>
+                                                    {item.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Link line */}
+                                    <div style={{ width: 3, height: 16, background: '#e53e3e', borderLeft: '1px dashed #fff' }} />
+
+                                    {/* Robot Client Forced to Implement Eat/Sleep */}
+                                    <motion.div
+                                        animate={robotReaction === 'confused' ? { x: [-3, 3, -3, 0], rotate: [-2, 2, -2, 0] } : {}}
+                                        transition={{ duration: 0.4 }}
+                                        style={{
+                                            width: 220, border: `3px solid ${robotReaction === 'confused' ? '#e53e3e' : 'var(--border)'}`, borderRadius: '14px',
+                                            padding: '0.6rem', background: 'var(--white)', boxShadow: '3px 3px 0 var(--border)', textAlign: 'center',
+                                            transition: 'all 0.2s',
+                                        }}>
+                                        <div style={{ fontSize: '1.5rem', display: 'flex', justifyContent: 'center', margin: '0.2rem 0' }}>🤖</div>
+                                        <div style={{ fontWeight: 900, fontSize: '0.75rem' }}>RobotWorker Client</div>
+                                        <div style={{ fontSize: '0.55rem', opacity: 0.5, fontWeight: 700 }}>IMPLEMENTS IWORKER</div>
+
+                                        {robotReaction === 'confused' && (
+                                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                                style={{ background: '#fff5f5', border: '1.5px solid #e53e3e', borderRadius: '6px', padding: '0.2rem 0.4rem', fontSize: '0.52rem', color: '#e53e3e', fontWeight: 800, marginTop: '0.3rem', lineHeight: 1.2 }}>
+                                                UnsupportedOperationException! Robots cannot eat() or sleep()!
+                                            </motion.div>
+                                        )}
+                                    </motion.div>
+                                    
+                                    {!robotReaction && (
+                                        <div style={{ fontSize: '0.58rem', opacity: 0.5, fontWeight: 700, textAlign: 'center' }}>
+                                            Hover any unworkable method (e.g. eat, sleep) to test Robot compliance
+                                        </div>
+                                    )}
+                                </motion.div>
+                            ) : (
+                                <motion.div key="clean" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', width: '100%' }}>
+                                    
+                                    {/* SVG Layout Flowchart */}
+                                    <svg viewBox="0 0 360 300" style={{ width: '100%', maxWidth: 360, height: 300, overflow: 'visible' }}>
+                                        {/* Dynamic connection lines */}
+                                        {(() => {
+                                            const lines = [
+                                                { from: 'workable', to: 'robot', x1: 42.5, y1: 100, x2: 90, y2: 210 },
+                                                { from: 'workable', to: 'human', x1: 42.5, y1: 100, x2: 270, y2: 210 },
+                                                { from: 'eatable', to: 'human', x1: 134.5, y1: 100, x2: 270, y2: 210 },
+                                                { from: 'sleepable', to: 'human', x1: 226.5, y1: 100, x2: 270, y2: 210 },
+                                            ];
+                                            return lines.filter(l => cats.includes(l.from)).map((l, idx) => {
+                                                const d = `M ${l.x1} ${l.y1} C ${l.x1} 155, ${l.x2} 155, ${l.x2} ${l.y2}`;
+                                                return (
+                                                    <g key={idx}>
+                                                        <path d={d} stroke="var(--border)" strokeWidth="4.5" fill="none" opacity="0.15" />
+                                                        <path d={d} stroke="#38a169" strokeWidth="2.5" fill="none" />
+                                                        <circle cx={l.x1} cy={l.y1} r="3.5" fill="#38a169" stroke="var(--white)" strokeWidth="1" />
+                                                        <circle cx={l.x2} cy={l.y2} r="3.5" fill="#38a169" stroke="var(--white)" strokeWidth="1" />
+                                                    </g>
+                                                );
+                                            });
+                                        })()}
+
+                                        {/* Segregated interfaces */}
+                                        {(() => {
+                                            const catPositions = { workable: 0, eatable: 92, sleepable: 184, manageable: 275 };
+                                            return cats.map(cat => {
+                                                const x = catPositions[cat] ?? 0;
+                                                return (
+                                                    <foreignObject key={cat} x={x} y={10} width={85} height={90}>
+                                                        <div style={{
+                                                            height: '100%', background: 'var(--white)', border: `2.5px solid ${catColors[cat]}`,
+                                                            borderRadius: '10px', overflow: 'hidden', boxShadow: '2px 2px 0 var(--border)',
+                                                            display: 'flex', flexDirection: 'column'
+                                                        }}>
+                                                            <div style={{ background: catColors[cat], padding: '0.25rem 0.4rem', fontWeight: 900, fontSize: '0.58rem', textAlign: 'center', borderBottom: '1.5px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                {catLabels[cat]}
+                                                            </div>
+                                                            <div style={{ padding: '0.25rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', overflowY: 'auto' }}>
+                                                                {menuItems.filter(i => i.cat === cat).map(i => (
+                                                                    <div key={i.id} style={{ fontFamily: 'var(--font-mono)', fontSize: '0.48rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                        {i.name}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </foreignObject>
+                                                );
+                                            });
+                                        })()}
+
+                                        {/* RobotWorker */}
+                                        <foreignObject x={15} y={210} width={150} height={80}>
+                                            <div style={{
+                                                height: '100%', border: '2.5px solid #38a169', borderRadius: '12px',
+                                                padding: '0.4rem', background: 'var(--white)', boxShadow: '2px 2px 0 var(--border)',
+                                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center'
                                             }}>
-                                                {ItemIcon && <ItemIcon size={12} />} <span>{item.name}</span>
+                                                <div style={{ fontSize: '1.2rem', marginBottom: '0.15rem' }}>🤖</div>
+                                                <div style={{ fontWeight: 850, fontSize: '0.65rem' }}>RobotWorker</div>
+                                                <div style={{ fontSize: '0.42rem', opacity: 0.5, fontWeight: 700, textTransform: 'uppercase', marginTop: '0.1rem' }}>implements IWorkable</div>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                                <div style={{ background: '#f8f9fa', padding: '0.15rem', textAlign: 'center', fontSize: '0.5rem', fontWeight: 800, borderTop: '1.5px solid var(--border)', color: '#555' }}>
-                                    → {catFor[cat] || 'Custom'}
-                                </div>
-                            </motion.div>
-                        ))}
+                                        </foreignObject>
 
-                        {/* Happy Robot */}
-                        <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}
-                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', marginTop: '0.5rem' }}>
-                            <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <CpuIcon size={36} color="#38a169" />
-                            </motion.div>
-                            <span style={{ fontWeight: 800, fontSize: '0.65rem' }}>Robot</span>
-                            <span style={{ fontSize: '0.52rem', color: '#38a169', fontWeight: 700, textAlign: 'center' }}>implements only<br />IWorkable ✓</span>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                        {/* HumanWorker */}
+                                        <foreignObject x={195} y={210} width={150} height={80}>
+                                            <div style={{
+                                                height: '100%', border: '2.5px solid #38a169', borderRadius: '12px',
+                                                padding: '0.4rem', background: 'var(--white)', boxShadow: '2px 2px 0 var(--border)',
+                                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center'
+                                            }}>
+                                                <div style={{ fontSize: '1.2rem', marginBottom: '0.15rem' }}>🧑‍💻</div>
+                                                <div style={{ fontWeight: 850, fontSize: '0.65rem' }}>HumanWorker</div>
+                                                <div style={{ fontSize: '0.42rem', opacity: 0.5, fontWeight: 700, textTransform: 'uppercase', lineHeight: 1.1, marginTop: '0.1rem' }}>
+                                                    implements IWorkable, IEatable, ISleepable
+                                                </div>
+                                            </div>
+                                        </foreignObject>
+                                    </svg>
 
-            <button className="btn btn-sm" style={{ background: applied ? '#a8e6cf' : '#ff6b9d', marginTop: '0.8rem', zIndex: 2, display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                onClick={() => setApplied(!applied)}>
-                {applied ? (<><SyncIcon size={14} /> Show Fat Interface</>) : (<><ScissorsIcon size={14} /> Split Interfaces (Apply ISP)</>)}
-            </button>
+                                    <div style={{ background: '#f0fff4', border: '2px solid #38a169', borderRadius: '8px', padding: '0.35rem 0.6rem', fontSize: '0.62rem', fontWeight: 800, color: '#38a169', display: 'flex', alignItems: 'center', gap: '0.3rem', width: '100%', maxWidth: 300, justifyContent: 'center', textAlign: 'center' }}>
+                                        <CheckIcon size={12} color="#38a169" /> <span>ISP Segregation complete! Clients only implement interfaces they actually need.</span>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
     );
 };
 
-
-/* ══════════════════════════════════════════════════════════════
-   5. DIP — Dependency Flow Diagram
-   ══════════════════════════════════════════════════════════════ */
 const DIPSim = ({ isMobile }) => {
     const [applied, setApplied] = useState(false);
     const [activePuppet, setActivePuppet] = useState(0);
@@ -768,195 +1018,244 @@ const DIPSim = ({ isMobile }) => {
     };
 
     return (
-        <div style={SIM_WRAP}>
+        <div style={{ ...FULL, padding: isMobile ? '0.6rem 0.6rem 2.5rem 0.6rem' : '1.2rem', gap: isMobile ? '0.7rem' : '1rem', overflowY: isMobile ? 'auto' : 'hidden' }}>
             {DOT_BG('dipGrid')}
 
-            <AnimatePresence mode="wait">
-                {!applied ? (
-                    <motion.div key="violation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
+            {/* Top Control Bar */}
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.6rem', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, zIndex: 2 }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase' }}>Dependency Inversion Principle (DIP)</span>
+                <button className="btn btn-sm" style={{ background: applied ? '#a8e6cf' : '#b39ddb', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                    onClick={() => { setApplied(!applied); setActivePuppet(0); }}>
+                    {applied ? (<><SyncIcon size={14} /> Show Direct Coupling</>) : (<><ShuffleIcon size={14} /> Invert Dependencies</>)}
+                </button>
+            </div>
 
-                        {/* High-level module */}
-                        <motion.div
-                            animate={shaking ? { x: [-3, 3, -3, 0] } : {}}
-                            transition={{ duration: 0.3 }}
-                            style={{
-                                width: 220, background: 'var(--white)',
-                                border: `3px solid ${shaking ? '#e53e3e' : 'var(--border)'}`,
-                                borderRadius: '14px', padding: '0.6rem', textAlign: 'center',
-                                boxShadow: shaking ? '0 0 20px rgba(229,62,62,0.25), 4px 4px 0 var(--border)' : '4px 4px 0 var(--border)',
-                                transition: 'border-color 0.3s, box-shadow 0.3s',
-                            }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.1rem' }}>
-                                <TargetIcon size={24} />
+            {/* Main Content Layout */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1.2rem', minHeight: 0, zIndex: 1 }}>
+                
+                {/* Left Panel: Coupling Configurations */}
+                <div style={{
+                    flex: 1, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%'
+                }}>
+                    <div style={{ background: 'var(--cyan)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem' }}>
+                        Coupling Configuration Manager
+                    </div>
+                    <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        
+                        <div style={{ display: 'flex', gap: '0.4rem', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                                <span style={{ fontSize: '0.65rem', fontWeight: 800, width: 90 }}>High-Level:</span>
+                                <input value={highLevelName} onChange={e => setHighLevelName(e.target.value)} style={MINI_INPUT} placeholder="NotificationService" />
                             </div>
-                            <div style={{ fontWeight: 900, fontSize: '0.82rem' }}>{highLevelName}</div>
-                            <div style={{ fontSize: '0.55rem', opacity: 0.5, fontWeight: 700, textTransform: 'uppercase' }}>HIGH-LEVEL MODULE</div>
-                        </motion.div>
-
-                        {/* Rigid rod connection */}
-                        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <motion.div
-                                animate={shaking ? { scaleY: [1, 0.95, 1.05, 1] } : {}}
-                                style={{ width: 6, height: 50, background: '#e53e3e', borderRadius: '3px', boxShadow: '0 0 8px rgba(229,62,62,0.3)' }} />
-                            <div style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', background: '#e53e3e', borderRadius: '6px', padding: '0.15rem 0.5rem', fontSize: '0.5rem', fontWeight: 900, color: '#fff', whiteSpace: 'nowrap' }}>
-                                DIRECT DEPENDENCY ↓
-                            </div>
-                        </div>
-
-                        {/* Low-level module */}
-                        <motion.div
-                            animate={shaking ? { x: [3, -3, 3, 0], rotate: [1, -1, 1, 0] } : {}}
-                            transition={{ duration: 0.3 }}
-                            style={{
-                                width: 220, background: 'var(--white)',
-                                border: `3px solid ${shaking ? '#e53e3e' : 'var(--border)'}`,
-                                borderRadius: '14px', padding: '0.6rem', textAlign: 'center',
-                                boxShadow: '4px 4px 0 var(--border)', transition: 'border-color 0.3s',
-                            }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0.3rem 0' }}>
-                                <EmailIcon size={24} />
-                            </div>
-                            <div style={{ fontWeight: 800, fontSize: '0.78rem' }}>{implementations[0]?.name || 'EmailSender'}</div>
-                            <div style={{ fontSize: '0.55rem', opacity: 0.5, fontWeight: 700, textTransform: 'uppercase' }}>LOW-LEVEL MODULE</div>
-                            <motion.div animate={shaking ? { opacity: [0, 1, 0] } : { opacity: 0 }}
-                                style={{ fontSize: '0.58rem', color: '#e53e3e', fontWeight: 800, marginTop: '0.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.2rem' }}>
-                                <AlertIcon size={12} color="#e53e3e" /> <span>Changes here break above!</span>
-                            </motion.div>
-                        </motion.div>
-
-                        <div style={{ fontSize: '0.6rem', opacity: 0.5, fontWeight: 700, textAlign: 'center', maxWidth: 280, marginTop: '0.3rem' }}>
-                            Can't swap to SMS or Push without modifying {highLevelName}
-                        </div>
-                    </motion.div>
-                ) : (
-                    <motion.div key="clean" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
-
-                        {/* Scrollable Diagram Wrapper on Mobile */}
-                        <div style={{
-                            width: '100%',
-                            overflowX: isMobile ? 'auto' : 'visible',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            paddingBottom: isMobile ? '0.5rem' : 0
-                        }}>
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                minWidth: isMobile ? `${Math.max(implementations.length * 100, 320)}px` : '100%',
-                                flexShrink: 0
-                            }}>
-                                {/* High-level module */}
-                                <motion.div initial={{ y: -10 }} animate={{ y: 0 }}
-                                    style={{
-                                        width: 220, background: 'var(--white)', border: '3px solid #38a169',
-                                        borderRadius: '14px', padding: '0.6rem', textAlign: 'center',
-                                        boxShadow: '0 0 12px rgba(56,161,105,0.15), 4px 4px 0 var(--border)',
-                                    }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.1rem' }}>
-                                        <TargetIcon size={24} />
-                                    </div>
-                                    <div style={{ fontWeight: 900, fontSize: '0.82rem' }}>{highLevelName}</div>
-                                    <div style={{ fontSize: '0.55rem', opacity: 0.5, fontWeight: 700, textTransform: 'uppercase' }}>HIGH-LEVEL (STABLE)</div>
-                                </motion.div>
-
-                                {/* Connection to interface */}
-                                <div style={{ width: 2, height: 14, background: '#38a169' }} />
-
-                                {/* Abstraction interface */}
-                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.15, type: 'spring' }}
-                                    style={{
-                                        background: '#b39ddb20', border: '3px solid #b39ddb', borderRadius: '20px',
-                                        padding: '0.4rem 1.2rem', textAlign: 'center', boxShadow: '4px 4px 0 var(--border)',
-                                    }}>
-                                    <div style={{ fontWeight: 800, fontSize: '0.62rem', color: '#7c3aed' }}>«interface»</div>
-                                    <div style={{ fontWeight: 900, fontSize: '0.78rem' }}>{interfaceName}</div>
-                                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', opacity: 0.5 }}>+ send(msg): void</div>
-                                </motion.div>
-
-                                {/* Branching lines */}
-                                <svg width={Math.max(implementations.length * 100, 200)} height="20" style={{ overflow: 'visible' }}>
-                                    {implementations.map((impl, i) => {
-                                        const cx = (Math.max(implementations.length * 100, 200)) / 2;
-                                        const spacing = 100;
-                                        const startX = cx - ((implementations.length - 1) * spacing) / 2;
-                                        const px = startX + i * spacing;
-                                        return (
-                                            <motion.line key={impl.id}
-                                                x1={cx} y1={0} x2={px} y2={20}
-                                                stroke={i === activePuppet ? impl.color : '#ccc'}
-                                                strokeWidth={i === activePuppet ? 2.5 : 1.5}
-                                                strokeDasharray={i === activePuppet ? '' : '4 3'}
-                                                initial={{ pathLength: 0 }}
-                                                animate={{ pathLength: 1 }}
-                                                transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
-                                            />
-                                        );
-                                    })}
-                                </svg>
-
-                                {/* Implementation modules */}
-                                <div style={{ display: 'flex', gap: '0.6rem', flexWrap: isMobile ? 'nowrap' : 'wrap', justifyContent: 'center' }}>
-                                    {implementations.map((impl, i) => (
-                                        <motion.div key={impl.id}
-                                            initial={{ y: 20, opacity: 0 }}
-                                            animate={{ y: 0, opacity: 1 }}
-                                            transition={{ delay: 0.35 + i * 0.1, type: 'spring' }}
-                                            onClick={() => setActivePuppet(i)}
-                                            style={{
-                                                width: 95, background: 'var(--white)',
-                                                border: `3px solid ${i === activePuppet ? impl.color : 'var(--border)'}`,
-                                                borderRadius: '12px', padding: '0.4rem', textAlign: 'center', cursor: 'pointer',
-                                                boxShadow: i === activePuppet ? `0 0 12px ${impl.color}35, 3px 3px 0 var(--border)` : '3px 3px 0 var(--border)',
-                                                transition: 'border-color 0.2s, box-shadow 0.2s',
-                                            }}>
-                                            <motion.div animate={i === activePuppet ? { y: [0, -3, 0] } : {}}
-                                                transition={{ duration: 1.5, repeat: Infinity }}
-                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 28, margin: '0.2rem 0' }}>
-                                                {impl.icon && <impl.icon size={24} color={i === activePuppet ? impl.color : 'var(--text)'} />}
-                                            </motion.div>
-                                            <div style={{ fontWeight: 800, fontSize: '0.6rem' }}>{impl.name}</div>
-                                            {i === activePuppet && (
-                                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                                    style={{ fontSize: '0.48rem', color: '#38a169', fontWeight: 800, marginTop: '0.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.1rem' }}>ACTIVE <CheckIcon size={10} color="#38a169" /></motion.div>
-                                            )}
-                                        </motion.div>
-                                    ))}
+                            {applied && (
+                                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', marginTop: '0.2rem' }}>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 800, width: 90 }}>Abstraction:</span>
+                                    <input value={interfaceName} onChange={e => setInterfaceName(e.target.value)} style={MINI_INPUT} placeholder="MessageSender" />
                                 </div>
-                            </div>
+                            )}
                         </div>
 
-                        {/* Add custom implementation */}
-                        <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', background: 'var(--white)', border: '2px solid var(--border)', borderRadius: '8px', padding: '0.3rem 0.5rem' }}>
-                            <input value={newImplName} onChange={e => setNewImplName(e.target.value)} placeholder="New sender name"
-                                style={{ ...MINI_INPUT, width: 130 }} onKeyDown={e => e.key === 'Enter' && addImpl()} />
-                            <button className="btn btn-sm" style={{ background: '#b39ddb', fontSize: '0.62rem' }} onClick={addImpl}>+ Add</button>
-                        </div>
+                        {applied && (
+                            <>
+                                {/* Add custom implementations */}
+                                <div style={{ border: '2px solid var(--border)', borderRadius: '8px', padding: '0.5rem', background: 'var(--bg-light)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                    <div style={{ fontSize: '0.6rem', fontWeight: 900, opacity: 0.5 }}>ADD LOW-LEVEL PLUGGABLE SENDER</div>
+                                    <div style={{ display: 'flex', gap: '0.3rem' }}>
+                                        <input value={newImplName} onChange={e => setNewImplName(e.target.value)} placeholder="e.g. WhatsAppSender" style={MINI_INPUT} onKeyDown={e => e.key === 'Enter' && addImpl()} />
+                                        <button className="btn btn-sm" style={{ background: '#b39ddb', fontSize: '0.62rem' }} onClick={addImpl}>+ Add</button>
+                                    </div>
+                                </div>
 
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
-                            style={{ fontSize: '0.6rem', fontWeight: 700, color: '#38a169', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
-                            <span>Click any implementation to swap — {highLevelName} is unaffected!</span> <ShuffleIcon size={12} />
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                {/* Active implementations grid */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                    <div style={{ fontSize: '0.6rem', fontWeight: 900, opacity: 0.5 }}>AVAILABLE SENDERS (CLICK TO SWAP RUNTIME)</div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                                        {implementations.map((impl, i) => {
+                                            const active = activePuppet === i;
+                                            return (
+                                                <button key={impl.id} onClick={() => setActivePuppet(i)}
+                                                    style={{
+                                                        background: active ? impl.color : 'var(--white)',
+                                                        border: '2px solid var(--border)',
+                                                        boxShadow: active ? 'var(--shadow-sm)' : 'none',
+                                                        borderRadius: '8px', padding: '0.35rem 0.6rem', cursor: 'pointer',
+                                                        fontWeight: 700, fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem'
+                                                    }}>
+                                                    {impl.icon && <impl.icon size={13} color="var(--text)" />}
+                                                    {impl.name}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </>
+                        )}
 
-            <button className="btn btn-sm" style={{ background: applied ? '#a8e6cf' : '#b39ddb', marginTop: '0.5rem', zIndex: 2, display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                onClick={() => { setApplied(!applied); setActivePuppet(0); }}>
-                {applied ? (<><SyncIcon size={14} /> Show Direct Coupling</>) : (<><ShuffleIcon size={14} /> Invert Dependencies</>)}
-            </button>
+                    </div>
+                </div>
+
+                {/* Right Panel: Abstraction Graph Visualizer */}
+                <div style={{
+                    flex: 1.2, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%',
+                    minHeight: isMobile ? '340px' : 'auto'
+                }}>
+                    <div style={{ background: 'var(--yellow)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem' }}>
+                        Coupling Flowchart Graph
+                    </div>
+                    <div style={{ flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+                        
+                        <AnimatePresence mode="wait">
+                            {!applied ? (
+                                <motion.div key="violation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+
+                                    {/* High-level module */}
+                                    <motion.div
+                                        animate={shaking ? { x: [-3, 3, -3, 0] } : {}}
+                                        transition={{ duration: 0.3 }}
+                                        style={{
+                                            width: 180, background: 'var(--white)',
+                                            border: `2.5px solid ${shaking ? '#e53e3e' : 'var(--border)'}`,
+                                            borderRadius: '12px', padding: '0.5rem', textAlign: 'center',
+                                            boxShadow: shaking ? '0 0 15px rgba(229,62,62,0.15), 3px 3px 0 var(--border)' : '3px 3px 0 var(--border)',
+                                            transition: 'all 0.3s',
+                                        }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.1rem' }}>
+                                            <TargetIcon size={20} />
+                                        </div>
+                                        <div style={{ fontWeight: 900, fontSize: '0.75rem' }}>{highLevelName}</div>
+                                        <div style={{ fontSize: '0.5rem', opacity: 0.5, fontWeight: 700 }}>HIGH-LEVEL MODULE</div>
+                                    </motion.div>
+
+                                    {/* Rigid rod connection */}
+                                    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                        <motion.div
+                                            animate={shaking ? { scaleY: [1, 0.95, 1.05, 1] } : {}}
+                                            style={{ width: 5, height: 40, background: '#e53e3e', borderRadius: '3px', boxShadow: '0 0 8px rgba(229,62,62,0.2)' }} />
+                                        <div style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', background: '#e53e3e', borderRadius: '50px', padding: '1px 6px', fontSize: '0.45rem', fontWeight: 900, color: '#fff', whiteSpace: 'nowrap' }}>
+                                            DIRECT COUPLING
+                                        </div>
+                                    </div>
+
+                                    {/* Low-level module */}
+                                    <motion.div
+                                        animate={shaking ? { x: [3, -3, 3, 0], rotate: [1, -1, 1, 0] } : {}}
+                                        transition={{ duration: 0.3 }}
+                                        style={{
+                                            width: 180, background: 'var(--white)',
+                                            border: `2.5px solid ${shaking ? '#e53e3e' : 'var(--border)'}`,
+                                            borderRadius: '12px', padding: '0.5rem', textAlign: 'center',
+                                            boxShadow: '3px 3px 0 var(--border)', transition: 'all 0.3s',
+                                        }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0.2rem 0' }}>
+                                            <EmailIcon size={20} />
+                                        </div>
+                                        <div style={{ fontWeight: 800, fontSize: '0.72rem' }}>{implementations[0]?.name || 'EmailSender'}</div>
+                                        <div style={{ fontSize: '0.5rem', opacity: 0.5, fontWeight: 700 }}>LOW-LEVEL COMPONENT</div>
+                                        <motion.div animate={shaking ? { opacity: [0, 1, 0] } : { opacity: 0 }}
+                                            style={{ fontSize: '0.52rem', color: '#e53e3e', fontWeight: 800, marginTop: '0.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.1rem' }}>
+                                            <AlertIcon size={10} color="#e53e3e" /> <span>Low-level edits break High-level!</span>
+                                        </motion.div>
+                                    </motion.div>
+                                </motion.div>
+                            ) : (
+                                <motion.div key="clean" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', width: '100%' }}>
+
+                                    {/* High-level module */}
+                                    <motion.div initial={{ y: -10 }} animate={{ y: 0 }}
+                                        style={{
+                                            width: 180, background: 'var(--white)', border: '2.5px solid #38a169',
+                                            borderRadius: '12px', padding: '0.5rem', textAlign: 'center',
+                                            boxShadow: '0 0 10px rgba(56,161,105,0.1), 3px 3px 0 var(--border)',
+                                        }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.1rem' }}>
+                                            <TargetIcon size={20} />
+                                        </div>
+                                        <div style={{ fontWeight: 900, fontSize: '0.75rem' }}>{highLevelName}</div>
+                                        <div style={{ fontSize: '0.5rem', opacity: 0.5, fontWeight: 700 }}>HIGH-LEVEL (STABLE)</div>
+                                    </motion.div>
+
+                                    {/* Connection to interface */}
+                                    <div style={{ width: 2, height: 10, background: '#38a169' }} />
+
+                                    {/* Abstraction interface */}
+                                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: 'spring' }}
+                                        style={{
+                                            background: '#b39ddb15', border: '2.5px solid #b39ddb', borderRadius: '20px',
+                                            padding: '0.35rem 1rem', textAlign: 'center', boxShadow: '3px 3px 0 var(--border)',
+                                        }}>
+                                        <div style={{ fontWeight: 800, fontSize: '0.55rem', color: '#7c3aed' }}>«interface»</div>
+                                        <div style={{ fontWeight: 900, fontSize: '0.72rem' }}>{interfaceName}</div>
+                                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.5rem', opacity: 0.5 }}>+ send(msg): void</div>
+                                    </motion.div>
+
+                                    {/* Branching lines */}
+                                    <svg width={Math.max(implementations.length * 90, 180)} height="16" style={{ overflow: 'visible' }}>
+                                        {implementations.map((impl, i) => {
+                                            const cx = (Math.max(implementations.length * 90, 180)) / 2;
+                                            const spacing = 90;
+                                            const startX = cx - ((implementations.length - 1) * spacing) / 2;
+                                            const px = startX + i * spacing;
+                                            return (
+                                                <motion.line key={impl.id}
+                                                    x1={cx} y1={0} x2={px} y2={16}
+                                                    stroke={i === activePuppet ? impl.color : '#ccc'}
+                                                    strokeWidth={i === activePuppet ? 2.5 : 1.5}
+                                                    strokeDasharray={i === activePuppet ? '' : '3 3'}
+                                                    initial={{ pathLength: 0 }}
+                                                    animate={{ pathLength: 1 }}
+                                                    transition={{ delay: 0.2 + i * 0.05, duration: 0.4 }}
+                                                />
+                                            );
+                                        })}
+                                    </svg>
+
+                                    {/* Implementation modules */}
+                                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'nowrap', justifyContent: 'center', overflowX: 'auto', width: '100%', paddingBottom: '4px' }}>
+                                        {implementations.map((impl, i) => (
+                                            <motion.div key={impl.id}
+                                                initial={{ y: 15, opacity: 0 }}
+                                                animate={{ y: 0, opacity: 1 }}
+                                                transition={{ delay: 0.25 + i * 0.05, type: 'spring' }}
+                                                onClick={() => setActivePuppet(i)}
+                                                style={{
+                                                    width: 80, minWidth: 80, background: 'var(--white)',
+                                                    border: `2.5px solid ${i === activePuppet ? impl.color : 'var(--border)'}`,
+                                                    borderRadius: '10px', padding: '0.35rem', textAlign: 'center', cursor: 'pointer',
+                                                    boxShadow: i === activePuppet ? `0 0 10px ${impl.color}25, 2.5px 2.5px 0 var(--border)` : '2.5px 2.5px 0 var(--border)',
+                                                    transition: 'all 0.2s',
+                                                }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 22, margin: '0.1rem 0' }}>
+                                                    {impl.icon && <impl.icon size={20} color={i === activePuppet ? impl.color : 'var(--text)'} />}
+                                                </div>
+                                                <div style={{ fontWeight: 800, fontSize: '0.58rem' }}>{impl.name}</div>
+                                                {i === activePuppet && (
+                                                    <div style={{ fontSize: '0.45rem', color: '#38a169', fontWeight: 800, marginTop: '0.1rem' }}>ACTIVE ✓</div>
+                                                )}
+                                            </motion.div>
+                                        ))}
+                                    </div>
+
+                                    <div style={{ background: '#f0fff4', border: '1.5px solid #38a169', borderRadius: '6px', padding: '0.25rem 0.5rem', fontSize: '0.55rem', color: '#38a169', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem', marginTop: '0.2rem' }}>
+                                        <CheckIcon size={12} color="#38a169" /> <span>Both components depend on the Abstraction Interface!</span>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
     );
 };
 
-
-/* ══════════════════════════════════════════════════════════════
-   MAIN COMPONENT
-   ══════════════════════════════════════════════════════════════ */
 export default function SolidPrinciplesSim() {
     const [activePrinciple, setActivePrinciple] = useState('srp');
     const [speed, setSpeed] = useState(700);
@@ -1014,10 +1313,10 @@ export default function SolidPrinciplesSim() {
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ duration: 0.25 }}
                         style={{ width: '100%', height: '100%' }}>
-                        {activePrinciple === 'srp' && <SRPSim />}
-                        {activePrinciple === 'ocp' && <OCPSim />}
-                        {activePrinciple === 'lsp' && <LSPSim />}
-                        {activePrinciple === 'isp' && <ISPSim />}
+                        {activePrinciple === 'srp' && <SRPSim isMobile={isMobile} />}
+                        {activePrinciple === 'ocp' && <OCPSim isMobile={isMobile} />}
+                        {activePrinciple === 'lsp' && <LSPSim isMobile={isMobile} />}
+                        {activePrinciple === 'isp' && <ISPSim isMobile={isMobile} />}
                         {activePrinciple === 'dip' && <DIPSim isMobile={isMobile} />}
                     </motion.div>
                 </AnimatePresence>
@@ -1039,7 +1338,7 @@ export default function SolidPrinciplesSim() {
                 </div>
             ))}
         
-            <DownloadNotes topicKey="oops/solid" /></div>
+            </div>
     );
 
     const RIGHT = (

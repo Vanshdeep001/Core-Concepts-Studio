@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
 import { runDiskFCFS, runDiskSSTF, runDiskSCAN, runDiskCSCAN } from './diskScheduling';
-import DownloadNotes from '../../components/DownloadNotes';
 
 const ALGOS = ['FCFS', 'SSTF', 'SCAN', 'C-SCAN'];
 const TRACK_MAX = 199;
@@ -449,7 +448,7 @@ export default function DiskSchedulingSim() {
                 ))}
             </div>
         
-            <DownloadNotes topicKey="os/disk" />
+            
         </div>
     );
 

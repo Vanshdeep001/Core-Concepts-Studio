@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Link } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
@@ -68,13 +69,89 @@ const MODULE_LABELS = {
   '/interview': 'Interview',
 };
 
+const ROUTE_TITLES = {
+  '/': 'Core Concepts Studio — Interactive Computer Science Simulators',
+  '/os': 'Operating Systems Simulators | Core Concepts Studio',
+  '/os/scheduling': 'CPU Scheduling Simulator | Core Concepts Studio',
+  '/os/scheduling/compare': 'CPU Scheduling Algorithms Comparison | Core Concepts Studio',
+  '/os/page-replacement': 'Page Replacement Algorithms Simulator | Core Concepts Studio',
+  '/os/bankers': "Banker's Algorithm Resource Allocation | Core Concepts Studio",
+  '/os/disk': 'Disk Scheduling Algorithms Simulator | Core Concepts Studio',
+  '/os/sync': 'Process Synchronization Simulators | Core Concepts Studio',
+  '/dbms': 'DBMS Database Concepts | Core Concepts Studio',
+  '/dbms/normalization': 'Database Normalization Sim (1NF, 2NF, 3NF, BCNF) | Core Concepts Studio',
+  '/dbms/joins': 'SQL Joins Simulator (Inner, Left, Right, Outer) | Core Concepts Studio',
+  '/dbms/transactions': 'Concurrency Control & Transactions Simulator | Core Concepts Studio',
+  '/dbms/bplustree': 'B+ Tree Indexing Visualizer | Core Concepts Studio',
+  '/dbms/er-design': 'ER Diagram Database Design Tool | Core Concepts Studio',
+  '/dbms/sql-visualizer': 'SQL Query Abstract Syntax Tree Visualizer | Core Concepts Studio',
+  '/networks': 'Computer Networks Simulator | Core Concepts Studio',
+  '/networks/osi': 'OSI Layer Protocol Stack Simulator | Core Concepts Studio',
+  '/networks/tcp-udp': 'TCP vs UDP Transmission Flow | Core Concepts Studio',
+  '/networks/subnetting': 'IP Subnetting Calculator & Visualizer | Core Concepts Studio',
+  '/networks/routing': 'Routing Algorithms (Dijkstra, Distance Vector) | Core Concepts Studio',
+  '/networks/http-dns': 'HTTP Request Lifecycle & DNS Lookup | Core Concepts Studio',
+  '/oops': 'Object-Oriented Programming (OOP) | Core Concepts Studio',
+  '/oops/pillars': 'Four Pillars of OOP Interactive Visualizer | Core Concepts Studio',
+  '/oops/inheritance': 'Polymorphism & VTable Dispatch Simulator | Core Concepts Studio',
+  '/oops/abstract-interface': 'Abstract Class vs Interface Architecture | Core Concepts Studio',
+  '/oops/patterns': 'Strategy, Factory & Observer Design Patterns | Core Concepts Studio',
+  '/oops/solid': 'SOLID Software Design Principles Sim | Core Concepts Studio',
+  '/oops/uml': 'UML Class Diagram Editor & Visualizer | Core Concepts Studio',
+  '/interview': 'CS Interview Coding Simulator | Core Concepts Studio',
+  '/git': 'Git Version Control Simulator | Core Concepts Studio',
+  '/git/sim': 'Git Graph Visual Commit Simulator | Core Concepts Studio',
+  '/systemdesign': 'System Design Visual Simulators | Core Concepts Studio',
+  '/systemdesign/load-balancer': 'Load Balancer Algorithms Visualizer | Core Concepts Studio',
+  '/systemdesign/cache-redis': 'Redis Cache Policies Simulator | Core Concepts Studio',
+  '/systemdesign/db-scaling': 'Database Sharding & Replication | Core Concepts Studio',
+  '/systemdesign/message-queue': 'RabbitMQ & Kafka Message Queue Simulator | Core Concepts Studio',
+  '/systemdesign/api-lifecycle': 'API Lifecycle & Gateway Routing Sim | Core Concepts Studio',
+  '/systemdesign/microservices': 'Microservices Communication Sim | Core Concepts Studio',
+};
+
+function SEOHandler() {
+  const location = useLocation();
+
+  useEffect(() => {
+    // 1. Update document title
+    const title = ROUTE_TITLES[location.pathname] || 'Core Concepts Studio — CS Simulators';
+    document.title = title;
+
+    // 2. Dynamically update meta description with the keyword coreconceptstudio
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      document.head.appendChild(metaDescription);
+    }
+    
+    let descriptionText = "Core Concepts Studio (coreconceptstudio) is an interactive simulator platform for OS, DBMS, Networks, Git, and OOP design concepts. Watch algorithms execute step-by-step.";
+    if (location.pathname.startsWith('/os')) {
+      descriptionText = "Learn CPU scheduling, Page replacement, Banker's algorithm, and Process synchronization on Core Concepts Studio (coreconceptstudio).";
+    } else if (location.pathname.startsWith('/dbms')) {
+      descriptionText = "Simulate SQL Joins, Database Normalization (1NF to BCNF), B+ Trees, and ER design on Core Concepts Studio (coreconceptstudio).";
+    } else if (location.pathname.startsWith('/oops')) {
+      descriptionText = "Master OOP concepts, SOLID principles, runtime dispatch, and design patterns visually on Core Concepts Studio (coreconceptstudio).";
+    } else if (location.pathname.startsWith('/networks')) {
+      descriptionText = "Visualize OSI layers, Subnetting, TCP/UDP handshakes, and routing protocols on Core Concepts Studio (coreconceptstudio).";
+    } else if (location.pathname.startsWith('/systemdesign')) {
+      descriptionText = "Simulate Load Balancers, Redis Caching, DB Sharding, and Kafka Message Queues on Core Concepts Studio (coreconceptstudio).";
+    }
+
+    metaDescription.setAttribute('content', descriptionText);
+  }, [location.pathname]);
+
+  return null;
+}
+
 function Footer() {
   const location = useLocation();
   const isHome = location.pathname === '/';
   return (
     <footer className="footer">
       <div>
-        <strong>CS Simulator</strong>{' '}
+        <strong>Core Concepts Studio</strong>{' '}
         {!isHome && (
           <span style={{ opacity: 0.6 }}>
             — {Object.entries(MODULE_LABELS).find(([k]) => location.pathname.startsWith(k))?.[1] ?? ''}
@@ -82,7 +159,7 @@ function Footer() {
         )}
       </div>
       <div style={{ opacity: 0.6, fontSize: '0.78rem' }}>
-        OS · DBMS · Networks · OOP · Git
+        OS · DBMS · Networks · OOP · Git · System Design
       </div>
     </footer>
   );
@@ -91,6 +168,7 @@ function Footer() {
 function AppContent() {
   return (
     <>
+      <SEOHandler />
       <Loader />
       <div className="page-wrapper">
         <Navbar />

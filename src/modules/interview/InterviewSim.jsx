@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UsersIcon, CheckIcon, XIcon, ClockIcon, PlayIcon, AlertIcon, LightbulbIcon, MicIcon, SpeakerIcon, SpeakerOffIcon, LinkIcon } from '../../components/Icons';
-import { requestInterviewTurn } from './interviewApi';
+import { requestInterviewTurn, warmUpBackend } from './interviewApi';
 import { getSimulation } from './simulationCatalog';
 import { useVoice, ttsSupported, sttSupported } from './useVoice';
 import { QUESTIONS_DATA } from './interviewQuestions';
@@ -921,6 +921,7 @@ export default function InterviewSim() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [explorerTab, setExplorerTab] = useState('explanation'); // explanation | visual
+    const [activeMobileTab, setActiveMobileTab] = useState('chat'); // chat | workspace
     const [copiedId, setCopiedId] = useState(null);
     const [hoveredCardId, setHoveredCardId] = useState(null);
     const [hoveredSidebarId, setHoveredSidebarId] = useState(null);
@@ -1069,6 +1070,12 @@ export default function InterviewSim() {
         }, 1000);
         return () => clearInterval(id);
     }, [phase]);
+
+    // Wake a sleeping Render free-tier instance on mount, so the first turn
+    // doesn't hit a 50-60s cold start (which surfaces as a CORS/network error).
+    useEffect(() => {
+        warmUpBackend();
+    }, []);
 
     // Auto-scroll chat to bottom
     useEffect(() => {
@@ -1266,6 +1273,7 @@ export default function InterviewSim() {
         setDsaCode('');
         setSqlQuery('');
         setDiagram({ nodes: [], connections: [] });
+        setActiveMobileTab('chat');
     };
 
     const endInterview = () => {
@@ -1526,7 +1534,7 @@ export default function InterviewSim() {
                 {/* Main Content Area */}
                 {!selectedQuestion ? (
                     /* Phase A: Directory View */
-                    <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)', padding: '1.5rem' }}>
+                    <div className="hide-scrollbar explorer-directory" style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)', padding: '1.5rem' }}>
                         <div style={{ maxWidth: 1040, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                             {/* Category Banner Card */}
                             <motion.div
@@ -1600,6 +1608,7 @@ export default function InterviewSim() {
                             ) : (
                                 <motion.div
                                     key={selectedCategory + '-grid'}
+                                    className="explorer-grid"
                                     variants={gridContainer}
                                     initial="hidden"
                                     animate="show"
@@ -1680,10 +1689,10 @@ export default function InterviewSim() {
                     </div>
                 ) : (
                     /* Phase B: Reading/Visualizer View */
-                    <div style={{ flex: 1, display: 'flex', overflow: 'hidden', background: 'var(--bg)', position: 'relative' }}>
+                    <div className="explorer-read-view" style={{ flex: 1, display: 'flex', overflow: 'hidden', background: 'var(--bg)', position: 'relative' }}>
 
                         {/* Left Column: Question switcher sidebar */}
-                        <div className="hide-scrollbar" style={{
+                        <div className="hide-scrollbar explorer-sidebar" style={{
                             display: isSidebarOpen ? 'flex' : 'none',
                             flexDirection: 'column',
                             borderRight: '3px solid var(--border)',
@@ -1753,6 +1762,9 @@ export default function InterviewSim() {
                                             onClick={() => {
                                                 setSelectedQuestion(item);
                                                 setExplorerTab('explanation');
+                                                if (window.innerWidth <= 768) {
+                                                    setIsSidebarOpen(false);
+                                                }
                                             }}
                                             onMouseEnter={() => setHoveredSidebarId(item.id)}
                                             onMouseLeave={() => setHoveredSidebarId(null)}
@@ -1806,7 +1818,7 @@ export default function InterviewSim() {
                         </div>
 
                         {/* Right Column: Spacious explanation & visualizer pane */}
-                        <div className="hide-scrollbar" style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', background: pane, flex: 1, position: 'relative' }}>
+                        <div className="hide-scrollbar explorer-pane" style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', background: pane, flex: 1, position: 'relative' }}>
                             {!isSidebarOpen && (
                                 <button
                                     onClick={() => setIsSidebarOpen(true)}
@@ -1917,6 +1929,7 @@ export default function InterviewSim() {
                                     initial={{ opacity: 0, y: 18 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                                    className="explorer-notepad-card"
                                     style={{
                                         background: surface,
                                         border: '3px solid var(--border)',
@@ -2028,6 +2041,7 @@ export default function InterviewSim() {
         <div className="main-content" style={{ padding: 0, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)', overflow: 'hidden' }}>
             {/* Thin header bar */}
             <div
+                className="interview-header-bar"
                 style={{
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -2105,30 +2119,52 @@ export default function InterviewSim() {
                 </span>
             </div>
 
+            {/* Mobile Tab Switcher */}
+            <div className="interview-mobile-tabs" style={{ display: 'none' }}>
+                <button
+                    className={`mobile-tab-btn ${activeMobileTab === 'chat' ? 'active' : ''}`}
+                    onClick={() => setActiveMobileTab('chat')}
+                >
+                    💬 Chat
+                </button>
+                <button
+                    className={`mobile-tab-btn ${activeMobileTab === 'workspace' ? 'active' : ''}`}
+                    onClick={() => setActiveMobileTab('workspace')}
+                >
+                    📝 Workspace
+                </button>
+            </div>
+
             {/* Main content split panel */}
             <div style={{ flex: 1, display: 'flex', minHeight: 0, overflow: 'hidden' }}>
                 {/* Left Side: Interactive Workspace */}
-                <div style={{
-                    width: '58%',
-                    borderRight: '3px solid var(--border)',
-                    background: isDark ? '#1a1a1a' : '#fafafa',
-                    padding: '1rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    minHeight: 0,
-                    overflowY: 'auto'
-                }}>
+                <div
+                    className={`interview-workspace-panel ${activeMobileTab === 'workspace' ? 'mobile-active' : ''}`}
+                    style={{
+                        width: '58%',
+                        borderRight: '3px solid var(--border)',
+                        background: isDark ? '#1a1a1a' : '#fafafa',
+                        padding: '1rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        minHeight: 0,
+                        overflowY: 'auto'
+                    }}
+                >
                     {renderActiveWorkspace()}
                 </div>
 
                 {/* Right Side: Chat & Voice input */}
-                <div style={{
-                    width: '42%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    background: isDark ? '#121212' : '#f9f9fb',
-                    minHeight: 0
-                }}>
+                <div
+                    className={`interview-chat-panel ${activeMobileTab === 'chat' ? 'mobile-active' : ''}`}
+                    style={{
+                        width: '42%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        background: isDark ? '#121212' : '#f9f9fb',
+                        minHeight: 0
+                    }}
+                >
                     {/* Chat messages area */}
                     <div
                         className="hide-scrollbar"

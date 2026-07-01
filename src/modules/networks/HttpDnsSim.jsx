@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
 import { GlobeIcon, LaptopIcon, SyncIcon, ClipboardIcon, CheckIcon, OutboxIcon, InboxIcon, KeyIcon, LockIcon, AlertIcon, SaveIcon, ChartIcon, BoxIcon, ClockIcon } from '../../components/Icons';
-import DownloadNotes from '../../components/DownloadNotes';
 
 /* ════════════════════════════════════════
    DATA — DNS chain, TLS panels, status codes
@@ -1096,7 +1095,7 @@ export default function HttpDnsSim() {
                 </div>
             ))}
         
-            <DownloadNotes topicKey="networks/http-dns" />
+            
         </div>
     );
 

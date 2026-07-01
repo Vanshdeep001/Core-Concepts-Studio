@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
-import DownloadNotes from '../../components/DownloadNotes';
 import {
     PillarIcon, TerminalIcon, SaveIcon, GearIcon, ShuffleIcon, PlayIcon,
     InfoIcon, ShieldIcon, LightbulbIcon, ZapIcon, AlertIcon, TreeIcon, WrenchIcon, TargetIcon,
@@ -27,12 +26,12 @@ const visColor = (v) => {
 const PRESETS = {
     Single: [
         {
-            id: 'Animal', parents: [], color: '#66d9ef', x: 280, y: 40,
+            id: 'Animal', parents: [], color: '#66d9ef', x: 305, y: 40,
             fields: [{ id: 'f1', name: 'name', type: 'String', value: '"Buddy"', visibility: '-' }],
             methods: [{ id: 'm1', name: 'speak', returnType: 'void', visibility: '+', response: 'Generic animal sound' }]
         },
         {
-            id: 'Dog', parents: ['Animal'], color: '#ffd93d', x: 280, y: 220,
+            id: 'Dog', parents: ['Animal'], color: '#ffd93d', x: 305, y: 220,
             fields: [{ id: 'f2', name: 'breed', type: 'String', value: '"Labrador"', visibility: '-' }],
             methods: [
                 { id: 'm2', name: 'speak', returnType: 'void', visibility: '+', response: 'Woof! Woof!', overridden: true },
@@ -42,75 +41,75 @@ const PRESETS = {
     ],
     'Multi-level': [
         {
-            id: 'Animal', parents: [], color: '#66d9ef', x: 280, y: 30,
+            id: 'Animal', parents: [], color: '#66d9ef', x: 305, y: 30,
             fields: [{ id: 'f1', name: 'name', type: 'String', value: '"Buddy"', visibility: '-' }],
             methods: [{ id: 'm1', name: 'speak', returnType: 'void', visibility: '+', response: 'Generic animal sound' }]
         },
         {
-            id: 'Dog', parents: ['Animal'], color: '#ffd93d', x: 280, y: 190,
+            id: 'Dog', parents: ['Animal'], color: '#ffd93d', x: 305, y: 190,
             fields: [{ id: 'f2', name: 'breed', type: 'String', value: '"Labrador"', visibility: '-' }],
             methods: [
                 { id: 'm2', name: 'speak', returnType: 'void', visibility: '+', response: 'Woof!', overridden: true }
             ]
         },
         {
-            id: 'Puppy', parents: ['Dog'], color: '#a8e6cf', x: 280, y: 350,
+            id: 'Puppy', parents: ['Dog'], color: '#a8e6cf', x: 305, y: 350,
             fields: [{ id: 'f3', name: 'age', type: 'int', value: '1', visibility: '-' }],
             methods: [{ id: 'm3', name: 'play', returnType: 'void', visibility: '+', response: 'Puppy plays with toys!' }]
         }
     ],
     Hierarchical: [
         {
-            id: 'Animal', parents: [], color: '#66d9ef', x: 280, y: 30,
+            id: 'Animal', parents: [], color: '#66d9ef', x: 305, y: 30,
             fields: [{ id: 'f1', name: 'name', type: 'String', value: '"Buddy"', visibility: '-' }],
             methods: [{ id: 'm1', name: 'speak', returnType: 'void', visibility: '+', response: 'Generic animal sound' }]
         },
         {
-            id: 'Dog', parents: ['Animal'], color: '#ffd93d', x: 120, y: 220,
+            id: 'Dog', parents: ['Animal'], color: '#ffd93d', x: 125, y: 220,
             fields: [{ id: 'f2', name: 'breed', type: 'String', value: '"Labrador"', visibility: '-' }],
             methods: [{ id: 'm2', name: 'speak', returnType: 'void', visibility: '+', response: 'Woof!', overridden: true }]
         },
         {
-            id: 'Cat', parents: ['Animal'], color: '#ff6b9d', x: 440, y: 220,
+            id: 'Cat', parents: ['Animal'], color: '#ff6b9d', x: 485, y: 220,
             fields: [{ id: 'f3', name: 'lives', type: 'int', value: '9', visibility: '-' }],
             methods: [{ id: 'm3', name: 'speak', returnType: 'void', visibility: '+', response: 'Meow!', overridden: true }]
         }
     ],
     Multiple: [
         {
-            id: 'Flyable', parents: [], color: '#b39ddb', x: 140, y: 40,
+            id: 'Flyable', parents: [], color: '#b39ddb', x: 125, y: 40,
             fields: [],
             methods: [{ id: 'm1', name: 'fly', returnType: 'void', visibility: '+', response: 'Flying high in the clouds!' }]
         },
         {
-            id: 'Swimmable', parents: [], color: '#4dd0c8', x: 420, y: 40,
+            id: 'Swimmable', parents: [], color: '#4dd0c8', x: 485, y: 40,
             fields: [],
             methods: [{ id: 'm2', name: 'swim', returnType: 'void', visibility: '+', response: 'Swimming deep in the ocean!' }]
         },
         {
-            id: 'Duck', parents: ['Flyable', 'Swimmable'], color: '#ffd93d', x: 280, y: 220,
+            id: 'Duck', parents: ['Flyable', 'Swimmable'], color: '#ffd93d', x: 305, y: 220,
             fields: [{ id: 'f1', name: 'quackVolume', type: 'int', value: '5', visibility: '-' }],
             methods: [{ id: 'm3', name: 'quack', returnType: 'void', visibility: '+', response: 'Quack! Quack!' }]
         }
     ],
     Hybrid: [
         {
-            id: 'Animal', parents: [], color: '#66d9ef', x: 280, y: 20,
+            id: 'Animal', parents: [], color: '#66d9ef', x: 305, y: 20,
             fields: [],
             methods: [{ id: 'm1', name: 'speak', returnType: 'void', visibility: '+', response: 'Generic animal sound' }]
         },
         {
-            id: 'Dog', parents: ['Animal'], color: '#ffd93d', x: 120, y: 170,
+            id: 'Dog', parents: ['Animal'], color: '#ffd93d', x: 125, y: 170,
             fields: [],
             methods: [{ id: 'm2', name: 'speak', returnType: 'void', visibility: '+', response: 'Woof!', overridden: true }]
         },
         {
-            id: 'Cat', parents: ['Animal'], color: '#ff6b9d', x: 440, y: 170,
+            id: 'Cat', parents: ['Animal'], color: '#ff6b9d', x: 485, y: 170,
             fields: [],
             methods: []
         },
         {
-            id: 'Hybrid', parents: ['Dog', 'Cat'], color: '#a8e6cf', x: 280, y: 320,
+            id: 'Hybrid', parents: ['Dog', 'Cat'], color: '#a8e6cf', x: 305, y: 320,
             fields: [],
             methods: []
         }
@@ -604,133 +603,14 @@ const ClassNodeCard = ({ node, isActive, mroPath, foundNodeId, currentMroSearch,
    ══════════════════════════════════════════════════════════════════ */
 const OverrideOverloadPanel = ({ nodes, isMobile }) => {
     const [selectedClassId, setSelectedClassId] = useState(nodes[0]?.id || '');
-    const [selectedParentId, setSelectedParentId] = useState('');
-    const [hoveredMethod, setHoveredMethod] = useState(null); // { name, classId }
-
-    const containerRef = useRef(null);
-    const elementRefs = useRef({});
-    const [coords, setCoords] = useState({});
-
-    // Measures positions of slots and code blocks to draw pointer paths
-    const updateCoords = useCallback(() => {
-        if (!containerRef.current) return;
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const newCoords = {};
-        Object.keys(elementRefs.current).forEach(key => {
-            const el = elementRefs.current[key];
-            if (el) {
-                const rect = el.getBoundingClientRect();
-                newCoords[key] = {
-                    x: rect.left - containerRect.left + rect.width / 2,
-                    y: rect.top - containerRect.top + rect.height / 2,
-                    left: rect.left - containerRect.left,
-                    right: rect.right - containerRect.left,
-                    top: rect.top - containerRect.top,
-                    bottom: rect.bottom - containerRect.top,
-                    width: rect.width,
-                    height: rect.height
-                };
-            }
-        });
-        setCoords(newCoords);
-    }, []);
-
-    useEffect(() => {
-        if (nodes.length > 0 && !nodes.some(n => n.id === selectedClassId)) {
-            setSelectedClassId(nodes[0].id);
-        }
-    }, [nodes, selectedClassId]);
+    const [selectedMethodName, setSelectedMethodName] = useState(null);
 
     const childNode = nodes.find(n => n.id === selectedClassId);
 
+    // Reset selected method if class changes
     useEffect(() => {
-        if (childNode && childNode.parents && childNode.parents.length > 0) {
-            if (!childNode.parents.includes(selectedParentId)) {
-                setSelectedParentId(childNode.parents[0]);
-            }
-        } else {
-            setSelectedParentId('');
-        }
-    }, [childNode, selectedParentId]);
-
-    useEffect(() => {
-        const timer = setTimeout(updateCoords, 100);
-        return () => clearTimeout(timer);
-    }, [updateCoords, selectedClassId, selectedParentId, nodes]);
-
-    useEffect(() => {
-        window.addEventListener('resize', updateCoords);
-        return () => window.removeEventListener('resize', updateCoords);
-    }, [updateCoords]);
-
-    const parentNode = nodes.find(n => n.id === selectedParentId);
-
-    // Dynamic mock addresses for physical visualization
-    const getClassBaseAddress = (classId) => {
-        let hash = 0;
-        for (let i = 0; i < classId.length; i++) {
-            hash = classId.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const base = Math.abs(hash % 900) + 100;
-        return `0x${base.toString(16).toUpperCase()}0`;
-    };
-
-    const getMethodAddress = (classId, methodName) => {
-        const node = nodes.find(n => n.id === classId);
-        if (!node) return '0x0000';
-        const idx = node.methods.findIndex(m => m.name === methodName);
-        const offset = idx >= 0 ? idx * 4 : 0;
-        const baseStr = getClassBaseAddress(classId);
-        const baseNum = parseInt(baseStr, 16);
-        return `0x${(baseNum + offset).toString(16).toUpperCase()}`;
-    };
-
-    const getVTableBaseAddress = (classId) => {
-        let hash = 0;
-        for (let i = 0; i < classId.length; i++) {
-            hash = classId.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const base = Math.abs(hash % 800) + 200;
-        return `0x${base.toString(16).toUpperCase()}0`;
-    };
-
-    const getSlotAddress = (classId, idx) => {
-        const baseStr = getVTableBaseAddress(classId);
-        const baseNum = parseInt(baseStr, 16);
-        return `0x${(baseNum + idx * 4).toString(16).toUpperCase()}`;
-    };
-
-    // Calculate Parent VTable entries
-    const parentVTable = useMemo(() => {
-        if (!parentNode) return [];
-        let mro = [];
-        try {
-            mro = getC3MRO(parentNode.id, nodes);
-        } catch (e) {
-            mro = [parentNode.id];
-        }
-        const seen = new Set();
-        const entries = [];
-        mro.forEach(cid => {
-            const n = nodes.find(x => x.id === cid);
-            if (n) {
-                n.methods.forEach(m => {
-                    if (!seen.has(m.name)) {
-                        seen.add(m.name);
-                        const res = getMethodResolution(parentNode.id, m.name, nodes);
-                        entries.push({
-                            name: m.name,
-                            resolvedClassId: res?.classId || cid,
-                            isOverride: res?.isOverride || false,
-                            isInherited: (res?.classId || cid) !== parentNode.id,
-                            response: m.response
-                        });
-                    }
-                });
-            }
-        });
-        return entries;
-    }, [parentNode, nodes]);
+        setSelectedMethodName(null);
+    }, [selectedClassId]);
 
     // Calculate Child VTable entries
     const childVTable = useMemo(() => {
@@ -776,132 +656,15 @@ const OverrideOverloadPanel = ({ nodes, isMobile }) => {
         return entries;
     }, [childNode, nodes]);
 
-    // Code blocks to render (physical compiled methods)
-    const codeBlocks = useMemo(() => {
-        const blocks = [];
-        const added = new Set();
-        
-        if (childNode) {
-            childNode.methods.forEach(m => {
-                const key = `${childNode.id}-${m.name}`;
-                if (!added.has(key)) {
-                    added.add(key);
-                    blocks.push({
-                        classId: childNode.id,
-                        name: m.name,
-                        response: m.response,
-                        color: childNode.color
-                    });
-                }
-            });
-        }
-
-        if (parentNode) {
-            let mro = [];
-            try {
-                mro = getC3MRO(parentNode.id, nodes);
-            } catch (e) {
-                mro = [parentNode.id];
-            }
-            mro.forEach(cid => {
-                const pNode = nodes.find(x => x.id === cid);
-                if (pNode) {
-                    pNode.methods.forEach(m => {
-                        const key = `${pNode.id}-${m.name}`;
-                        if (!added.has(key)) {
-                            added.add(key);
-                            blocks.push({
-                                classId: pNode.id,
-                                name: m.name,
-                                response: m.response,
-                                color: pNode.color
-                            });
-                        }
-                    });
-                }
-            });
-        }
-        
-        return blocks;
-    }, [childNode, parentNode, nodes]);
-
-    // Calculate SVG lines connecting Slots to Code Blocks
-    const svgLines = useMemo(() => {
-        const lines = [];
-        
-        // Parent connections: right side of slot to left side of code
-        if (parentNode && parentVTable.length > 0) {
-            parentVTable.forEach((entry, idx) => {
-                const parentSlotKey = `parent-slot-${entry.name}`;
-                const codeBlockKey = `code-block-${entry.resolvedClassId}-${entry.name}`;
-                
-                const parentSlot = coords[parentSlotKey];
-                const codeBlock = coords[codeBlockKey];
-                
-                if (parentSlot && codeBlock) {
-                    const x1 = parentSlot.right;
-                    const y1 = parentSlot.y;
-                    const x2 = codeBlock.left;
-                    const y2 = codeBlock.y;
-                    
-                    const isHovered = hoveredMethod && hoveredMethod.name === entry.name && hoveredMethod.classId === entry.resolvedClassId;
-                    
-                    lines.push({
-                        key: `parent-line-${entry.name}`,
-                        d: `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}`,
-                        stroke: isHovered ? 'var(--cyan)' : 'rgba(0, 0, 0, 0.15)',
-                        strokeWidth: isHovered ? 4 : 2,
-                        dashArray: 'none',
-                        opacity: hoveredMethod ? (isHovered ? 1.0 : 0.2) : 0.6
-                    });
-                }
-            });
-        }
-        
-        // Child connections: left side of slot to right side of code
-        if (childNode && childVTable.length > 0) {
-            childVTable.forEach((entry, idx) => {
-                const childSlotKey = `child-slot-${entry.name}`;
-                const codeBlockKey = `code-block-${entry.resolvedClassId}-${entry.name}`;
-                
-                const childSlot = coords[childSlotKey];
-                const codeBlock = coords[codeBlockKey];
-                
-                if (childSlot && codeBlock) {
-                    const x1 = childSlot.left;
-                    const y1 = childSlot.y;
-                    const x2 = codeBlock.right;
-                    const y2 = codeBlock.y;
-                    
-                    const isHovered = hoveredMethod && hoveredMethod.name === entry.name && hoveredMethod.classId === entry.resolvedClassId;
-                    
-                    let strokeColor = 'var(--cyan)';
-                    if (entry.isOverride) strokeColor = 'var(--pink)';
-                    else if (entry.isInherited) strokeColor = 'var(--yellow)';
-                    else if (entry.isNew) strokeColor = 'var(--green)';
-                    
-                    lines.push({
-                        key: `child-line-${entry.name}`,
-                        d: `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}`,
-                        stroke: strokeColor,
-                        strokeWidth: isHovered ? 4.5 : 2.5,
-                        dashArray: entry.isInherited ? '5 3' : 'none',
-                        opacity: hoveredMethod ? (isHovered ? 1.0 : 0.2) : 0.85
-                    });
-                }
-            });
-        }
-        
-        return lines;
-    }, [coords, parentVTable, childVTable, parentNode, childNode, hoveredMethod]);
+    const activeEntry = childVTable.find(e => e.name === selectedMethodName);
 
     return (
         <div style={{
             height: '100%', width: '100%', display: 'flex', flexDirection: 'column', padding: '1rem', gap: '1rem',
             background: 'var(--bg)', color: 'var(--text)', overflowY: 'auto'
         }}>
-            {/* Class Selector Dropdowns */}
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end', background: 'var(--white)', border: '3px solid var(--border)', borderRadius: 'var(--radius)', padding: '0.6rem 0.8rem', boxShadow: 'var(--shadow-sm)', flexShrink: 0 }}>
+            {/* Top Selector Panel */}
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--white)', border: '3px solid var(--border)', borderRadius: 'var(--radius)', padding: '0.6rem 0.8rem', boxShadow: 'var(--shadow-sm)', flexShrink: 0 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                     <span style={{ fontSize: '0.58rem', fontWeight: 800, opacity: 0.6, textTransform: 'uppercase' }}>Select Class to Inspect:</span>
                     <select value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)} style={{ border: '2px solid var(--border)', borderRadius: 'var(--radius)', padding: '0.2rem 0.4rem', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', background: 'var(--white)', color: 'var(--text)', cursor: 'pointer', outline: 'none' }}>
@@ -912,235 +675,131 @@ const OverrideOverloadPanel = ({ nodes, isMobile }) => {
                         ))}
                     </select>
                 </div>
-                {childNode && childNode.parents.length > 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                        <span style={{ fontSize: '0.58rem', fontWeight: 800, opacity: 0.6, textTransform: 'uppercase' }}>Select Parent Path:</span>
-                        <select value={selectedParentId} onChange={e => setSelectedParentId(e.target.value)} style={{ border: '2px solid var(--border)', borderRadius: 'var(--radius)', padding: '0.2rem 0.4rem', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', background: 'var(--white)', color: 'var(--text)', cursor: 'pointer', outline: 'none' }}>
-                            {childNode.parents.map(p => (
-                                <option key={p} value={p}>
-                                    Parent {p}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
-                {/* Visual Legend */}
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.8rem', flexWrap: 'wrap', fontSize: '0.58rem', fontWeight: 800, paddingBottom: '0.2rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}><span style={{ width: 8, height: 8, background: 'var(--pink)', border: '1px solid var(--border)' }} /> Overridden (Child code)</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}><span style={{ width: 8, height: 8, background: 'var(--yellow)', border: '1px solid var(--border)' }} /> Inherited (Parent code)</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}><span style={{ width: 8, height: 8, background: 'var(--green)', border: '1px solid var(--border)' }} /> New (Child exclusive)</div>
-                </div>
             </div>
 
-            {/* Visual Pointer Mapping Workspace */}
-            <div ref={containerRef} style={{
-                position: 'relative', flex: 1, minHeight: 380, display: 'flex', gap: '1.2rem',
-                justifyContent: 'space-between', alignItems: 'stretch', background: 'var(--white)',
-                border: '3px solid var(--border)', borderRadius: 'var(--radius)', padding: '1rem',
-                overflow: 'hidden', boxShadow: 'var(--shadow)',
-                minWidth: isMobile ? '700px' : 'auto'
-            }}>
-                {/* SVG Connections Overlay */}
-                <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-                    <defs>
-                        <marker id="vtable-pointer-arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-                            <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="var(--border)" />
-                        </marker>
-                    </defs>
-                    {svgLines.map(l => (
-                        <path
-                            key={l.key}
-                            d={l.d}
-                            fill="none"
-                            stroke={l.stroke}
-                            strokeWidth={l.strokeWidth}
-                            strokeDasharray={l.dashArray}
-                            opacity={l.opacity}
-                            markerEnd="url(#vtable-pointer-arrow)"
-                            style={{ transition: 'stroke 0.2s, stroke-width 0.2s, opacity 0.2s' }}
-                        />
-                    ))}
-                </svg>
+            {/* Split Visual Layout */}
+            <div style={{ display: 'flex', flex: 1, gap: '1.2rem', minHeight: 360, flexDirection: isMobile ? 'column' : 'row' }}>
+                
+                {/* 1. Left Card: Class Blueprint */}
+                <div style={{
+                    flex: 1, border: '3px solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem',
+                    boxShadow: 'var(--shadow-sm)'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', borderBottom: '2px solid var(--border)', paddingBottom: '0.4rem', fontWeight: 900, fontSize: '0.75rem' }}>
+                        <span style={{ background: childNode?.color || 'var(--cyan)', color: '#000000', padding: '1px 6px', border: '1px solid var(--border)', borderRadius: '4px' }}>Class {selectedClassId}</span>
+                        <span>Blueprint Methods</span>
+                    </div>
 
-                {/* Left Column: Parent VTable */}
-                <div style={{ width: '28%', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 2 }}>
-                    {parentNode ? (
-                        <div style={{
-                            border: '3px solid var(--border)', borderRadius: 'var(--radius)',
-                            background: 'var(--white)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden', height: '100%'
-                        }}>
-                            <div style={{
-                                padding: '0.4rem 0.6rem', borderBottom: '3px solid var(--border)', fontWeight: 800, fontSize: '0.7rem',
-                                color: '#000000', background: parentNode.color || 'var(--cyan)'
-                            }}>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><TreeIcon size={14} color="#000000" /> {parentNode.id} VTable (vptr: {getVTableBaseAddress(parentNode.id)})</span>
-                            </div>
-                            <div style={{ padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                                <div style={{ display: 'flex', fontSize: '0.5rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.5, borderBottom: '1px solid var(--border)', paddingBottom: '0.2rem', fontFamily: 'var(--font-mono)' }}>
-                                    <div style={{ width: '40%' }}>Slot / Offset</div>
-                                    <div style={{ width: '60%' }}>Code Target Ptr</div>
-                                </div>
-                                {parentVTable.map((entry, idx) => {
-                                    const isHovered = hoveredMethod && hoveredMethod.name === entry.name && hoveredMethod.classId === entry.resolvedClassId;
-                                    return (
-                                        <div
-                                            key={entry.name}
-                                            ref={el => elementRefs.current[`parent-slot-${entry.name}`] = el}
-                                            onMouseEnter={() => setHoveredMethod({ name: entry.name, classId: entry.resolvedClassId })}
-                                            onMouseLeave={() => setHoveredMethod(null)}
-                                            style={{
-                                                display: 'flex', alignItems: 'center', padding: '0.25rem 0.35rem', borderRadius: '4px',
-                                                fontSize: '0.6rem', fontFamily: 'var(--font-mono)', border: '1.5px solid var(--border)',
-                                                background: isHovered ? 'rgba(56,161,105,0.1)' : 'var(--bg-outer)',
-                                                cursor: 'pointer', transition: 'all 0.15s'
-                                            }}
-                                        >
-                                            <div style={{ width: '40%', fontWeight: 700 }}>
-                                                {getSlotAddress(parentNode.id, idx)}:
-                                            </div>
-                                            <div style={{ width: '60%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontWeight: 800, color: 'var(--cyan)' }}>
-                                                    {getMethodAddress(entry.resolvedClassId, entry.name)}
-                                                </span>
-                                                <span style={{ fontSize: '0.55rem', fontWeight: 700, opacity: 0.7 }}>
-                                                    {entry.name}()
-                                                </span>
-                                            </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, overflowY: 'auto' }}>
+                        {childVTable.length === 0 ? (
+                            <div style={{ fontStyle: 'italic', opacity: 0.5, textAlign: 'center', padding: '1rem' }}>No methods defined. Open Class Builder in the Canvas tab to add methods!</div>
+                        ) : (
+                            childVTable.map(entry => {
+                                const isSelected = entry.name === selectedMethodName;
+                                let badgeColor = 'var(--cyan)';
+                                let badgeText = 'Subclass Exclusive';
+                                if (entry.isOverride) {
+                                    badgeColor = 'var(--pink)';
+                                    badgeText = 'Overridden';
+                                } else if (entry.isInherited) {
+                                    badgeColor = 'var(--yellow)';
+                                    badgeText = `Inherited from ${entry.resolvedClassId}`;
+                                }
+                                return (
+                                    <button
+                                        key={entry.name}
+                                        onClick={() => setSelectedMethodName(entry.name)}
+                                        style={{
+                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                            padding: '0.5rem 0.75rem', borderRadius: 'var(--radius)', border: '2.5px solid var(--border)',
+                                            background: isSelected ? 'var(--bg-outer)' : 'var(--white)',
+                                            boxShadow: isSelected ? 'none' : '2px 2px 0 var(--border)',
+                                            transform: isSelected ? 'translate(2px, 2px)' : 'none',
+                                            cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left', width: '100%',
+                                            outline: 'none'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                                            <span style={{ fontWeight: 800, fontSize: '0.7rem', color: 'var(--text)' }}>{entry.name}()</span>
                                         </div>
-                                    );
-                                })}
+                                        <span style={{
+                                            fontSize: '0.55rem', fontWeight: 900, background: badgeColor, color: '#000000',
+                                            padding: '2px 6px', border: '1px solid var(--border)', borderRadius: '4px'
+                                        }}>
+                                            {badgeText}
+                                        </span>
+                                    </button>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+
+                {/* 2. Right Card: Resolution Target */}
+                <div style={{
+                    flex: 1.2, border: '3px solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.8rem',
+                    boxShadow: 'var(--shadow-sm)'
+                }}>
+                    <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: '0.4rem', fontWeight: 900, fontSize: '0.75rem', color: 'var(--text)' }}>
+                        🎯 VTable Resolution Target
+                    </div>
+
+                    {activeEntry ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', flex: 1, justifyContent: 'center' }}>
+                            {/* Visual Dispatch Arrow Diagram */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', background: 'var(--bg-outer)', border: '2px solid var(--border)', borderRadius: 'var(--radius)', padding: '0.75rem', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <div style={{ border: '2px solid var(--border)', background: 'var(--white)', padding: '0.35rem 0.6rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 800 }}>
+                                    {selectedClassId.toLowerCase()}.{activeEntry.name}()
+                                </div>
+                                <div style={{ fontSize: '1rem', color: 'var(--border)' }}>➔</div>
+                                <div style={{ border: '2px solid var(--border)', background: activeEntry.isOverride ? 'var(--pink)' : activeEntry.isInherited ? 'var(--yellow)' : 'var(--green)', color: '#000000', padding: '0.35rem 0.6rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 800 }}>
+                                    {activeEntry.resolvedClassId}::{activeEntry.name}()
+                                </div>
+                            </div>
+
+                            {/* Text explanation */}
+                            <div style={{ fontSize: '0.66rem', lineHeight: 1.4, color: 'var(--text)', background: 'var(--white)', borderLeft: `4px solid ${activeEntry.isOverride ? 'var(--pink)' : activeEntry.isInherited ? 'var(--yellow)' : 'var(--green)'}`, paddingLeft: '0.5rem' }}>
+                                {activeEntry.isOverride && (
+                                    <>
+                                        <strong>Method Overridden:</strong> Since <code>{selectedClassId}</code> overrides <code>{activeEntry.name}()</code>, the VTable slot points to the subclass implementation, overriding the behavior of the parent.
+                                    </>
+                                )}
+                                {activeEntry.isInherited && (
+                                    <>
+                                        <strong>Method Inherited:</strong> Since <code>{selectedClassId}</code> does not override <code>{activeEntry.name}()</code>, the call resolves up the inheritance hierarchy to the parent implementation in <code>{activeEntry.resolvedClassId}</code>.
+                                    </>
+                                )}
+                                {activeEntry.isNew && (
+                                    <>
+                                        <strong>New Method:</strong> This method is defined exclusively in <code>{selectedClassId}</code>.
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Executed Code Segment */}
+                            <div style={{ border: '2.5px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+                                <div style={{ background: 'var(--bg-outer)', borderBottom: '2px solid var(--border)', padding: '0.2rem 0.5rem', fontSize: '0.58rem', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>
+                                    Executed Code Body ({activeEntry.resolvedClassId}::{activeEntry.name})
+                                </div>
+                                <div style={{ padding: '0.6rem', background: '#0d1117', color: '#c9d1d9', fontFamily: 'var(--font-mono)', fontSize: '0.62rem', lineHeight: 1.4 }}>
+                                    <div>{`void ${activeEntry.name}() {`}</div>
+                                    <div style={{ color: '#7ee787', paddingLeft: '1rem' }}>{`System.out.println("${activeEntry.response || 'Calling ' + activeEntry.name}");`}</div>
+                                    <div>{`}`}</div>
+                                </div>
                             </div>
                         </div>
                     ) : (
-                        <div style={{
-                            border: '3px dashed var(--border)', borderRadius: 'var(--radius)',
-                            background: 'var(--white)', display: 'flex', flexDirection: 'column',
-                            alignItems: 'center', justifyContent: 'center', padding: '1rem', height: '100%',
-                            textAlign: 'center', color: 'var(--text)', opacity: 0.6
-                        }}>
-                            <span style={{ fontSize: '1.2rem', marginBottom: '0.3rem' }}>Object</span>
-                            <span style={{ fontSize: '0.62rem', fontWeight: 700 }}>No Parent VTable</span>
-                            <span style={{ fontSize: '0.55rem', padding: '0 0.5rem', marginTop: '0.2rem', lineHeight: 1.3 }}>
-                                Class {selectedClassId} inherits directly from Object. Select or create a child subclass on the canvas to compare tables.
-                            </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '0.5rem', color: 'var(--text)', opacity: 0.6, textAlign: 'center', padding: '1rem' }}>
+                            <LightbulbIcon size={36} color="var(--yellow)" />
+                            <div style={{ fontSize: '0.72rem', fontWeight: 800 }}>No Method Selected</div>
+                            <div style={{ fontSize: '0.62rem', maxWidth: 240, lineHeight: 1.3 }}>Click any method in the Class Blueprint on the left to simulate resolution.</div>
                         </div>
                     )}
                 </div>
 
-                {/* Middle Column: Compiled Code Segment (ROM) */}
-                <div style={{ width: '40%', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 2 }}>
-                    <div style={{
-                        border: '3px solid var(--border)', borderRadius: 'var(--radius)',
-                        background: 'var(--white)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden', height: '100%',
-                        display: 'flex', flexDirection: 'column'
-                    }}>
-                        <div style={{
-                            padding: '0.4rem 0.6rem', borderBottom: '3px solid var(--border)', fontWeight: 800, fontSize: '0.7rem',
-                            color: '#000000', background: 'var(--bg-outer)', textAlign: 'center'
-                        }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'center' }}><TerminalIcon size={14} color="#000000" /> Compiled Code Segment (Executable Blocks)</span>
-                        </div>
-                        <div style={{ padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto', flex: 1 }}>
-                            {codeBlocks.map(block => {
-                                const isHovered = hoveredMethod && hoveredMethod.name === block.name && hoveredMethod.classId === block.classId;
-                                const codeAddr = getMethodAddress(block.classId, block.name);
-                                
-                                return (
-                                    <div
-                                        key={`${block.classId}-${block.name}`}
-                                        ref={el => elementRefs.current[`code-block-${block.classId}-${block.name}`] = el}
-                                        onMouseEnter={() => setHoveredMethod({ name: block.name, classId: block.classId })}
-                                        onMouseLeave={() => setHoveredMethod(null)}
-                                        style={{
-                                            border: isHovered ? '2.5px solid var(--green)' : '2.5px solid var(--border)',
-                                            borderRadius: 'var(--radius)', background: isHovered ? 'rgba(77, 208, 200, 0.05)' : 'var(--white)',
-                                            boxShadow: isHovered ? 'var(--shadow-sm)' : 'none',
-                                            transition: 'all 0.15s', cursor: 'pointer', overflow: 'hidden'
-                                        }}
-                                    >
-                                        <div style={{
-                                            background: block.color, padding: '0.2rem 0.4rem', borderBottom: '2px solid var(--border)',
-                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.58rem', fontWeight: 800, color: '#000000'
-                                        }}>
-                                            <span>Function: {block.classId}::{block.name}()</span>
-                                            <span style={{ fontFamily: 'var(--font-mono)' }}>Addr: {codeAddr}</span>
-                                        </div>
-                                        <div style={{ padding: '0.35rem 0.5rem', display: 'flex', flexDirection: 'column', gap: '0.2rem', fontFamily: 'var(--font-mono)' }}>
-                                            <div style={{ border: '1.5px solid var(--border)', background: 'var(--bg-outer)', padding: '0.25rem', borderRadius: '4px', fontSize: '0.55rem', fontWeight: 800 }}>
-                                                stdout &lt;&lt; "{block.response || 'Calling ' + block.name}"
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Column: Child VTable */}
-                <div style={{ width: '28%', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 2 }}>
-                    {childNode && (
-                        <div style={{
-                            border: '3px solid var(--border)', borderRadius: 'var(--radius)',
-                            background: 'var(--white)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden', height: '100%'
-                        }}>
-                            <div style={{
-                                padding: '0.4rem 0.6rem', borderBottom: '3px solid var(--border)', fontWeight: 800, fontSize: '0.7rem',
-                                color: '#000000', background: childNode.color
-                            }}>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><TreeIcon size={14} color="#000000" /> {childNode.id} VTable (vptr: {getVTableBaseAddress(childNode.id)})</span>
-                            </div>
-                            <div style={{ padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                                <div style={{ display: 'flex', fontSize: '0.5rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.5, borderBottom: '1px solid var(--border)', paddingBottom: '0.2rem', fontFamily: 'var(--font-mono)' }}>
-                                    <div style={{ width: '40%' }}>Slot / Offset</div>
-                                    <div style={{ width: '60%' }}>Code Target Ptr</div>
-                                </div>
-                                {childVTable.map((entry, idx) => {
-                                    const isHovered = hoveredMethod && hoveredMethod.name === entry.name && hoveredMethod.classId === entry.resolvedClassId;
-                                    return (
-                                        <div
-                                            key={entry.name}
-                                            ref={el => elementRefs.current[`child-slot-${entry.name}`] = el}
-                                            onMouseEnter={() => setHoveredMethod({ name: entry.name, classId: entry.resolvedClassId })}
-                                            onMouseLeave={() => setHoveredMethod(null)}
-                                            style={{
-                                                display: 'flex', alignItems: 'center', padding: '0.25rem 0.35rem', borderRadius: '4px',
-                                                fontSize: '0.6rem', fontFamily: 'var(--font-mono)', border: '1.5px solid var(--border)',
-                                                background: isHovered ? 'rgba(56,161,105,0.1)' : 'var(--bg-outer)',
-                                                cursor: 'pointer', transition: 'all 0.15s'
-                                            }}
-                                        >
-                                            <div style={{ width: '40%', fontWeight: 700 }}>
-                                                {getSlotAddress(childNode.id, idx)}:
-                                            </div>
-                                            <div style={{ width: '60%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontWeight: 800, color: entry.isOverride ? 'var(--pink)' : entry.isInherited ? 'var(--yellow)' : 'var(--green)' }}>
-                                                    {getMethodAddress(entry.resolvedClassId, entry.name)}
-                                                </span>
-                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                                    <span style={{ fontSize: '0.55rem', fontWeight: 700 }}>
-                                                        {entry.name}()
-                                                    </span>
-                                                    <span style={{
-                                                        fontSize: '0.42rem',
-                                                        fontWeight: 900,
-                                                        color: entry.isOverride ? 'var(--pink)' : entry.isInherited ? 'var(--text)' : 'var(--green)',
-                                                        opacity: entry.isInherited ? 0.5 : 1
-                                                    }}>
-                                                        {entry.isOverride ? '[Override]' : entry.isInherited ? '[Inherited]' : '[New]'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-                </div>
             </div>
-
-
         </div>
     );
 };
@@ -1164,44 +823,6 @@ const RuntimeDispatchPanel = ({
 }) => {
     const activePair = dispatchPairs[pairIdx] || null;
 
-    const containerRef = useRef(null);
-    const elementRefs = useRef({});
-    const [coords, setCoords] = useState({});
-
-    // Dynamic coordinates measuring for linking components
-    const updateCoords = useCallback(() => {
-        if (!containerRef.current) return;
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const newCoords = {};
-        Object.keys(elementRefs.current).forEach(key => {
-            const el = elementRefs.current[key];
-            if (el) {
-                const rect = el.getBoundingClientRect();
-                newCoords[key] = {
-                    x: rect.left - containerRect.left + rect.width / 2,
-                    y: rect.top - containerRect.top + rect.height / 2,
-                    left: rect.left - containerRect.left,
-                    right: rect.right - containerRect.left,
-                    top: rect.top - containerRect.top,
-                    bottom: rect.bottom - containerRect.top,
-                    width: rect.width,
-                    height: rect.height
-                };
-            }
-        });
-        setCoords(newCoords);
-    }, []);
-
-    useEffect(() => {
-        const timer = setTimeout(updateCoords, 100);
-        return () => clearTimeout(timer);
-    }, [updateCoords, step, pairIdx, selectedMethod, nodes]);
-
-    useEffect(() => {
-        window.addEventListener('resize', updateCoords);
-        return () => window.removeEventListener('resize', updateCoords);
-    }, [updateCoords]);
-
     if (dispatchPairs.length === 0) {
         return (
             <div style={{ height: '100%', width: '100%', background: 'var(--bg)', padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.8rem', color: 'var(--text)' }}>
@@ -1214,152 +835,26 @@ const RuntimeDispatchPanel = ({
         );
     }
 
-    const res = activePair ? getMethodResolution(activePair.child.id, selectedMethod, nodes) : null;
-
-    // Helpers to compute stable Mock memory addresses
-    const getClassBaseAddress = (classId) => {
-        let hash = 0;
-        for (let i = 0; i < classId.length; i++) {
-            hash = classId.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const base = Math.abs(hash % 900) + 100;
-        return `0x${base.toString(16).toUpperCase()}0`;
-    };
-
-    const getMethodAddress = (classId, methodName) => {
-        const node = nodes.find(n => n.id === classId);
-        if (!node) return '0x0000';
-        const idx = node.methods.findIndex(m => m.name === methodName);
-        const offset = idx >= 0 ? idx * 4 : 0;
-        const baseStr = getClassBaseAddress(classId);
-        const baseNum = parseInt(baseStr, 16);
-        return `0x${(baseNum + offset).toString(16).toUpperCase()}`;
-    };
-
-    const getVTableBaseAddress = (classId) => {
-        let hash = 0;
-        for (let i = 0; i < classId.length; i++) {
-            hash = classId.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const base = Math.abs(hash % 800) + 200;
-        return `0x${base.toString(16).toUpperCase()}0`;
-    };
-
-    const getSlotAddress = (classId, idx) => {
-        const baseStr = getVTableBaseAddress(classId);
-        const baseNum = parseInt(baseStr, 16);
-        return `0x${(baseNum + idx * 4).toString(16).toUpperCase()}`;
-    };
-
-    // Calculate slots inside active child class VTable
-    let vtableEntries = [];
-    if (activePair) {
-        let mro = [];
-        try {
-            mro = getC3MRO(activePair.child.id, nodes);
-        } catch (e) {
-            mro = [activePair.child.id];
-        }
-        const seen = new Set();
-        mro.forEach(cid => {
-            const n = nodes.find(x => x.id === cid);
-            if (n) {
-                n.methods.forEach(m => {
-                    if (!seen.has(m.name)) {
-                        seen.add(m.name);
-                        const r = getMethodResolution(activePair.child.id, m.name, nodes);
-                        vtableEntries.push({
-                            name: m.name,
-                            resolvedClassId: r?.classId || cid
-                        });
-                    }
-                });
-            }
-        });
-    }
-
-    // JVM speech bubble content mapping
-    const getJVMSpeech = () => {
+    // Step explanation text mapping (clean & structured)
+    const getStepExplanation = () => {
         if (!activePair) return '';
-        switch(step) {
+        switch (step) {
             case 1:
-                return `Static check: Variable 'ref' has static type '${activePair.parent.id}'. The compiler verifies that the class '${activePair.parent.id}' defines '${selectedMethod}()' so that it can build the bytecode call.`;
+                return `Static check: The compiler verifies that the declared class '${activePair.parent.id}' defines '${selectedMethod}()' so that it compiles.`;
             case 2:
-                return `Dereferencing reference variable 'ref' containing address 0x7B58. The JVM jumps to Heap address 0x7B58 and discovers the actual object instance is of type '${activePair.child.id}'. It locates the object's hidden 'vptr' field pointing to the class metadata.`;
+                return `Heap dereference: At runtime, the JVM looks up the reference 'ref' and finds the true object is of type '${activePair.child.id}'. It reads its hidden class pointer (vptr).`;
             case 3:
-                return `VTable query: The JVM uses 'vptr' (0x${getVTableBaseAddress(activePair.child.id).slice(2)}) to locate class '${activePair.child.id}'s VTable. It looks up the slot for method '${selectedMethod}()' and reads its target code pointer: ${res ? getMethodAddress(res.classId, selectedMethod) : '0x0000'}.`;
+                return `VTable lookup & Execution: JVM inspects class '${activePair.child.id}'s VTable, resolves '${selectedMethod}()' slot, and calls '${getMethodResolution(activePair.child.id, selectedMethod, nodes)?.classId}::${selectedMethod}()'.`;
             case 4:
-                return `Code execution: The JVM jumps to address ${res ? getMethodAddress(res.classId, selectedMethod) : '0x0000'} in the Code Segment and runs the instructions compiled for '${res?.classId}::${selectedMethod}()'. Console prints: "${res?.method.response || 'calling ' + selectedMethod}"!`;
+                return `Execution Completed: stdout prints "${getMethodResolution(activePair.child.id, selectedMethod, nodes)?.method.response || 'calling ' + selectedMethod}".`;
             default:
-                return `Dynamic dispatch tracing. Select ref/object setup and click "Dispatch" (or press Start/Step on the top simulation toolbar) to step through how virtual methods are resolved at runtime.`;
+                return `Select ref/object setup and click "Dispatch" to trace the dynamic resolution step-by-step.`;
         }
     };
-
-    // Calculate SVG lines for Memory Pipeline
-    const svgLines = [];
-    if (activePair) {
-        const stackRef = coords['stack-ref-var'];
-        const heapObj = coords['heap-obj-card'];
-        const heapVptr = coords['heap-vptr-row'];
-        const vtableHeader = coords['vtable-card-header'];
-        const vtableRow = coords[`vtable-row-${selectedMethod}`];
-        const codeBlock = coords[`code-block-${res?.classId}-${selectedMethod}`];
-
-        // 1. Stack -> Heap (address 0x7B58)
-        if (stackRef && heapObj) {
-            const x1 = stackRef.right;
-            const y1 = stackRef.y;
-            const x2 = heapObj.left;
-            const y2 = heapObj.y;
-            svgLines.push({
-                key: 'stack-to-heap',
-                d: `M ${x1} ${y1} C ${(x1+x2)/2} ${y1}, ${(x1+x2)/2} ${y2}, ${x2} ${y2}`,
-                stroke: step >= 2 ? 'var(--cyan)' : 'var(--border)',
-                strokeWidth: step >= 2 ? 4 : 2,
-                dash: step === 2 ? '6 3' : 'none',
-                flow: step === 2,
-                active: step === 2
-            });
-        }
-
-        // 2. Heap vptr -> VTable Header (address 0x9B00)
-        if (heapVptr && vtableHeader) {
-            const x1 = heapVptr.right;
-            const y1 = heapVptr.y;
-            const x2 = vtableHeader.left;
-            const y2 = vtableHeader.y;
-            svgLines.push({
-                key: 'heap-to-vtable',
-                d: `M ${x1} ${y1} C ${(x1+x2)/2} ${y1}, ${(x1+x2)/2} ${y2}, ${x2} ${y2}`,
-                stroke: step >= 3 ? 'var(--green)' : 'var(--border)',
-                strokeWidth: step >= 3 ? 4 : 2,
-                dash: step === 3 ? '6 3' : 'none',
-                flow: step === 3,
-                active: step === 3
-            });
-        }
-
-        // 3. VTable row -> Code Block (address 0xCF00)
-        if (vtableRow && codeBlock) {
-            const x1 = vtableRow.right;
-            const y1 = vtableRow.y;
-            const x2 = codeBlock.left;
-            const y2 = codeBlock.y;
-            svgLines.push({
-                key: 'vtable-to-code',
-                d: `M ${x1} ${y1} C ${(x1+x2)/2} ${y1}, ${(x1+x2)/2} ${y2}, ${x2} ${y2}`,
-                stroke: step >= 4 ? 'var(--pink)' : 'var(--border)',
-                strokeWidth: step >= 4 ? 4 : 2,
-                dash: step === 4 ? '6 3' : 'none',
-                flow: step === 4,
-                active: step === 4
-            });
-        }
-    }
 
     return (
         <div style={{ height: '100%', width: '100%', background: 'var(--bg)', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', color: 'var(--text)', overflowY: 'auto' }}>
-            {/* Selector controls */}
+            {/* Control Panel */}
             <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'flex-end', background: 'var(--white)', border: '3px solid var(--border)', borderRadius: 'var(--radius)', padding: '0.6rem 0.8rem', boxShadow: 'var(--shadow-sm)', flexShrink: 0 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                     <span style={{ fontSize: '0.55rem', fontWeight: 800, opacity: 0.6, textTransform: 'uppercase' }}>Reference Setup:</span>
@@ -1393,277 +888,136 @@ const RuntimeDispatchPanel = ({
                 </div>
             </div>
 
-            {/* Visual Pipeline Stepper */}
+            {/* Code Context Header */}
             <div style={{
-                display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: 'var(--white)',
-                border: '3px solid var(--border)', borderRadius: 'var(--radius)', padding: '0.4rem 0.6rem',
-                boxShadow: 'var(--shadow-sm)', flexShrink: 0, gap: '0.5rem', flexWrap: 'wrap'
+                background: 'var(--white)', border: '3px solid var(--border)', borderRadius: 'var(--radius)',
+                padding: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.3rem', boxShadow: 'var(--shadow-sm)', flexShrink: 0
             }}>
-                {[
-                    { s: 1, label: '1. Compile Check', color: 'var(--yellow)', desc: 'Verify Parent Type' },
-                    { s: 2, label: '2. Stack -> Heap', color: 'var(--cyan)', desc: 'Resolve True Object' },
-                    { s: 3, label: '3. Object -> VTable', color: 'var(--green)', desc: 'Lookup Method Ptr' },
-                    { s: 4, label: '4. Execute Code', color: 'var(--pink)', desc: 'Run Implementation' }
-                ].map((item, index) => {
-                    const isCurrent = step === item.s;
-                    const isPassed = step > item.s;
-                    return (
-                        <div key={item.s} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: 1, minWidth: 140, justifyContent: 'center' }}>
-                            <div style={{
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.1rem', padding: '0.2rem 0.4rem',
-                                borderRadius: 'var(--radius)', border: '2px solid var(--border)',
-                                background: isCurrent ? item.color : (isPassed ? 'var(--bg-outer)' : 'var(--white)'),
-                                color: isCurrent ? '#000000' : 'var(--text)',
-                                opacity: isCurrent ? 1 : (isPassed ? 0.75 : 0.45),
-                                fontWeight: 800, fontSize: '0.62rem', transition: 'all 0.2s',
-                                boxShadow: isCurrent ? 'var(--shadow-sm)' : 'none', flex: 1, textAlign: 'center'
-                            }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', justifyContent: 'center' }}>
-                                    <span style={{ background: 'rgba(0,0,0,0.1)', width: 13, height: 13, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.48rem' }}>{item.s}</span>
-                                    {item.label}
-                                </div>
-                                <div style={{ fontSize: '0.48rem', opacity: 0.75, fontWeight: 700 }}>
-                                    {item.desc}
-                                </div>
-                            </div>
-                            {index < 3 && (
-                                <div style={{
-                                    height: 3, width: 20, background: step > item.s ? 'var(--border)' : 'var(--border)',
-                                    borderStyle: step > item.s ? 'solid' : 'dashed',
-                                    borderWidth: '1px 0 0 0',
-                                    opacity: step > item.s ? 1 : 0.3
-                                }} />
-                            )}
-                        </div>
-                    );
-                })}
+                <div style={{ fontSize: '0.55rem', fontWeight: 800, opacity: 0.6, textTransform: 'uppercase' }}>Polymorphic Code Context:</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 800, color: 'var(--pink)', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                    <div>{activePair.parent.id} ref = new {activePair.child.id}();</div>
+                    <div>ref.{selectedMethod}();</div>
+                </div>
             </div>
 
-            {/* Memory Canvas Visualization */}
+            {/* Redesigned 3-Box Flow Canvas */}
             <div style={{
-                overflowX: isMobile ? 'auto' : 'hidden',
-                overflowY: 'hidden',
-                width: '100%',
-                flex: 1,
-                minHeight: 280
+                flex: 1, minHeight: 260, border: '3px solid var(--border)', background: 'var(--white)',
+                borderRadius: 'var(--radius)', padding: '1.5rem', position: 'relative', display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row', gap: '1.5rem', justifyContent: 'space-around',
+                alignItems: 'center', boxShadow: 'var(--shadow)'
             }}>
-                <div ref={containerRef} style={{
-                    width: isMobile ? 800 : '100%',
-                    height: '100%',
-                    minHeight: 280,
-                    border: '3px solid var(--border)', background: 'var(--white)', borderRadius: 'var(--radius)',
-                    padding: '1rem', position: 'relative', display: 'flex', gap: '1rem',
-                    justifyContent: 'space-around', alignItems: 'stretch', overflow: 'hidden', boxShadow: 'var(--shadow)',
-                    flexShrink: 0
-                }}>
-                
-                {/* SVG Connections Overlay */}
-                <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
-                    {svgLines.map(l => (
-                        <path
-                            key={l.key}
-                            d={l.d}
-                            fill="none"
-                            stroke={l.stroke}
-                            strokeWidth={l.strokeWidth}
-                            strokeDasharray={l.dash}
-                            markerEnd="url(#dispatch-arrow)"
-                            style={l.flow ? { animation: 'flowUp 0.6s linear infinite' } : {}}
-                        />
-                    ))}
-                </svg>
-
-                {/* 1. STACK FRAME (Compile check) */}
+                {/* Step 1 Box: Reference (Compile Time Type) */}
                 <div style={{
-                    width: '22%', borderRadius: 'var(--radius)',
-                    background: 'var(--white)', padding: '0.5rem', display: 'flex', flexDirection: 'column',
-                    boxShadow: step === 1 ? 'var(--shadow)' : 'var(--shadow-sm)',
-                    border: '3px solid var(--border)',
-                    borderColor: step === 1 ? 'var(--yellow)' : 'var(--border)',
-                    transform: step === 1 ? 'scale(1.02)' : 'scale(1)',
-                    transition: 'all 0.2s', position: 'relative', zIndex: 2
+                    width: isMobile ? '100%' : '28%', minHeight: '120px', borderRadius: 'var(--radius)',
+                    border: '3px solid var(--border)', background: step === 1 ? 'rgba(217, 119, 6, 0.12)' : 'var(--white)',
+                    borderColor: step === 1 ? '#d97706' : 'var(--border)',
+                    boxShadow: step === 1 ? '0 0 20px rgba(217, 119, 6, 0.4)' : 'none',
+                    transform: step === 1 ? 'scale(1.04)' : 'scale(1)',
+                    transition: 'all 0.25s ease-in-out', padding: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem',
+                    animation: step === 1 ? 'glowBreathe 2s ease-in-out infinite' : 'none',
+                    color: '#d97706'
                 }}>
-                    <div style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', borderBottom: '2px solid var(--border)', paddingBottom: '0.2rem', marginBottom: '0.4rem', background: 'var(--bg-outer)', color: '#000000', textAlign: 'center' }}>
-                        Stack Frame (main)
+                    <div style={{
+                        fontSize: '0.55rem', fontWeight: 900, textTransform: 'uppercase',
+                        color: step === 1 ? '#ffffff' : '#000000',
+                        background: step === 1 ? '#d97706' : 'var(--yellow)',
+                        padding: '2px 5px', borderRadius: '3px', alignSelf: 'flex-start',
+                        transition: 'all 0.25s'
+                    }}>
+                        1. Reference Variable
                     </div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.4rem', justifyContent: 'center' }}>
-                        <div style={{ color: activePair.parent.color, fontWeight: 900 }}>
-                            Type: {activePair.parent.id} ref
-                        </div>
-                        <div
-                            ref={el => elementRefs.current['stack-ref-var'] = el}
-                            style={{
-                                border: '2px solid var(--border)',
-                                background: step >= 1 ? 'rgba(255, 217, 61, 0.15)' : 'var(--bg-outer)',
-                                padding: '0.3rem', borderRadius: '4px', textAlign: 'center'
-                            }}
-                        >
-                            <div style={{ fontWeight: 800 }}>Variable: ref</div>
-                            <div style={{ fontSize: '0.52rem', opacity: 0.8, color: 'var(--text)' }}>
-                                Value: <strong>0x7B58</strong>
-                            </div>
-                        </div>
-                    </div>
-                    {step >= 1 && (
-                        <div style={{ position: 'absolute', bottom: 4, left: 4, right: 4, fontSize: '0.45rem', color: '#22863a', fontWeight: 900, textAlign: 'center', background: 'rgba(56,161,105,0.15)', padding: '2px', borderRadius: '2px', border: '1px solid #22863a' }}>
-                            ✓ Compile Verification OK
-                        </div>
-                    )}
-                </div>
-
-                {/* 2. HEAP MEMORY (Physical Instance) */}
-                <div
-                    ref={el => elementRefs.current['heap-obj-card'] = el}
-                    style={{
-                        width: '24%', borderRadius: 'var(--radius)',
-                        background: 'var(--white)', padding: '0.5rem', display: 'flex', flexDirection: 'column',
-                        boxShadow: step === 2 ? 'var(--shadow)' : 'var(--shadow-sm)',
-                        border: '3px solid var(--border)',
-                        borderColor: step === 2 ? 'var(--cyan)' : 'var(--border)',
-                        transform: step === 2 ? 'scale(1.02)' : 'scale(1)',
-                        transition: 'all 0.2s', position: 'relative', zIndex: 2
-                    }}
-                >
-                    <div style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', borderBottom: '2px solid var(--border)', paddingBottom: '0.2rem', marginBottom: '0.4rem', background: 'var(--bg-outer)', color: '#000000', textAlign: 'center' }}>
-                        Heap Memory
-                    </div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.35rem', justifyContent: 'center' }}>
-                        <div style={{ opacity: 0.6, fontSize: '0.5rem', fontWeight: 800 }}>Address: 0x7B58</div>
-                        <div style={{ color: activePair.child.color, fontWeight: 900, fontSize: '0.62rem', borderBottom: '1px solid var(--border)', paddingBottom: '2px' }}>
-                            Instance: {activePair.child.id}
-                        </div>
-                        
-                        {/* Virtual Pointer VPTR */}
-                        <div
-                            ref={el => elementRefs.current['heap-vptr-row'] = el}
-                            style={{
-                                border: '1.5px dashed var(--border)', padding: '0.25rem', borderRadius: '4px',
-                                background: step >= 2 ? 'rgba(102, 217, 239, 0.15)' : 'transparent',
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                            }}
-                        >
-                            <span style={{ fontWeight: 800, color: 'var(--cyan)' }}>vptr:</span>
-                            <span style={{ fontWeight: 800 }}>0x{getVTableBaseAddress(activePair.child.id).slice(2)}</span>
-                        </div>
-
-                        {/* Fields list */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', marginTop: '0.2rem' }}>
-                            <div style={{ fontSize: '0.48rem', opacity: 0.5, fontWeight: 900 }}>OBJECT FIELDS:</div>
-                            {activePair.child.fields && activePair.child.fields.length > 0 ? (
-                                activePair.child.fields.map(f => (
-                                    <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px', background: 'var(--bg-outer)', borderRadius: '2px' }}>
-                                        <span>{f.name}:</span>
-                                        <span style={{ fontWeight: 800 }}>{f.value}</span>
-                                    </div>
-                                ))
-                            ) : (
-                                <div style={{ fontStyle: 'italic', opacity: 0.5 }}>[No variables]</div>
-                            )}
-                        </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text)' }}>
+                        <div><strong>Variable:</strong> ref</div>
+                        <div><strong>Declared Type:</strong> {activePair.parent.id}</div>
+                        <div style={{ fontSize: '0.58rem', opacity: 0.5, marginTop: '0.2rem' }}>[Compiler checks this class definition]</div>
                     </div>
                 </div>
 
-                {/* 3. CLASS VTABLE */}
+                {!isMobile && <div style={{ fontSize: '1.5rem', color: step === 1 ? '#d97706' : step === 2 ? '#2563eb' : (step === 3 || step === 4) ? '#16a34a' : 'var(--border)', fontWeight: 800, transition: 'color 0.25s' }}>➔</div>}
+
+                {/* Step 2 Box: Runtime Instance */}
                 <div style={{
-                    width: '24%', borderRadius: 'var(--radius)',
-                    background: 'var(--white)', padding: '0.5rem', display: 'flex', flexDirection: 'column',
-                    boxShadow: step === 3 ? 'var(--shadow)' : 'var(--shadow-sm)',
-                    border: '3px solid var(--border)',
-                    borderColor: step === 3 ? 'var(--green)' : 'var(--border)',
-                    transform: step === 3 ? 'scale(1.02)' : 'scale(1)',
-                    transition: 'all 0.2s', position: 'relative', zIndex: 2
+                    width: isMobile ? '100%' : '28%', minHeight: '120px', borderRadius: 'var(--radius)',
+                    border: '3px solid var(--border)', background: step === 2 ? 'rgba(37, 99, 235, 0.12)' : 'var(--white)',
+                    borderColor: step === 2 ? '#2563eb' : 'var(--border)',
+                    boxShadow: step === 2 ? '0 0 20px rgba(37, 99, 235, 0.4)' : 'none',
+                    transform: step === 2 ? 'scale(1.04)' : 'scale(1)',
+                    transition: 'all 0.25s ease-in-out', padding: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem',
+                    animation: step === 2 ? 'glowBreathe 2s ease-in-out infinite' : 'none',
+                    color: '#2563eb'
                 }}>
-                    <div
-                        ref={el => elementRefs.current['vtable-card-header'] = el}
-                        style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', borderBottom: '2px solid var(--border)', paddingBottom: '0.2rem', marginBottom: '0.4rem', background: 'var(--bg-outer)', color: '#000000', textAlign: 'center' }}
-                    >
-                        Class VTable
+                    <div style={{
+                        fontSize: '0.55rem', fontWeight: 900, textTransform: 'uppercase',
+                        color: step === 2 ? '#ffffff' : '#000000',
+                        background: step === 2 ? '#2563eb' : 'var(--cyan)',
+                        padding: '2px 5px', borderRadius: '3px', alignSelf: 'flex-start',
+                        transition: 'all 0.25s'
+                    }}>
+                        2. Heap Object
                     </div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.35rem', justifyContent: 'center' }}>
-                        <div style={{ fontWeight: 800, borderBottom: '1px solid var(--border)', paddingBottom: '2px' }}>
-                            Base Ptr: 0x{getVTableBaseAddress(activePair.child.id).slice(2)}
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                            {vtableEntries.map((entry, idx) => {
-                                const isActive = step >= 3 && entry.name === selectedMethod;
-                                return (
-                                    <div
-                                        key={entry.name}
-                                        ref={el => {
-                                            if (entry.name === selectedMethod) {
-                                                elementRefs.current[`vtable-row-${entry.name}`] = el;
-                                            }
-                                        }}
-                                        style={{
-                                            display: 'flex', justifyContent: 'space-between', padding: '0.2rem', borderRadius: '3px',
-                                            border: isActive ? '1.5px solid var(--green)' : '1.5px solid transparent',
-                                            background: isActive ? 'rgba(77, 208, 200, 0.15)' : 'transparent',
-                                            fontWeight: isActive ? 900 : 500
-                                        }}
-                                    >
-                                        <span>{entry.name}()</span>
-                                        <span style={{ color: 'var(--green)', fontWeight: 800 }}>
-                                            {getMethodAddress(entry.resolvedClassId, entry.name)}
-                                        </span>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text)' }}>
+                        <div><strong>True Instance:</strong> {activePair.child.id}</div>
+                        <div><strong>Metadata Link:</strong> vptr</div>
+                        <div style={{ fontSize: '0.58rem', opacity: 0.5, marginTop: '0.2rem' }}>[Jumps to true class implementation at runtime]</div>
                     </div>
                 </div>
 
-                {/* 4. CODE SEGMENT */}
+                {!isMobile && <div style={{ fontSize: '1.5rem', color: step === 2 ? '#2563eb' : (step === 3 || step === 4) ? '#16a34a' : 'var(--border)', fontWeight: 800, transition: 'color 0.25s' }}>➔</div>}
+
+                {/* Step 3 Box: VTable Target Executed */}
                 <div style={{
-                    width: '26%', borderRadius: 'var(--radius)',
-                    background: 'var(--white)', padding: '0.5rem', display: 'flex', flexDirection: 'column',
-                    boxShadow: step === 4 ? 'var(--shadow)' : 'var(--shadow-sm)',
-                    border: '3px solid var(--border)',
-                    borderColor: step === 4 ? 'var(--pink)' : 'var(--border)',
-                    transform: step === 4 ? 'scale(1.02)' : 'scale(1)',
-                    transition: 'all 0.2s', position: 'relative', zIndex: 2
+                    width: isMobile ? '100%' : '28%', minHeight: '120px', borderRadius: 'var(--radius)',
+                    border: '3px solid var(--border)', background: (step === 3 || step === 4) ? 'rgba(22, 163, 74, 0.12)' : 'var(--white)',
+                    borderColor: (step === 3 || step === 4) ? '#16a34a' : 'var(--border)',
+                    boxShadow: (step === 3 || step === 4) ? '0 0 20px rgba(22, 163, 74, 0.4)' : 'none',
+                    transform: (step === 3 || step === 4) ? 'scale(1.04)' : 'scale(1)',
+                    transition: 'all 0.25s ease-in-out', padding: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem',
+                    animation: (step === 3 || step === 4) ? 'glowBreathe 2s ease-in-out infinite' : 'none',
+                    color: '#16a34a'
                 }}>
-                    <div style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', borderBottom: '2px solid var(--border)', paddingBottom: '0.2rem', marginBottom: '0.4rem', background: 'var(--bg-outer)', color: '#000000', textAlign: 'center' }}>
-                        Code Segment
+                    <div style={{
+                        fontSize: '0.55rem', fontWeight: 900, textTransform: 'uppercase',
+                        color: (step === 3 || step === 4) ? '#ffffff' : '#000000',
+                        background: (step === 3 || step === 4) ? '#16a34a' : 'var(--green)',
+                        padding: '2px 5px', borderRadius: '3px', alignSelf: 'flex-start',
+                        transition: 'all 0.25s'
+                    }}>
+                        3. Resolved Method
                     </div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.55rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.4rem', justifyContent: 'center' }}>
-                        {res ? (
-                            <div
-                                ref={el => elementRefs.current[`code-block-${res.classId}-${selectedMethod}`] = el}
-                                style={{
-                                    border: step === 4 ? '2px solid var(--pink)' : '2px solid var(--border)',
-                                    background: step === 4 ? 'rgba(255,107,157,0.1)' : 'var(--bg-outer)',
-                                    padding: '0.3rem', borderRadius: '4px'
-                                }}
-                            >
-                                <div style={{ fontWeight: 900, color: 'var(--pink)', fontSize: '0.52rem' }}>
-                                    RESOLVED (Addr: {getMethodAddress(res.classId, selectedMethod)})
-                                </div>
-                                <div style={{ fontSize: '0.6rem', color: '#22863a', fontWeight: 800 }}>
-                                    {res.classId}::{selectedMethod}()
-                                </div>
-                                <div style={{ border: '1.5px solid var(--border)', background: 'var(--bg-outer)', padding: '0.2rem', borderRadius: '4px', marginTop: '0.2rem', fontSize: '0.55rem' }}>
-                                    stdout &lt;&lt; "{res.method.response || 'Action response'}"
-                                </div>
-                            </div>
-                        ) : (
-                            <div style={{ fontStyle: 'italic', opacity: 0.5, textAlign: 'center' }}>
-                                No method selected
-                            </div>
-                        )}
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text)' }}>
+                        <div><strong>Resolves To:</strong> {getMethodResolution(activePair.child.id, selectedMethod, nodes)?.classId}::{selectedMethod}()</div>
+                        <div style={{ fontSize: '0.58rem', opacity: 0.5, marginTop: '0.2rem' }}>[Redirected by VTable function slot]</div>
                     </div>
                 </div>
             </div>
+
+            {/* Explanation Banner */}
+            <div style={{
+                background: 'rgba(56, 161, 105, 0.08)',
+                borderLeft: '4px solid var(--green)',
+                padding: '0.6rem 0.8rem',
+                fontSize: '0.68rem',
+                lineHeight: 1.4,
+                borderRadius: '4px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.15rem',
+                flexShrink: 0
+            }}>
+                <div style={{ fontWeight: 800 }}>⚙️ JVM Resolution Flow:</div>
+                <div style={{ color: 'var(--text)' }}>{getStepExplanation()}</div>
             </div>
 
-            {/* Simulation Console Log Log */}
+            {/* Output Segment */}
             <div className="panel" style={{
                 padding: '0.6rem 0.8rem', fontFamily: 'var(--font-mono)', fontSize: '0.62rem',
                 background: 'var(--white)', color: 'var(--text)', border: 'var(--border-width) solid var(--border)',
                 borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-sm)', flexShrink: 0
             }}>
-                <span style={{ fontWeight: 800, color: 'var(--pink)' }}>System Console Log:</span>
+                <span style={{ fontWeight: 800, color: 'var(--pink)' }}>Console Output:</span>
                 <div style={{ marginTop: '0.2rem', color: step === 4 ? 'var(--green)' : 'var(--text)', fontWeight: step === 4 ? 800 : 500 }}>
-                    {log || 'Click "Dispatch" or use simulation controls to start step-by-step memory tracking.'}
+                    {log || 'Click "Dispatch" to start step-by-step memory resolution.'}
                 </div>
             </div>
         </div>
@@ -1682,6 +1036,7 @@ export default function InheritanceDeepDiveSim() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    const canvasContainerRef = useRef(null);
     const [treeType, setTreeType] = useState('Single');
     const [nodes, setNodes] = useState(PRESETS['Single'].map(n => ({ ...n })));
     const [activeNode, setActiveNode] = useState(null);
@@ -1698,7 +1053,21 @@ export default function InheritanceDeepDiveSim() {
 
     const loadPreset = useCallback((type) => {
         setTreeType(type);
-        setNodes(PRESETS[type].map(n => ({ ...n })));
+        const rawPreset = PRESETS[type].map(n => ({ ...n }));
+        const canvasWidth = canvasContainerRef.current ? canvasContainerRef.current.clientWidth : 800;
+        const centerX = canvasWidth > 0 ? (canvasWidth - NODE_W) / 2 : 305;
+        const centered = rawPreset.map(n => {
+            let xOffset = 0;
+            if (n.id === 'Flyable' || (n.id === 'Dog' && type === 'Hierarchical')) xOffset = -160;
+            else if (n.id === 'Swimmable' || n.id === 'Cat') xOffset = 160;
+            else if (n.id === 'Dog' && type === 'Hybrid') xOffset = -160;
+            
+            return {
+                ...n,
+                x: centerX + xOffset
+            };
+        });
+        setNodes(centered);
         setActiveNode(null); setMroPath([]); setMroSteps(0);
         setCurrentMroSearch(null); setFoundNodeId(null); setMroOutput(null);
         setMroError(null);
@@ -1709,6 +1078,33 @@ export default function InheritanceDeepDiveSim() {
         setDispatchStep(0);
         setDispatchLog('');
     }, []);
+
+    // Centering Effect on mount and type change
+    useEffect(() => {
+        if (canvasContainerRef.current) {
+            const canvasWidth = canvasContainerRef.current.clientWidth;
+            if (canvasWidth > 0) {
+                setNodes(prev => {
+                    // Only center if user hasn't dragged them away from preset defaults
+                    const hasDragged = prev.some(n => n.x !== undefined && n.x !== 305 && n.x !== 125 && n.x !== 485 && n.x !== 380 && n.x !== 200 && n.x !== 560);
+                    if (hasDragged) return prev;
+                    
+                    const centerX = (canvasWidth - NODE_W) / 2;
+                    return prev.map(n => {
+                        let xOffset = 0;
+                        if (n.id === 'Flyable' || (n.id === 'Dog' && treeType === 'Hierarchical')) xOffset = -160;
+                        else if (n.id === 'Swimmable' || n.id === 'Cat') xOffset = 160;
+                        else if (n.id === 'Dog' && treeType === 'Hybrid') xOffset = -160;
+                        
+                        return {
+                            ...n,
+                            x: centerX + xOffset
+                        };
+                    });
+                });
+            }
+        }
+    }, [treeType, view]);
 
     // Helper to calculate card center coordinates for drawing connections
     const getCoordinates = (nodeId) => {
@@ -2181,7 +1577,7 @@ export default function InheritanceDeepDiveSim() {
                 </div>
             )}
         
-            <DownloadNotes topicKey="oops/inheritance" />
+            
         </div>
     );
 
@@ -2238,7 +1634,7 @@ export default function InheritanceDeepDiveSim() {
 
             <div style={{ flex: 1, overflow: 'auto', background: 'var(--bg)', position: 'relative', padding: '1rem' }}>
                 {view === 'tree' && (
-                    <div style={{ width: isMobile ? 650 : '100%', height: '100%', minHeight: 480, position: 'relative', overflow: 'hidden', background: `radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px), var(--bg)`, backgroundSize: '24px 24px', border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)' }}>
+                    <div ref={canvasContainerRef} style={{ width: isMobile ? 650 : '100%', height: '100%', minHeight: 480, position: 'relative', overflow: 'hidden', background: `radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px), var(--bg)`, backgroundSize: '24px 24px', border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)' }}>
                         
                         {/* Connection Lines Rendering */}
                         <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>

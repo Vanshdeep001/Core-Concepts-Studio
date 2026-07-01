@@ -293,14 +293,16 @@ export default function ImmersiveLayout({
                         <>
                             {/* Title & Module */}
                             <div className="immersive-brand-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginRight: '0.5rem' }}>
-                                <div style={{
-                                    width: 40, height: 40, background: 'var(--white)',
-                                    border: '2px solid var(--border)', borderRadius: '8px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '1.4rem', boxShadow: '2px 2px 0 var(--border)'
-                                }}>
-                                    {icon}
-                                </div>
+                                {icon && (
+                                    <div style={{
+                                        width: 40, height: 40, background: 'var(--white)',
+                                        border: '2px solid var(--border)', borderRadius: '8px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: '1.4rem', boxShadow: '2px 2px 0 var(--border)'
+                                    }}>
+                                        {icon}
+                                    </div>
+                                )}
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                     <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)', lineHeight: 1 }}>{title}</span>
                                     <span style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.2rem' }}>{moduleLabel}</span>

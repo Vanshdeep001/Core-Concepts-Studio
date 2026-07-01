@@ -27,7 +27,7 @@ export default function Navbar() {
                         <rect x="2" y="2" width="20" height="20" rx="2" stroke="currentColor" strokeWidth="2.5" />
                         <rect x="7" y="7" width="10" height="10" rx="1" fill="currentColor" />
                     </svg>
-                    <span>CS Simulator</span>
+                    <span>Core Concepts Studio</span>
                 </NavLink>
 
                 {/* Module breadcrumb */}

@@ -5,7 +5,6 @@ import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
 import { runFIFO, runLRU, runOptimal, runLFU } from './pageReplacement';
 import { FileIcon, CircleFilled, TrendUpIcon, AlertIcon, TargetIcon, GearIcon, ClipboardIcon, LightbulbIcon } from '../../components/Icons';
-import DownloadNotes from '../../components/DownloadNotes';
 
 const ALGOS = ['FIFO', 'LRU', 'Optimal', 'LFU'];
 
@@ -252,7 +251,7 @@ export default function PageReplacementSim() {
             <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.5 }}>Frames</div>
             <div style={{ fontWeight: 700, fontSize: '1rem' }}>{frames}</div>
         
-            <DownloadNotes topicKey="os/page-replacement" />
+            
         </div>
     );
 

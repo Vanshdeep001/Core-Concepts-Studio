@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
-import DownloadNotes from '../../components/DownloadNotes';
 
 import {
     DiamondIcon,
@@ -456,296 +455,246 @@ const FactorySim = ({ isMobile }) => {
         { type: 'Triangle', icon: 'TriangleShape', color: '#ff6b9d' },
     ]);
     const [newType, setNewType] = useState('');
-    const [animationState, setAnimationState] = useState('idle'); // 'idle' | 'ordering' | 'manufacturing' | 'dispatching'
+    const [animationState, setAnimationState] = useState('idle');
     const [activeShape, setActiveShape] = useState(null);
 
-    const COLORS = ['#b39ddb', '#ffb347', '#4dd0c8', '#f0a0c0', '#90cdf4', '#ffd93d'];
-    const ICONS = ['PentagonShape', 'HexagonShape', 'DiamondIcon', 'SquareShape', 'CircleShape', 'TriangleShape'];
+    const getLaneLeft = (type) => {
+        const idx = customTypes.findIndex(t => t.type === type);
+        const count = customTypes.length;
+        if (idx < 0 || count === 0) return '75%';
+        const laneStart = 55;
+        const laneEnd = 95;
+        const laneWidth = (laneEnd - laneStart) / count;
+        return `${laneStart + laneWidth * idx + laneWidth / 2}%`;
+    };
+
+    const CUSTOM_ICONS = ['PentagonShape', 'HexagonShape', 'DiamondIcon', 'SquareShape', 'CircleShape'];
+    const CUSTOM_COLORS = ['#b39ddb', '#ffb347', '#4dd0c8', '#f0a0c0', '#90cdf4'];
 
     const produce = async (shape) => {
         if (animationState !== 'idle') return;
         setActiveShape(shape);
-        
-        // Step 1: Client sends request to Factory (flies client -> factory)
         setAnimationState('ordering');
         await new Promise(r => setTimeout(r, 800));
-        
-        // Step 2: Factory runs instantiation logic (gears spin)
         setAnimationState('manufacturing');
         await new Promise(r => setTimeout(r, 1000));
-        
-        // Step 3: Concrete product is dispatched (flies factory -> lane)
         setAnimationState('dispatching');
         await new Promise(r => setTimeout(r, 800));
-        
-        // Finalize (bounces into conveyor lane stack)
         setProducts(prev => [...prev, { ...shape, id: Date.now() }]);
         setAnimationState('idle');
         setActiveShape(null);
     };
 
     const addType = () => {
-        if (!newType.trim() || customTypes.length >= 4) return;
-        const icon = ICONS[customTypes.length % ICONS.length];
         const trimmed = newType.trim();
-        if (!trimmed) return;
+        if (!trimmed || customTypes.length >= 6) return;
         if (customTypes.some(t => t.type.toLowerCase() === trimmed.toLowerCase())) return;
-        if (customTypes.length >= 5) return; // Limit categories
-
-        const icons = ['TriangleShape', 'PentagonShape', 'HexagonShape'];
-        const colors = ['#b39ddb', '#ffb347', '#4dd0c8'];
-        const nextIdx = customTypes.length - 3; // custom categories start after default 3
-
-        const newブルー = {
+        const nextIdx = customTypes.length;
+        setCustomTypes(prev => [...prev, {
             type: trimmed.charAt(0).toUpperCase() + trimmed.slice(1),
-            icon: icons[nextIdx % icons.length],
-            color: colors[nextIdx % colors.length]
-        };
-
-        setCustomTypes(prev => [...prev, newブルー]);
+            icon: CUSTOM_ICONS[nextIdx % CUSTOM_ICONS.length],
+            color: CUSTOM_COLORS[nextIdx % CUSTOM_COLORS.length]
+        }]);
         setNewType('');
     };
 
-    return (
-        <div style={{ ...FULL, padding: isMobile ? '0.8rem' : '1.2rem', gap: '0.8rem', overflowY: isMobile ? 'auto' : 'hidden' }}>
-            {DOT_BG('factoryGrid')}
+    const statusColor = animationState === 'ordering' ? '#2563eb' : animationState === 'manufacturing' ? '#d97706' : animationState === 'dispatching' ? '#059669' : 'var(--text)';
+    const statusBg = animationState === 'ordering' ? 'var(--blue)' : animationState === 'manufacturing' ? 'var(--orange)' : animationState === 'dispatching' ? 'var(--green)' : 'var(--bg-outer)';
 
-            {/* Header Control Panel */}
-            <div style={{ 
-                display: 'flex', 
-                flexDirection: isMobile ? 'column' : 'row',
-                alignItems: isMobile ? 'stretch' : 'center', 
-                justifyContent: 'space-between', 
-                gap: '0.6rem', 
-                flexShrink: 0, 
-                zIndex: 10, 
-                borderBottom: '2.5px solid var(--border)', 
-                paddingBottom: '0.6rem' 
+    return (
+        <div style={{ ...FULL, padding: isMobile ? '0.8rem' : '1.2rem', gap: '1rem', overflowY: isMobile ? 'auto' : 'hidden' }}>
+
+            {/* Top Bar */}
+            <div style={{
+                display: 'flex', flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between',
+                gap: '0.6rem', flexShrink: 0, zIndex: 10,
+                borderBottom: 'var(--border-width) solid var(--border)', paddingBottom: '0.6rem'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', color: '#0f172a' }}>Factory blueprints:</span>
-                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-                        <input value={newType} onChange={e => setNewType(e.target.value)} placeholder="Custom Product"
-                            style={{ ...MINI_INPUT, width: 120, height: 26, fontSize: '0.7rem', border: '2px solid var(--border)' }} disabled={animationState !== 'idle'} onKeyDown={e => e.key === 'Enter' && addType()} />
-                        <button className="btn btn-sm" style={{ background: '#a8e6cf', border: '2px solid var(--border)', fontSize: '0.65rem', padding: '0.3rem 0.6rem', fontWeight: 800, color: '#0f172a', cursor: 'pointer' }} onClick={addType} disabled={animationState !== 'idle' || customTypes.length >= 4}>+ Register Type</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 900, textTransform: 'uppercase' }}>Register Type:</span>
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                        <input value={newType} onChange={e => setNewType(e.target.value)} placeholder="e.g. Star"
+                            style={{ ...MINI_INPUT, width: 130, height: 28, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)' }}
+                            disabled={animationState !== 'idle'} onKeyDown={e => e.key === 'Enter' && addType()} />
+                        <button style={{
+                            background: 'var(--green)', border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                            fontSize: '0.65rem', padding: '0.3rem 0.7rem', fontWeight: 900, cursor: 'pointer', boxShadow: 'var(--shadow-sm)'
+                        }} onClick={addType} disabled={animationState !== 'idle' || customTypes.length >= 6}>+ Add</button>
                     </div>
                 </div>
-
-                <div style={{ display: 'flex', gap: '0.4rem', alignSelf: isMobile ? 'flex-end' : 'auto' }}>
-                    {products.length > 0 && (
-                        <button className="btn btn-sm" style={{ background: '#ef4444', border: '2px solid var(--border)', color: '#fff', fontSize: '0.65rem', padding: '0.3rem 0.6rem', fontWeight: 800, cursor: 'pointer' }}
-                            onClick={() => setProducts([])}>Clear Products</button>
-                    )}
-                </div>
+                {products.length > 0 && (
+                    <button style={{
+                        background: 'var(--pink)', border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                        color: 'var(--text)', fontSize: '0.65rem', padding: '0.3rem 0.7rem', fontWeight: 900, cursor: 'pointer', boxShadow: 'var(--shadow-sm)'
+                    }} onClick={() => setProducts([])}>Clear All</button>
+                )}
             </div>
 
-            {/* Main Interactive Flow */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1.2rem', minHeight: 0, zIndex: 1, position: 'relative' }}>
-                
-                {/* 1. Client Order Panel */}
-                <div style={{ 
-                    width: isMobile ? '100%' : '25%', 
-                    border: '2.5px solid var(--border)', 
-                    borderRadius: '12px', 
-                    background: '#fff', 
-                    padding: '0.8rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.6rem',
-                    boxShadow: '4px 4px 0 var(--border)'
+            {/* Main 3-Column Layout */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', minHeight: 0, zIndex: 1, position: 'relative' }}>
+
+                {/* 1. CLIENT PANEL */}
+                <div style={{
+                    width: isMobile ? '100%' : '22%',
+                    border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column'
                 }}>
-                    <div style={{ fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase', color: '#0f172a' }}>
-                        Client Interface
+                    <div style={{ background: 'var(--yellow)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.7rem', fontWeight: 900, fontSize: '0.68rem', textTransform: 'uppercase' }}>
+                        Client
                     </div>
-                    <div style={{ fontSize: '0.58rem', color: '#334155', fontWeight: 700, marginBottom: '0.4rem' }}>
-                        Choose a shape blueprint to request instantiation through the factory:
+                    <div style={{ padding: '0.6rem', fontSize: '0.58rem', fontWeight: 700, opacity: 0.6, borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                        Select a blueprint to order:
                     </div>
-                    
-                    <div className="hide-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                        {customTypes.map(s => (
-                            <motion.button 
-                                key={s.type} 
-                                whileHover={{ scale: 1.02 }} 
-                                whileTap={{ scale: 0.98 }}
-                                className="btn"
-                                style={{ 
-                                    background: activeShape?.type === s.type ? s.color : '#fff', 
-                                    border: `2px solid var(--border)`,
-                                    color: '#0f172a',
-                                    fontSize: '0.7rem',
-                                    padding: '0.5rem',
-                                    fontWeight: 900,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    boxShadow: `3px 3px 0 ${s.color}`,
-                                    cursor: 'pointer'
-                                }}
-                                onClick={() => produce(s)} 
-                                disabled={animationState !== 'idle'}
-                            >
-                                <span>{getShapeIcon(s.icon, 16, activeShape?.type === s.type ? '#0f172a' : s.color)} <span style={{ marginLeft: '0.3rem' }}>{s.type} Blueprint</span></span>
-                                <span style={{ fontSize: '0.6rem', fontWeight: 800 }}>Order →</span>
-                            </motion.button>
-                        ))}
+                    <div className="hide-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0', overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        {customTypes.map((s, i) => {
+                            const isActive = activeShape?.type === s.type;
+                            return (
+                                <motion.button
+                                    key={s.type}
+                                    whileHover={{ x: 2 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    style={{
+                                        background: isActive ? s.color : 'var(--white)',
+                                        borderTop: 'none', borderLeft: 'none', borderRight: 'none',
+                                        borderBottom: '1px solid rgba(0,0,0,0.08)',
+                                        padding: '0.55rem 0.7rem',
+                                        fontSize: '0.7rem', fontWeight: 800, fontFamily: 'var(--font-main)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                        cursor: animationState !== 'idle' ? 'not-allowed' : 'pointer',
+                                        opacity: animationState !== 'idle' && !isActive ? 0.5 : 1,
+                                        color: 'var(--text)', textAlign: 'left'
+                                    }}
+                                    onClick={() => produce(s)}
+                                    disabled={animationState !== 'idle'}
+                                >
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                        {getShapeIcon(s.icon, 16, isActive ? 'var(--text)' : s.color)}
+                                        {s.type}
+                                    </span>
+                                    <span style={{ fontSize: '0.55rem', fontWeight: 900, opacity: 0.5 }}>ORDER</span>
+                                </motion.button>
+                            );
+                        })}
                     </div>
                 </div>
 
-                {/* 2. Factory Dispatch Node */}
-                <div style={{ 
-                    width: isMobile ? '100%' : '30%', 
-                    minHeight: isMobile ? '180px' : 'auto',
-                    border: '2.5px solid var(--border)', 
-                    borderRadius: '12px', 
-                    background: '#fff', 
-                    padding: '0.8rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'relative',
-                    boxShadow: '4px 4px 0 var(--border)',
-                    overflow: 'hidden'
+                {/* 2. FACTORY NODE */}
+                <div style={{
+                    width: isMobile ? '100%' : '22%',
+                    minHeight: isMobile ? '160px' : 'auto',
+                    border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column'
                 }}>
-                    <div style={{ position: 'absolute', top: 10, left: 10, fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase', color: '#0f172a' }}>
+                    <div style={{ background: 'var(--cyan)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.7rem', fontWeight: 900, fontSize: '0.68rem', textTransform: 'uppercase' }}>
                         ShapeFactory
                     </div>
-
-                    <div style={{ 
-                        display: 'flex', 
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '0.8rem',
-                        zIndex: 2
-                    }}>
-                        {/* Animated Gear */}
-                        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.8rem', padding: '1rem' }}>
+                        {/* Gears */}
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
                             <motion.div
                                 animate={animationState === 'manufacturing' ? { rotate: 360 } : {}}
                                 transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
-                                style={{ display: 'flex', alignItems: 'center' }}
+                                style={{ display: 'flex' }}
                             >
-                                <GearIcon size={32} color={animationState === 'manufacturing' ? '#d97706' : '#94a3b8'} />
+                                <GearIcon size={36} color={animationState === 'manufacturing' ? '#d97706' : '#94a3b8'} />
                             </motion.div>
                             <motion.div
                                 animate={animationState === 'manufacturing' ? { rotate: -360 } : {}}
                                 transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                                style={{ display: 'flex', alignItems: 'center', marginTop: '0.4rem' }}
+                                style={{ display: 'flex', marginTop: '0.5rem' }}
                             >
-                                <GearIcon size={24} color="#1e293b" />
+                                <GearIcon size={26} color={animationState === 'manufacturing' ? 'var(--text)' : '#cbd5e1'} />
                             </motion.div>
                         </div>
 
-                        <div style={{ 
-                            fontSize: '0.65rem', 
-                            fontFamily: 'var(--font-mono)', 
-                            background: '#f8fafc', 
-                            padding: '6px 12px', 
-                            borderRadius: '6px', 
-                            textAlign: 'center',
-                            border: '2px solid var(--border)',
-                            color: '#0f172a',
-                            fontWeight: 800
+                        {/* Status Display */}
+                        <div style={{
+                            fontFamily: 'var(--font-mono)', fontSize: '0.68rem', fontWeight: 900,
+                            background: statusBg, border: 'var(--border-width) solid var(--border)',
+                            borderRadius: 'var(--radius)', padding: '0.4rem 0.8rem', textAlign: 'center',
+                            color: 'var(--text)', boxShadow: 'var(--shadow-sm)',
+                            transition: 'all 0.2s'
                         }}>
-                            {animationState === 'idle' && <span style={{ color: '#475569' }}>Awaiting Request...</span>}
-                            {animationState === 'ordering' && <span style={{ color: '#2563eb', fontWeight: 900 }}>parseType("{activeShape?.type}")</span>}
-                            {animationState === 'manufacturing' && <span style={{ color: '#d97706', fontWeight: 900 }}>new {activeShape?.type}()</span>}
-                            {animationState === 'dispatching' && <span style={{ color: '#059669', fontWeight: 900 }}>return product;</span>}
+                            {animationState === 'idle' && 'Awaiting...'}
+                            {animationState === 'ordering' && `parse("${activeShape?.type}")`}
+                            {animationState === 'manufacturing' && `new ${activeShape?.type}()`}
+                            {animationState === 'dispatching' && 'return product;'}
+                        </div>
+
+                        {/* Step indicator */}
+                        <div style={{ display: 'flex', gap: '0.3rem' }}>
+                            {['ordering', 'manufacturing', 'dispatching'].map((step, i) => (
+                                <div key={step} style={{
+                                    width: 8, height: 8,
+                                    background: animationState === step ? statusColor :
+                                        ['ordering', 'manufacturing', 'dispatching'].indexOf(animationState) > i ? 'var(--green)' : 'var(--bg-outer)',
+                                    border: '2px solid var(--border)',
+                                    transition: 'all 0.2s'
+                                }} />
+                            ))}
                         </div>
                     </div>
                 </div>
 
-                {/* 3. Product Classification Lanes */}
-                <div style={{ 
-                    flex: 1, 
-                    display: 'flex', 
-                    gap: '0.6rem', 
+                {/* 3. PRODUCT LANES */}
+                <div style={{
+                    flex: 1, display: 'flex', gap: '0.5rem',
                     height: isMobile ? '350px' : '100%',
-                    minWidth: isMobile ? '100%' : 0,
                     overflowX: isMobile ? 'auto' : 'visible',
                     paddingBottom: isMobile ? '0.5rem' : 0
                 }}>
                     {customTypes.map(typeObj => (
                         <div key={typeObj.type} style={{
                             flex: 1,
-                            border: '2.5px solid var(--border)',
-                            borderRadius: '12px',
-                            background: '#f8fafc',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            padding: '0.6rem',
-                            position: 'relative',
-                            boxShadow: '4px 4px 0 var(--border)',
-                            minWidth: isMobile ? '130px' : 0
+                            border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                            background: 'var(--white)', boxShadow: 'var(--shadow)',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center',
+                            overflow: 'hidden', minWidth: isMobile ? '110px' : 0
                         }}>
-                            {/* Conveyor Belt Indicator */}
-                            <div style={{ 
-                                fontSize: '0.62rem', 
-                                fontWeight: 900, 
-                                textTransform: 'uppercase', 
-                                background: '#fff',
-                                border: '2px solid var(--border)',
-                                padding: '3px 8px',
-                                borderRadius: '20px',
-                                color: '#0f172a',
-                                borderBottomColor: typeObj.color,
-                                borderBottomWidth: '4px',
-                                marginBottom: '0.6rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.4rem',
-                                zIndex: 2
+                            {/* Lane Header */}
+                            <div style={{
+                                width: '100%', background: `${typeObj.color}30`,
+                                borderBottom: 'var(--border-width) solid var(--border)',
+                                padding: '0.4rem', textAlign: 'center',
+                                fontWeight: 900, fontSize: '0.6rem', textTransform: 'uppercase',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem'
                             }}>
-                                {getShapeIcon(typeObj.icon, 14, typeObj.color)}
+                                {getShapeIcon(typeObj.icon, 12, typeObj.color)}
                                 <span>{typeObj.type}s</span>
+                                <span style={{
+                                    background: 'var(--text)', color: 'var(--white)', fontSize: '0.5rem',
+                                    fontWeight: 900, padding: '0 4px', marginLeft: '0.2rem'
+                                }}>{products.filter(p => p.type === typeObj.type).length}</span>
                             </div>
 
-                            {/* Conveyor Lines animation background */}
-                            <div style={{
-                                position: 'absolute',
-                                top: 40, bottom: 10, left: '50%',
-                                width: 10,
-                                background: 'repeating-linear-gradient(0deg, #cbd5e1 0px, #cbd5e1 10px, transparent 10px, transparent 20px)',
-                                opacity: 0.7,
-                                transform: 'translateX(-50%)',
-                                pointerEvents: 'none'
-                            }} />
-
-                            <div className="hide-scrollbar" style={{ 
-                                flex: 1, 
-                                display: 'flex', 
-                                flexDirection: 'column-reverse', 
-                                gap: '0.5rem', 
-                                width: '100%', 
-                                overflowY: 'auto', 
-                                scrollbarWidth: 'none',
-                                msOverflowStyle: 'none',
-                                alignItems: 'center',
-                                zIndex: 1,
-                                paddingBottom: '0.4rem'
+                            {/* Products Stack */}
+                            <div className="hide-scrollbar" style={{
+                                flex: 1, display: 'flex', flexDirection: 'column-reverse',
+                                gap: '0.4rem', width: '100%', overflowY: 'auto',
+                                scrollbarWidth: 'none', msOverflowStyle: 'none',
+                                alignItems: 'center', padding: '0.5rem 0.3rem'
                             }}>
                                 <AnimatePresence>
                                     {products.filter(p => p.type === typeObj.type).map(p => (
                                         <motion.div
                                             key={p.id}
-                                            initial={{ scale: 0, y: -45 }}
+                                            initial={{ scale: 0, y: -30 }}
                                             animate={{ scale: 1, y: 0 }}
                                             exit={{ scale: 0 }}
-                                            transition={{ type: 'spring', stiffness: 220, damping: 12 }}
+                                            transition={{ type: 'spring', stiffness: 250, damping: 14 }}
                                             style={{
-                                                width: 48,
-                                                height: 48,
-                                                borderRadius: '8px',
-                                                border: `2px solid var(--border)`,
-                                                background: '#fff',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                boxShadow: `3px 3px 0 ${p.color}`,
+                                                width: 42, height: 42,
+                                                border: 'var(--border-width) solid var(--border)',
+                                                borderRadius: 'var(--radius)',
+                                                background: 'var(--white)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                boxShadow: `2px 2px 0 ${p.color}`,
                                             }}
                                         >
-                                            {getShapeIcon(p.icon, 24, p.color)}
+                                            {getShapeIcon(p.icon, 22, p.color)}
                                         </motion.div>
                                     ))}
                                 </AnimatePresence>
@@ -754,50 +703,39 @@ const FactorySim = ({ isMobile }) => {
                     ))}
                 </div>
 
-                {/* Flying Overlay Animation: Client Order Request (moves client -> factory) */}
+                {/* FLYING ANIMATIONS */}
                 {animationState === 'ordering' && activeShape && (
                     <motion.div
-                        initial={{ left: '12.5%', top: '50%', scale: 0.6, opacity: 0, x: '-50%', y: '-50%' }}
-                        animate={{ left: '42.5%', top: '50%', scale: 1.1, opacity: 1 }}
+                        initial={{ left: '11%', top: '50%', scale: 0.5, opacity: 0, x: '-50%', y: '-50%' }}
+                        animate={{ left: '33%', top: '50%', scale: 1, opacity: 1 }}
                         transition={{ duration: 0.6, ease: 'easeOut' }}
                         style={{
-                            position: 'absolute',
-                            background: activeShape.color,
-                            border: '2.5px solid var(--border)',
-                            color: '#0f172a',
-                            fontSize: '0.65rem',
-                            fontWeight: 900,
-                            padding: '5px 10px',
-                            borderRadius: '6px',
-                            boxShadow: '3px 3px 0 var(--border)',
-                            zIndex: 20,
+                            position: 'absolute', zIndex: 20,
+                            background: activeShape.color, border: 'var(--border-width) solid var(--border)',
+                            borderRadius: 'var(--radius)', padding: '4px 10px',
+                            fontSize: '0.65rem', fontWeight: 900, fontFamily: 'var(--font-mono)',
+                            boxShadow: 'var(--shadow-sm)', color: 'var(--text)'
                         }}
                     >
-                        request({activeShape.type})
+                        order({activeShape.type})
                     </motion.div>
                 )}
 
-                {/* Flying Overlay Animation: Product Dispatch (moves factory -> target lane top) */}
                 {animationState === 'dispatching' && activeShape && (
                     <motion.div
-                        initial={{ left: '42.5%', top: '50%', scale: 0.6, opacity: 0.8, x: '-50%', y: '-50%' }}
+                        initial={{ left: '33%', top: '50%', scale: 0.6, opacity: 0.8, x: '-50%', y: '-50%' }}
                         animate={{ left: getLaneLeft(activeShape.type), top: '15%', scale: 1, opacity: 1 }}
                         transition={{ duration: 0.6, ease: 'easeInOut' }}
                         style={{
-                            position: 'absolute',
-                            background: activeShape.color,
-                            border: '2.5px solid var(--border)',
-                            width: 48,
-                            height: 48,
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: `3px 3px 0 var(--border)`,
-                            zIndex: 20,
+                            position: 'absolute', zIndex: 20,
+                            background: activeShape.color, border: 'var(--border-width) solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            width: 42, height: 42,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: 'var(--shadow-sm)'
                         }}
                     >
-                        {getShapeIcon(activeShape.icon, 24, activeShape.color)}
+                        {getShapeIcon(activeShape.icon, 22, activeShape.color)}
                     </motion.div>
                 )}
 
@@ -1528,157 +1466,524 @@ const DecoratorSim = ({ isMobile }) => {
    5. STRATEGY — Swap Algorithms
    ══════════════════════════════════════════════════════════════ */
 const StrategySim = ({ isMobile }) => {
-    const [strategy, setStrategy] = useState(null);
-    const [sorting, setSorting] = useState(false);
-    const [arr, setArr] = useState([64, 25, 12, 22, 11, 45, 38, 90, 55, 33]);
-    const [sortedArr, setSortedArr] = useState(null);
-    const [highlightIdx, setHighlightIdx] = useState(-1);
-    // User input
-    const [customInput, setCustomInput] = useState('');
     const [strategies, setStrategies] = useState([
-        { name: 'BubbleSort', color: '#ffd93d', complexity: 'O(n²)', desc: 'Compare adjacent pairs, swap if needed' },
-        { name: 'QuickSort', color: '#66d9ef', complexity: 'O(n log n)', desc: 'Pick pivot, partition, recurse' },
-        { name: 'MergeSort', color: '#a8e6cf', complexity: 'O(n log n)', desc: 'Divide, sort halves, merge' },
+        {
+            id: 'road',
+            name: 'RoadTripStrategy',
+            label: 'Road Trip (Car)',
+            color: '#ffb347',
+            speed: 'High (80 km/h)',
+            cost: '$18.50',
+            carbon: '2.4 kg CO2',
+            icon: 'car',
+            desc: 'Interstate highways. Avoids obstacles via bridges, toll fees apply.',
+            waypoints: [{ x: 25, y: 150 }, { x: 90, y: 80 }, { x: 160, y: 80 }, { x: 230, y: 80 }, { x: 230, y: 220 }, { x: 295, y: 150 }],
+            code: `class RoadTripStrategy implements RouteStrategy {
+    public List<Point> buildRoute(Point a, Point b) {
+        // Highway routing engine
+        return getHighwayRoute(a, b);
+    }
+}`
+        },
+        {
+            id: 'hiking',
+            name: 'HikingStrategy',
+            label: 'Hiking Trail (Walk)',
+            color: '#ffd93d',
+            speed: 'Low (5 km/h)',
+            cost: '$0.00',
+            carbon: '0.0 kg CO2',
+            icon: 'walk',
+            desc: 'Direct forest paths. Zero cost, eco-friendly.',
+            waypoints: [{ x: 25, y: 150 }, { x: 95, y: 185 }, { x: 160, y: 185 }, { x: 225, y: 115 }, { x: 295, y: 150 }],
+            code: `class HikingStrategy implements RouteStrategy {
+    public List<Point> buildRoute(Point a, Point b) {
+        // Pedestrian forest trails
+        return getWalkingTrails(a, b);
+    }
+}`
+        },
+        {
+            id: 'sky',
+            name: 'SkyExpressStrategy',
+            label: 'Sky Express (Drone)',
+            color: '#ff6b9d',
+            speed: 'Extreme (150 km/h)',
+            cost: '$45.00',
+            carbon: '0.8 kg CO2',
+            icon: 'drone',
+            desc: 'Direct line (beeline) over all terrain. Expensive but fastest.',
+            waypoints: [{ x: 25, y: 150 }, { x: 295, y: 150 }],
+            code: `class SkyExpressStrategy implements RouteStrategy {
+    public List<Point> buildRoute(Point a, Point b) {
+        // Straight flight beeline
+        return getDirectLine(a, b);
+    }
+}`
+        },
+        {
+            id: 'transit',
+            name: 'TransitStrategy',
+            label: 'Rail Transit (Train)',
+            color: '#66d9ef',
+            speed: 'Medium (60 km/h)',
+            cost: '$3.50',
+            carbon: '0.3 kg CO2',
+            icon: 'train',
+            desc: 'Fixed railway line and stations. Fast and cheap.',
+            waypoints: [{ x: 25, y: 150 }, { x: 60, y: 260 }, { x: 160, y: 260 }, { x: 240, y: 260 }, { x: 295, y: 150 }],
+            code: `class TransitStrategy implements RouteStrategy {
+    public List<Point> buildRoute(Point a, Point b) {
+        // Fixed rail route
+        return getRailwayPath(a, b);
+    }
+}`
+        }
     ]);
-    const [newStratName, setNewStratName] = useState('');
-    const STRAT_COLORS = ['#b39ddb', '#ffb347', '#4dd0c8', '#f0a0c0'];
 
-    const runSort = () => {
-        setSorting(true);
-        setSortedArr(null);
-        setHighlightIdx(-1);
-        const sorted = [...arr].sort((a, b) => a - b);
-        // Animate through indices
-        sorted.forEach((_, i) => {
-            setTimeout(() => setHighlightIdx(i), i * 80);
-        });
-        setTimeout(() => {
-            setSortedArr(sorted);
-            setSorting(false);
-            setHighlightIdx(-1);
-        }, sorted.length * 80 + 300);
+    const [selectedStrategy, setSelectedStrategy] = useState(strategies[0]);
+    const [animationState, setAnimationState] = useState('idle'); // 'idle' | 'calculating' | 'navigating' | 'finished'
+    const [travelerPos, setTravelerPos] = useState({ x: 25, y: 150 });
+    const [currentWaypointIdx, setCurrentWaypointIdx] = useState(0);
+    const [logs, setLogs] = useState([]);
+    const [customName, setCustomName] = useState('');
+    const [showCode, setShowCode] = useState('java');
+
+    const addCustomStrategy = () => {
+        if (!customName.trim()) return;
+        const name = customName.trim().replace(/\s+/g, '') + 'Strategy';
+        const label = customName.trim();
+        const randColor = ['#b39ddb', '#4dd0c8', '#f0a0c0', '#90cdf4'][strategies.length % 4];
+        
+        // Random path bypassing obstacles
+        const waypoints = [
+            { x: 25, y: 150 },
+            { x: 80 + Math.floor(Math.random() * 40), y: 60 + Math.floor(Math.random() * 80) },
+            { x: 180 + Math.floor(Math.random() * 40), y: 180 + Math.floor(Math.random() * 80) },
+            { x: 295, y: 150 }
+        ];
+
+        const newStrat = {
+            id: `custom-${Date.now()}`,
+            name,
+            label: `${label} (Custom)`,
+            color: randColor,
+            speed: 'Variable (50 km/h)',
+            cost: `$${(Math.random() * 20 + 5).toFixed(2)}`,
+            carbon: `${(Math.random() * 1.5).toFixed(1)} kg CO2`,
+            icon: 'custom',
+            desc: 'Custom user-defined path planning strategy.',
+            waypoints,
+            code: `class ${name} implements RouteStrategy {
+    public List<Point> buildRoute(Point a, Point b) {
+        // Custom path routing calculation
+        return getCustomPath(a, b);
+    }
+}`
+        };
+
+        setStrategies(prev => [...prev, newStrat]);
+        setSelectedStrategy(newStrat);
+        setCustomName('');
+        addLog(`Created and registered strategy: ${name}`);
     };
 
-    const setCustomArray = () => {
-        const nums = customInput.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n > 0);
-        if (nums.length >= 2) {
-            setArr(nums.slice(0, 16));
-            setSortedArr(null);
-            setCustomInput('');
+    const addLog = (msg) => {
+        setLogs(prev => [...prev, `[${new Date().toLocaleTimeString([], { hour12: false })}] ${msg}`]);
+    };
+
+    const runNavigation = async () => {
+        if (animationState !== 'idle') return;
+        setAnimationState('calculating');
+        setLogs([]);
+        addLog(`CONTEXT: Client requests route from (A) to (B)`);
+        addLog(`CONTEXT: Current strategy set to: ${selectedStrategy.name}`);
+        
+        await new Promise(r => setTimeout(r, 800));
+        addLog(`STRATEGY: ${selectedStrategy.name}.buildRoute() invoked`);
+        addLog(`STRATEGY: Path computed. Waypoints: ${selectedStrategy.waypoints.length}`);
+        
+        await new Promise(r => setTimeout(r, 600));
+        setAnimationState('navigating');
+        addLog(`NAVIGATOR: Executing movement at ${selectedStrategy.speed}...`);
+
+        const wps = selectedStrategy.waypoints;
+        for (let i = 0; i < wps.length; i++) {
+            setTravelerPos(wps[i]);
+            setCurrentWaypointIdx(i);
+            if (i > 0) {
+                addLog(`NAVIGATOR: Passed waypoint ${i}: (${wps[i].x}, ${wps[i].y})`);
+            }
+            let delay = 350;
+            if (selectedStrategy.id === 'hiking') delay = 500;
+            if (selectedStrategy.id === 'sky') delay = 180;
+            await new Promise(r => setTimeout(r, delay));
+        }
+
+        setAnimationState('finished');
+        addLog(`NAVIGATOR: Arrived at Destination (B)!`);
+        addLog(`SUMMARY: Time: ${selectedStrategy.speed} | Cost: ${selectedStrategy.cost} | Eco: ${selectedStrategy.carbon}`);
+    };
+
+    const resetSim = () => {
+        setAnimationState('idle');
+        setTravelerPos(selectedStrategy.waypoints[0]);
+        setCurrentWaypointIdx(0);
+        setLogs([]);
+    };
+
+    useEffect(() => {
+        resetSim();
+    }, [selectedStrategy]);
+
+    const renderIcon = (type, color) => {
+        switch (type) {
+            case 'car':
+                return (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="1" y="3" width="15" height="13" />
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                        <circle cx="5.5" cy="18.5" r="2.5" />
+                        <circle cx="18.5" cy="18.5" r="2.5" />
+                    </svg>
+                );
+            case 'walk':
+                return (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="4" r="2" />
+                        <path d="M13.6 15l-1.6-4-1-2.5c-.2-.6-.8-1-1.5-1H7C6.4 7.5 6 8 6 8.5v3.6" />
+                        <path d="M12 11.5l1.6 3 2.4 4" />
+                        <path d="M8 15v3.5" />
+                    </svg>
+                );
+            case 'drone':
+                return (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                );
+            case 'train':
+                return (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="4" y="2" width="16" height="16" rx="2" />
+                        <line x1="4" y1="12" x2="20" y2="12" />
+                        <line x1="8" y1="2" x2="8" y2="18" />
+                        <line x1="16" y1="2" x2="16" y2="18" />
+                        <path d="M6 22l2-4M18 22l-2-4" />
+                    </svg>
+                );
+            default:
+                return (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="12 2 2 22 22 22" />
+                    </svg>
+                );
         }
     };
 
-    const randomize = () => {
-        setArr(Array.from({ length: 10 }, () => Math.floor(Math.random() * 99) + 1));
-        setSortedArr(null);
-    };
-
-    const addStrategy = () => {
-        if (!newStratName.trim()) return;
-        setStrategies(prev => [...prev, { name: newStratName.trim(), color: STRAT_COLORS[strategies.length % STRAT_COLORS.length], complexity: 'O(?)', desc: 'Custom strategy' }]);
-        setNewStratName('');
-    };
-
-    const displayArr = sortedArr || arr;
-    const maxVal = Math.max(...displayArr);
-
     return (
-        <div style={{ ...FULL, padding: isMobile ? '0.8rem' : '1rem 1.5rem', gap: '0.8rem' }}>
+        <div style={{ ...FULL, padding: isMobile ? '0.6rem 0.6rem 2.5rem 0.6rem' : '1.2rem', gap: isMobile ? '0.7rem' : '1rem', overflowY: isMobile ? 'auto' : 'hidden' }}>
             {DOT_BG('stratGrid')}
 
-            {/* Strategy selection row */}
-            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.5rem', flexWrap: 'wrap', alignItems: isMobile ? 'stretch' : 'center', flexShrink: 0, zIndex: 1 }}>
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.6rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.4 }}>Strategy:</span>
-                    {strategies.map(s => (
-                        <motion.button key={s.name} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                            onClick={() => { setStrategy(s); setSortedArr(null); }}
-                            className="btn btn-sm"
-                            style={{
-                                background: strategy?.name === s.name ? s.color : 'var(--white)',
-                                border: `2px solid ${s.color}`, fontSize: '0.68rem',
-                                boxShadow: strategy?.name === s.name ? `0 0 12px ${s.color}60` : '2px 2px 0 var(--border)',
-                            }}>
-                            {s.name} <span style={{ opacity: 0.5, fontSize: '0.55rem', marginLeft: '0.2rem' }}>{s.complexity}</span>
-                        </motion.button>
-                    ))}
+            {/* Top Selector Panel */}
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '0.5rem' : '0.6rem', flexWrap: 'wrap', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between', flexShrink: 0, zIndex: 2 }}>
+                <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 900, textTransform: 'uppercase', marginRight: '0.2rem' }}>Select Strategy:</span>
+                    {strategies.map(s => {
+                        const active = selectedStrategy.id === s.id;
+                        return (
+                            <button key={s.id}
+                                onClick={() => setSelectedStrategy(s)}
+                                style={{
+                                    padding: isMobile ? '0.35rem 0.6rem' : '0.4rem 0.8rem',
+                                    fontSize: isMobile ? '0.62rem' : '0.68rem',
+                                    fontWeight: 900,
+                                    fontFamily: 'var(--font-main)',
+                                    border: 'var(--border-width) solid var(--border)',
+                                    borderRadius: 'var(--radius)',
+                                    background: active ? s.color : 'var(--white)',
+                                    boxShadow: active ? 'var(--shadow-sm)' : 'none',
+                                    cursor: 'pointer',
+                                    transform: active ? 'translate(-1px, -1px)' : 'none',
+                                    transition: 'all 0.1s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.3rem'
+                                }}
+                            >
+                                {renderIcon(s.icon, 'var(--text)')}
+                                {s.label}
+                            </button>
+                        );
+                    })}
                 </div>
-                <div style={{ display: 'flex', gap: '0.2rem', alignSelf: isMobile ? 'flex-end' : 'auto' }}>
-                    <input value={newStratName} onChange={e => setNewStratName(e.target.value)} placeholder="New strategy"
-                        style={{ ...MINI_INPUT, width: 100, fontSize: '0.6rem' }} onKeyDown={e => e.key === 'Enter' && addStrategy()} />
-                    <button className="btn btn-sm" style={{ background: '#b39ddb', fontSize: '0.5rem' }} onClick={addStrategy}>+</button>
+
+                <div style={{ display: 'flex', gap: '0.4rem', justifyContent: isMobile ? 'center' : 'flex-end', width: isMobile ? '100%' : 'auto' }}>
+                    <input value={customName} onChange={e => setCustomName(e.target.value)} placeholder="e.g. Helicopter"
+                        style={{ ...MINI_INPUT, width: isMobile ? 110 : 120, height: 28, border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)' }} />
+                    <button style={{
+                        background: 'var(--purple)', border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                        fontSize: isMobile ? '0.6rem' : '0.65rem', padding: '0.3rem 0.7rem', fontWeight: 900, cursor: 'pointer', boxShadow: 'var(--shadow-sm)'
+                    }} onClick={addCustomStrategy}>+ Register Strategy</button>
                 </div>
             </div>
 
-            {/* Main: bar chart + controls */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.6rem', minHeight: 0, zIndex: 1 }}>
-                {/* Sorter context box */}
+            {/* Main Content Layout */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', minHeight: 0, zIndex: 1 }}>
+                
+                {/* Left: Map visualizer */}
                 <div style={{
-                    flex: 1, border: `3px solid ${strategy ? strategy.color : 'var(--border)'}`, borderRadius: '14px',
-                    padding: '1rem', background: strategy ? `${strategy.color}08` : 'var(--white)',
-                    boxShadow: '4px 4px 0 var(--border)', display: 'flex', flexDirection: 'column',
-                    transition: 'border-color 0.3s, background 0.3s', minHeight: isMobile ? 240 : 0,
+                    flex: isMobile ? 'none' : 1.1,
+                    height: isMobile ? '390px' : 'auto',
+                    border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                    background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column'
                 }}>
-                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.4rem', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', flexShrink: 0, marginBottom: '0.5rem' }}>
-                        <div style={{ fontWeight: 900, fontSize: '0.82rem' }}>
-                            Sorter Context
-                            <span style={{ fontSize: '0.62rem', opacity: 0.5, marginLeft: '0.5rem' }}>
-                                strategy = {strategy ? strategy.name : 'null'}
-                            </span>
+                    <div style={{ background: 'var(--cyan)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Interactive Navigation Map</span>
+                        <div style={{ display: 'flex', gap: '0.3rem' }}>
+                            <button style={{
+                                background: 'var(--white)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)',
+                                fontSize: '0.58rem', padding: '1px 6px', cursor: 'pointer', fontWeight: 800
+                            }} onClick={resetSim}>Reset</button>
+                            <button style={{
+                                background: selectedStrategy.color, border: '1.5px solid var(--border)', borderRadius: 'var(--radius)',
+                                fontSize: '0.58rem', padding: '1px 8px', cursor: 'pointer', fontWeight: 900
+                            }} onClick={runNavigation} disabled={animationState !== 'idle'}>
+                                {animationState === 'idle' ? 'Calculate & Run' : animationState === 'calculating' ? 'Routing...' : 'Traveling...'}
+                            </button>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.3rem', alignSelf: isMobile ? 'flex-end' : 'auto' }}>
-                            <button className="btn btn-sm" style={{ background: '#f8f9fa', fontSize: '0.6rem', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }} onClick={randomize}><ShuffleIcon size={12} /> Randomize</button>
-                            {strategy && (
-                                <button className="btn btn-sm" style={{ background: strategy.color, fontSize: '0.65rem' }}
-                                    onClick={runSort} disabled={sorting}>
-                                    {sorting ? 'Sorting...' : 'sort()'}
-                                </button>
+                    </div>
+                    
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', position: 'relative', padding: '0 0.8rem', overflow: 'hidden' }}>
+                        <svg width="100%" height="100%" viewBox="0 0 320 320" style={{ maxWidth: 320, maxHeight: 320, overflow: 'visible' }}>
+                            <defs>
+                                {/* Reusable Pine Tree */}
+                                <g id="tree">
+                                    <polygon points="6,0 11,8 8,8 10,13 2,13 4,8 1,8" fill="#2d6a4f" stroke="#0f172a" strokeWidth="1.2" />
+                                    <rect x="5" y="13" width="2" height="3" fill="#78350f" stroke="#0f172a" strokeWidth="1" />
+                                </g>
+                                {/* Grid Pattern */}
+                                <pattern id="mapGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                    <circle cx="2" cy="2" r="1" fill="#e2e8f0" />
+                                </pattern>
+                            </defs>
+
+                            {/* Background Grid */}
+                            <rect width="320" height="320" fill="url(#mapGrid)" />
+
+                            {/* Forest / Mountains Area */}
+                            <rect x="205" y="70" width="80" height="90" fill="#a8e6cf25" stroke="#a8e6cf" strokeWidth="2" strokeDasharray="4,3" rx="4" />
+                            <text x="245" y="82" fill="#2d6a4f" fontSize="7" fontWeight="900" textAnchor="middle" letterSpacing="0.05em">FOREST ZONE</text>
+                            
+                            {/* Forest trees */}
+                            <use href="#tree" x="215" y="90" />
+                            <use href="#tree" x="230" y="95" />
+                            <use href="#tree" x="220" y="115" />
+                            <use href="#tree" x="245" y="105" />
+                            <use href="#tree" x="260" y="95" />
+                            <use href="#tree" x="255" y="120" />
+                            <use href="#tree" x="238" y="125" />
+
+                            {/* River obstacle with beautiful gradient or waves (extended beyond y=0 to y=320) */}
+                            <path d="M150,-60 Q170,80 135,160 T160,380" stroke="#90cdf4" strokeWidth="16" fill="none" opacity="0.6" />
+                            <path d="M150,-60 Q170,80 135,160 T160,380" stroke="#cbd5e1" strokeWidth="18" fill="none" opacity="0.15" />
+                            {/* Road Network (Highway) */}
+                            <path d="M25,150 L90,80 L230,80 L230,220 L295,150" stroke="#475569" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.8" />
+                            <path d="M25,150 L90,80 L230,80 L230,220 L295,150" stroke="#ffd93d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4,4" fill="none" opacity="0.9" />
+                            
+                            {/* Rail network (Tracks) */}
+                            <path d="M25,150 L60,260 L240,260 L295,150" stroke="#64748b" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.6" />
+                            <path d="M25,150 L60,260 L240,260 L295,150" stroke="#334155" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2,6" fill="none" opacity="0.8" />
+
+                            {/* Bridges over river */}
+                            {/* Highway Bridge */}
+                            <g>
+                                <rect x="135" y="73" width="25" height="14" fill="#475569" stroke="var(--border)" strokeWidth="1.5" rx="1" />
+                                <line x1="140" y1="73" x2="140" y2="87" stroke="#cbd5e1" strokeWidth="1" />
+                                <line x1="145" y1="73" x2="145" y2="87" stroke="#cbd5e1" strokeWidth="1" />
+                                <line x1="150" y1="73" x2="150" y2="87" stroke="#cbd5e1" strokeWidth="1" />
+                                <line x1="155" y1="73" x2="155" y2="87" stroke="#cbd5e1" strokeWidth="1" />
+                            </g>
+                            {/* Train bridge */}
+                            <g>
+                                <rect x="108" y="253" width="24" height="14" fill="#1e293b" stroke="var(--border)" strokeWidth="1.5" rx="1" />
+                                <path d="M108,253 Q120,245 132,253" stroke="#94a3b8" fill="none" strokeWidth="1.5" />
+                            </g>
+
+                            {/* Start A / End B nodes with shadows */}
+                            <circle cx="27" cy="152" r="14" fill="#000" />
+                            <circle cx="25" cy="150" r="14" fill="var(--yellow)" stroke="var(--border)" strokeWidth="2.5" />
+                            <text x="25" y="154" textAnchor="middle" fontSize="11" fontWeight="900" fill="var(--text)">A</text>
+
+                            <circle cx="297" cy="152" r="14" fill="#000" />
+                            <circle cx="295" cy="150" r="14" fill="var(--green)" stroke="var(--border)" strokeWidth="2.5" />
+                            <text x="295" y="154" textAnchor="middle" fontSize="11" fontWeight="900" fill="var(--text)">B</text>
+
+                            {/* Selected strategy path line with glow & animation */}
+                            {selectedStrategy && (
+                                <>
+                                    {/* Thick glow underlay */}
+                                    <polyline
+                                        points={selectedStrategy.waypoints.map(w => `${w.x},${w.y}`).join(' ')}
+                                        stroke={selectedStrategy.color}
+                                        strokeWidth="8"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        fill="none"
+                                        opacity="0.3"
+                                    />
+                                    {/* Running dotted line */}
+                                    <motion.polyline
+                                        points={selectedStrategy.waypoints.map(w => `${w.x},${w.y}`).join(' ')}
+                                        stroke={selectedStrategy.color}
+                                        strokeWidth="4"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeDasharray="6,4"
+                                        animate={{ strokeDashoffset: [0, -20] }}
+                                        transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                                        fill="none"
+                                    />
+                                </>
+                            )}
+
+                            {/* Traveler Avatar */}
+                            <motion.g
+                                animate={{ x: travelerPos.x - 14, y: travelerPos.y - 14 }}
+                                transition={{ type: 'spring', stiffness: 150, damping: 15 }}
+                            >
+                                <circle cx="15.5" cy="15.5" r="13.5" fill="#000000" />
+                                <circle cx="14" cy="14" r="13" fill={selectedStrategy.color} stroke="var(--border)" strokeWidth="2.5" />
+                                <g transform="translate(5, 5)">
+                                    {renderIcon(selectedStrategy.icon, 'var(--text)')}
+                                </g>
+                            </motion.g>
+                        </svg>
+                    </div>
+
+                    {/* Strategy Details Box (Relative Footer to avoid overlap) */}
+                    <div style={{
+                        background: 'var(--white)', borderTop: 'var(--border-width) solid var(--border)',
+                        padding: '0.4rem 0.6rem', fontSize: '0.62rem',
+                        display: 'flex', flexDirection: 'column', gap: '0.15rem', flexShrink: 0
+                    }}>
+                        <span style={{ fontWeight: 900 }}>{selectedStrategy.label} Parameters:</span>
+                        <div style={{ display: 'flex', gap: '0.8rem', opacity: 0.85, fontWeight: 700 }}>
+                            <span>Speed: {selectedStrategy.speed}</span>
+                            <span>Cost: {selectedStrategy.cost}</span>
+                            <span>Carbon: {selectedStrategy.carbon}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right: Code & Execution Console */}
+                <div style={{
+                    flex: isMobile ? 'none' : 1,
+                    display: 'flex', flexDirection: 'column', gap: '1rem',
+                    height: isMobile ? 'auto' : '100%'
+                }}>
+                    {/* Strategy Pattern UML / Code Explanation */}
+                    <div style={{
+                        border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                        background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                        display: 'flex', flexDirection: 'column',
+                        flex: isMobile ? 'none' : 1.1,
+                        height: isMobile ? '280px' : 'auto'
+                    }}>
+                        <div style={{ background: 'var(--yellow)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>Interchangeable Code Implementation</span>
+                            <div style={{ display: 'flex', gap: '0.2rem' }}>
+                                <button onClick={() => setShowCode('java')} style={{ background: showCode === 'java' ? 'var(--text)' : 'var(--white)', color: showCode === 'java' ? 'var(--white)' : 'var(--text)', border: '1.5px solid var(--border)', fontSize: '0.55rem', fontWeight: 900, padding: '1px 5px', cursor: 'pointer' }}>Java</button>
+                                <button onClick={() => setShowCode('js')} style={{ background: showCode === 'js' ? 'var(--text)' : 'var(--white)', color: showCode === 'js' ? 'var(--white)' : 'var(--text)', border: '1.5px solid var(--border)', fontSize: '0.55rem', fontWeight: 900, padding: '1px 5px', cursor: 'pointer' }}>JS</button>
+                            </div>
+                        </div>
+
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                            {/* Code snippet display */}
+                            <div style={{
+                                flex: 1, background: '#282a36', color: '#f8f8f2',
+                                fontFamily: 'var(--font-mono)', fontSize: '0.62rem',
+                                padding: '0.8rem', overflowY: 'auto', lineHeight: 1.55
+                            }}>
+                                {showCode === 'java' ? (
+                                    <>
+                                        <div style={{ color: '#ff79c6', fontWeight: 'bold' }}>// 1. Define RouteStrategy Interface</div>
+                                        <div><span style={{ color: '#ff79c6' }}>interface</span> <span style={{ color: '#50fa7b' }}>RouteStrategy</span> {'{'}</div>
+                                        <div style={{ paddingLeft: '1rem' }}><span style={{ color: '#8be9fd' }}>List&lt;Point&gt;</span> <span style={{ color: '#50fa7b' }}>buildRoute</span>(Point a, Point b);</div>
+                                        <div>{'}'}</div>
+                                        <br />
+                                        <div style={{ color: '#ff79c6', fontWeight: 'bold' }}>// 2. interchangeable Strategy subclass</div>
+                                        <div style={{ background: '#383a59', padding: '0.2rem 0.4rem', borderLeft: `3px solid ${selectedStrategy.color}` }}>
+                                            {selectedStrategy.code}
+                                        </div>
+                                        <br />
+                                        <div style={{ color: '#ff79c6', fontWeight: 'bold' }}>// 3. Navigator context swaps strategy at runtime</div>
+                                        <div><span style={{ color: '#ff79c6' }}>class</span> <span style={{ color: '#8be9fd' }}>Navigator</span> {'{'}</div>
+                                        <div style={{ paddingLeft: '1rem' }}><span style={{ color: '#ff79c6' }}>private</span> RouteStrategy strategy;</div>
+                                        <div style={{ paddingLeft: '1rem' }}><span style={{ color: '#ff79c6' }}>public void</span> <span style={{ color: '#50fa7b' }}>setStrategy</span>(RouteStrategy s) {'{'} <span style={{ color: '#ff79c6' }}>this</span>.strategy = s; {'}'}</div>
+                                        <div style={{ paddingLeft: '1rem' }}><span style={{ color: '#ff79c6' }}>public</span> List&lt;Point&gt; <span style={{ color: '#50fa7b' }}>navigate</span>(Point a, Point b) {'{'}</div>
+                                        <div style={{ paddingLeft: '2rem' }}><span style={{ color: '#ff79c6' }}>return</span> <span style={{ color: '#ff79c6' }}>this</span>.strategy.buildRoute(a, b);</div>
+                                        <div style={{ paddingLeft: '1rem' }}>{'}'}</div>
+                                        <div>{'}'}</div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div style={{ color: '#ff79c6', fontWeight: 'bold' }}>// Context class using active strategy function</div>
+                                        <div><span style={{ color: '#ff79c6' }}>class</span> <span style={{ color: '#8be9fd' }}>Navigator</span> {'{'}</div>
+                                        <div style={{ paddingLeft: '1rem' }}>constructor(strategy) {'{'} <span style={{ color: '#ff79c6' }}>this</span>.strategy = strategy; {'}'}</div>
+                                        <div style={{ paddingLeft: '1rem' }}>setStrategy(strategy) {'{'} <span style={{ color: '#ff79c6' }}>this</span>.strategy = strategy; {'}'}</div>
+                                        <div style={{ paddingLeft: '1rem' }}>buildRoute(a, b) {'{'} <span style={{ color: '#ff79c6' }}>return</span> <span style={{ color: '#ff79c6' }}>this</span>.strategy(a, b); {'}'}</div>
+                                        <div>{'}'}</div>
+                                        <br />
+                                        <div style={{ color: '#ff79c6', fontWeight: 'bold' }}>// Swappable functional strategies</div>
+                                        <div style={{ background: '#383a59', padding: '0.2rem 0.4rem', borderLeft: `3px solid ${selectedStrategy.color}` }}>
+                                            <span style={{ color: '#ff79c6' }}>const</span> <span style={{ color: '#50fa7b' }}>{selectedStrategy.name}</span> = (a, b) =&gt; {'{'}
+                                            <div style={{ paddingLeft: '1rem' }}><span style={{ color: '#6272a4' }}>// Interchangeable calculation logic</span></div>
+                                            <div style={{ paddingLeft: '1rem' }}><span style={{ color: '#ff79c6' }}>return</span> path;</div>
+                                            {'};'}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Live Execution Console Logs */}
+                    <div style={{
+                        flex: isMobile ? 'none' : 0.9,
+                        height: isMobile ? '160px' : 'auto',
+                        border: 'var(--border-width) solid var(--border)', borderRadius: 'var(--radius)',
+                        background: 'var(--white)', boxShadow: 'var(--shadow)', overflow: 'hidden',
+                        display: 'flex', flexDirection: 'column'
+                    }}>
+                        <div style={{ background: 'var(--pink)', borderBottom: 'var(--border-width) solid var(--border)', padding: '0.5rem 0.8rem', fontWeight: 900, fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <GearIcon size={16} color="var(--text)" /> Execution Log & Trace
+                        </div>
+                        <div style={{
+                            flex: 1, background: '#1e1e1e', color: '#a8ff60',
+                            fontFamily: 'var(--font-mono)', fontSize: '0.62rem',
+                            padding: '0.6rem', overflowY: 'auto', display: 'flex',
+                            flexDirection: 'column', gap: '0.25rem', minHeight: 80
+                        }}>
+                            {logs.length === 0 ? (
+                                <span style={{ color: '#6272a4', fontStyle: 'italic' }}>Press "Calculate & Run" to execute Strategy runtime delegation...</span>
+                            ) : (
+                                logs.map((log, idx) => (
+                                    <div key={idx} style={{ opacity: idx === logs.length - 1 ? 1 : 0.65 }}>
+                                        {log}
+                                    </div>
+                                ))
                             )}
                         </div>
                     </div>
-
-                    {/* Bar chart visualization — fills remaining space */}
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '3px', minHeight: 60, overflowX: isMobile ? 'auto' : 'visible', paddingBottom: '0.2rem' }}>
-                        {displayArr.map((v, i) => {
-                            const pct = (v / maxVal) * 100;
-                            const isSorted = sortedArr !== null;
-                            const isHighlight = i <= highlightIdx;
-                            return (
-                                <motion.div key={i} layout
-                                    style={{
-                                        flex: 1, minWidth: isMobile ? 25 : 20, maxWidth: 50,
-                                        height: `${pct}%`,
-                                        background: isSorted ? '#38a169' : isHighlight && sorting ? (strategy?.color || '#66d9ef') : '#e2e8f0',
-                                        border: '2px solid var(--border)',
-                                        borderRadius: '4px 4px 0 0',
-                                        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-                                        transition: 'background 0.2s, height 0.3s',
-                                        position: 'relative',
-                                    }}>
-                                    <span style={{ fontSize: '0.58rem', fontWeight: 800, fontFamily: 'var(--font-mono)', marginTop: '2px' }}>{v}</span>
-                                </motion.div>
-                            );
-                        })}
-                    </div>
                 </div>
 
-                {/* Custom input row */}
-                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.35rem', alignItems: isMobile ? 'stretch' : 'center', flexShrink: 0 }}>
-                    <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flex: 1 }}>
-                        <span style={{ fontSize: '0.58rem', fontWeight: 800, opacity: 0.4, whiteSpace: 'nowrap' }}>Custom array:</span>
-                        <input value={customInput} onChange={e => setCustomInput(e.target.value)}
-                            placeholder="e.g. 42, 17, 88, 3, 56, 71"
-                            style={{ ...MINI_INPUT, flex: 1 }}
-                            onKeyDown={e => e.key === 'Enter' && setCustomArray()} />
-                    </div>
-                    <button className="btn btn-sm" style={{ background: '#66d9ef', fontSize: '0.6rem', alignSelf: isMobile ? 'flex-end' : 'auto' }} onClick={setCustomArray}>Set</button>
-                </div>
             </div>
         </div>
     );
 };
-
-
 /* ══════════════════════════════════════════════════════════════
    MAIN COMPONENT
    ══════════════════════════════════════════════════════════════ */
@@ -1777,7 +2082,7 @@ export default function DesignPatternsSim() {
                 {activePattern === 'singleton' || activePattern === 'factory' ? 'Creational' : activePattern === 'decorator' ? 'Structural' : 'Behavioral'}
             </div>
         
-            <DownloadNotes topicKey="oops/patterns" /></div>
+            </div>
     );
 
     const ActiveIcon = active?.icon;

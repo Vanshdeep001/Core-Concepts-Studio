@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { WrenchIcon, BlueprintIcon, ChartIcon, BuildIcon } from '../../components/Icons';
 import ImmersiveLayout from '../../shared/ImmersiveLayout';
 import useSnapshot from '../../hooks/useSnapshot';
-import DownloadNotes from '../../components/DownloadNotes';
 import {
     LockIcon, EyeIcon, PillarIcon, ShuffleIcon,
     ZapIcon, KeyIcon, CheckIcon, XIcon, UnlockIcon,
@@ -1035,7 +1034,7 @@ export default function FourPillarsSim() {
                 <UMLPanel parentClass={parentClass} childClasses={childClasses} activePillar={activePillar} />
             </div>
         
-            <DownloadNotes topicKey="oops/pillars" />
+            
         </div>
     );
 
