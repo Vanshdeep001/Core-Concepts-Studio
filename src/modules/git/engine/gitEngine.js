@@ -737,70 +737,84 @@ export function deleteWorkingFile(state, filename) {
 
 // ─── DAG Layout ──────────────────────────────────────────────────────────────
 
+// Swimlane layout: X = commit depth (time), Y = the branch a commit lives on.
+// Because each commit records the branch it was made on (commit.branch), every
+// branch gets its own horizontal lane and visibly diverges — instead of every
+// label stacking on a single node.
 export function computeDAGLayout(commits, branches, HEAD, remote) {
-    // Topological sort + position assignment
     const ids = Object.keys(commits);
-    if (!ids.length) return { nodes: [], edges: [] };
+    if (!ids.length) return { nodes: [], edges: [], branchLabels: {}, lanes: [] };
 
-    // Build adjacency (parent -> children)
-    const children = {};
-    ids.forEach(id => { children[id] = []; });
-    ids.forEach(id => {
-        commits[id].parentHashes.forEach(p => {
-            if (children[p]) children[p].push(id);
+    // ── Column (x) = generation depth: longest parent chain from a root ──
+    const depth = {};
+    const computeDepth = (id, seen = new Set()) => {
+        if (depth[id] !== undefined) return depth[id];
+        if (seen.has(id)) return 0;            // cycle guard (shouldn't happen)
+        seen.add(id);
+        const parents = (commits[id]?.parentHashes || []).filter(p => commits[p]);
+        depth[id] = parents.length
+            ? 1 + Math.max(...parents.map(p => computeDepth(p, seen)))
+            : 0;
+        return depth[id];
+    };
+    ids.forEach(id => computeDepth(id));
+
+    // ── Lane (y row) = the branch each commit was made on ──
+    // main/master always take the top lane; other branches get their own row in
+    // creation order, so branching off shows as a new track below.
+    const laneOfBranch = {};
+    let nextLane = 0;
+    const claimLane = (b) => {
+        if (b == null) return;
+        if (laneOfBranch[b] === undefined) laneOfBranch[b] = nextLane++;
+    };
+    ['main', 'master'].forEach(b => { if (b in branches) claimLane(b); });
+    Object.keys(branches).forEach(claimLane);
+    ids.forEach(id => claimLane(commits[id].branch));
+
+    const laneOf = (id) => {
+        const b = commits[id].branch;
+        return (b != null && laneOfBranch[b] !== undefined) ? laneOfBranch[b] : 0;
+    };
+
+    // ── Resolve column collisions within a lane (safety) ──
+    const col = {};
+    const taken = new Set();
+    ids.slice()
+        .sort((a, b) => depth[a] - depth[b])
+        .forEach(id => {
+            let c = depth[id];
+            const lane = laneOf(id);
+            while (taken.has(`${lane}:${c}`)) c++;
+            taken.add(`${lane}:${c}`);
+            col[id] = c;
         });
-    });
-
-    // Find roots (no parents)
-    const roots = ids.filter(id => commits[id].parentHashes.length === 0);
-
-    // BFS-based level assignment
-    const levels = {};
-    const visited = new Set();
-    const queue = roots.map(r => ({ id: r, level: 0 }));
-    while (queue.length) {
-        const { id, level } = queue.shift();
-        if (visited.has(id)) continue;
-        visited.add(id);
-        levels[id] = Math.max(levels[id] || 0, level);
-        (children[id] || []).forEach(c => queue.push({ id: c, level: level + 1 }));
-    }
-
-    // Group by level
-    const byLevel = {};
-    Object.entries(levels).forEach(([id, lvl]) => {
-        if (!byLevel[lvl]) byLevel[lvl] = [];
-        byLevel[lvl].push(id);
-    });
 
     const NODE_W = 120;
     const NODE_H = 70;
-    const H_GAP = 50;
+    const H_GAP = 60;
     const V_GAP = 80;
+    const COL_W = NODE_W + H_GAP;
+    const LANE_H = NODE_H + V_GAP;
 
     const positions = {};
-    Object.entries(byLevel).forEach(([lvl, ids]) => {
-        ids.forEach((id, i) => {
-            positions[id] = {
-                x: parseInt(lvl) * (NODE_W + H_GAP) + 40,
-                y: i * (NODE_H + V_GAP) + 120,
-            };
-        });
+    ids.forEach(id => {
+        positions[id] = {
+            x: col[id] * COL_W + 40,
+            y: laneOf(id) * LANE_H + 120,
+        };
     });
 
-    // Build branch labels
+    // Build branch labels (skip branches with no commit yet, e.g. main before
+    // the first commit, so we never draw a label pointing at null).
     const branchLabels = {};
     Object.entries(branches).forEach(([name, hash]) => {
+        if (hash == null || !positions[hash]) return;
         if (!branchLabels[hash]) branchLabels[hash] = [];
         branchLabels[hash].push({ name, type: 'local' });
     });
 
-    // HEAD label
     const headHash = HEAD.type === 'branch' ? branches[HEAD.ref] : HEAD.ref;
-    if (headHash) {
-        if (!branchLabels[headHash]) branchLabels[headHash] = [];
-        // HEAD pointer
-    }
 
     // Remote branch labels
     if (remote?.branches) {
@@ -818,23 +832,38 @@ export function computeDAGLayout(commits, branches, HEAD, remote) {
         width: NODE_W,
         height: NODE_H,
         commit: commits[id],
+        lane: laneOf(id),
+        branch: commits[id].branch,
         branchLabels: branchLabels[id] || [],
         isHEAD: id === headHash,
         isMerge: commits[id].isMerge,
         isRebase: commits[id].isRebase,
     }));
 
+    // Per-lane extent, so the renderer can draw a swimlane rail behind commits.
+    const laneMap = {};
+    nodes.forEach(n => {
+        const cx = n.x + NODE_W / 2;
+        const cy = n.y + NODE_H / 2;
+        if (!laneMap[n.lane]) laneMap[n.lane] = { lane: n.lane, branch: n.branch, minX: cx, maxX: cx, y: cy };
+        else {
+            laneMap[n.lane].minX = Math.min(laneMap[n.lane].minX, cx);
+            laneMap[n.lane].maxX = Math.max(laneMap[n.lane].maxX, cx);
+        }
+    });
+    const lanes = Object.values(laneMap);
+
     const edges = [];
     ids.forEach(id => {
         if (!positions[id]) return;
         commits[id].parentHashes.forEach((p, i) => {
             if (positions[p]) {
-                edges.push({ from: id, to: p, isMergeEdge: i > 0 });
+                edges.push({ from: id, to: p, isMergeEdge: i > 0, branch: commits[id].branch });
             }
         });
     });
 
-    return { nodes, edges, headHash, branchLabels };
+    return { nodes, edges, headHash, branchLabels, lanes };
 }
 
 // ─── Diff helper ─────────────────────────────────────────────────────────────
@@ -877,6 +906,159 @@ export const PRESETS = {
         ],
     },
 };
+
+// ─── Failure / no-op diagnostics ───────────────────────────────────────────────
+// Given a command's result, explain WHY it didn't do what the user expected and
+// HOW to fix it. Returns null when the command ran normally (nothing to warn about).
+export function diagnose(command, args = {}, output = '') {
+    const o = output || '';
+    const has = (s) => o.toLowerCase().includes(s.toLowerCase());
+
+    // The classic fetch / pull / push blocker — no remote to talk to.
+    if (has('No remote configured')) {
+        return {
+            severity: 'error',
+            title: 'No remote is connected',
+            what: `"${command}" syncs with a remote repository (usually named "origin"), but this repo doesn't have one yet — so there's nothing to sync with and Git stops.`,
+            fix: [
+                'Register a remote: open the Remote tab and run "git remote add" with a URL — that creates "origin".',
+                'Or start from an existing remote with "git clone <url>" (clone sets up origin automatically).',
+                `Then run "${command}" again.`,
+            ],
+        };
+    }
+
+    if (command === 'git push' && has('Nothing to push')) {
+        return {
+            severity: 'error',
+            title: 'Nothing to push',
+            what: 'The current branch has no commits to send to the remote.',
+            fix: [
+                'Create a file with "+ File", then run "git add" and "git commit".',
+                'Once you have at least one commit, run "git push" again.',
+            ],
+        };
+    }
+
+    if (command === 'git pull' && has('Remote branch not found')) {
+        return {
+            severity: 'error',
+            title: "That branch isn't on the remote",
+            what: 'You tried to pull a branch the remote doesn\'t have, so there is nothing to download for it.',
+            fix: [
+                'Push the branch to the remote first with "git push".',
+                'Or pull a branch that exists on the remote (e.g. main).',
+            ],
+        };
+    }
+
+    if (has('Already up to date')) {
+        return {
+            severity: 'info',
+            title: 'Already up to date',
+            what: 'Your branch already has everything the other side has — there is nothing new to merge or download. This is normal, not an error.',
+            fix: [
+                'Make a new commit on the other branch/remote, then try again to watch the changes flow in.',
+            ],
+        };
+    }
+
+    if (command === 'git add' && has('Nothing to add')) {
+        return {
+            severity: 'error',
+            title: 'Nothing to stage',
+            what: 'The working directory has no changes, so "git add" has nothing to move into the staging area.',
+            fix: [
+                'Create or edit a file with the "+ File" button (top-right of the command panel).',
+                'Then run "git add ." to stage it.',
+            ],
+        };
+    }
+
+    if ((command === 'git merge' || command === 'git rebase') && has('not found')) {
+        return {
+            severity: 'error',
+            title: 'Branch not found',
+            what: `"${command}" refers to a branch that doesn't exist in this repository.`,
+            fix: [
+                'Check the Branches list in the State panel for valid names.',
+                'Create the branch first with "git branch <name>" or "git switch -c <name>".',
+            ],
+        };
+    }
+
+    if (command === 'git rebase' && has('detached HEAD')) {
+        return {
+            severity: 'error',
+            title: 'Cannot rebase with a detached HEAD',
+            what: 'HEAD is not on a branch right now, so there is no branch pointer for rebase to move.',
+            fix: [
+                'Switch to a branch first: "git switch <branch>" (or "git checkout <branch>").',
+                'Then run "git rebase <target>".',
+            ],
+        };
+    }
+
+    if (command === 'git stash' && has('No local changes')) {
+        return {
+            severity: 'error',
+            title: 'Nothing to stash',
+            what: 'Stash tucks away uncommitted work, but your working directory and staging area are clean.',
+            fix: [
+                'Create or edit a file with "+ File" first.',
+                'Then run "git stash" to save the changes aside.',
+            ],
+        };
+    }
+
+    if (command === 'git stash pop' && has('No stash entries')) {
+        return {
+            severity: 'error',
+            title: 'The stash is empty',
+            what: 'There are no saved stash entries to restore.',
+            fix: [
+                'Run "git stash" first (while you have uncommitted changes) to save something.',
+                'Then "git stash pop" brings it back.',
+            ],
+        };
+    }
+
+    if (command === 'git checkout' && has('did not match any branch')) {
+        return {
+            severity: 'error',
+            title: 'No such branch or commit',
+            what: 'The name you gave does not match any existing branch or commit.',
+            fix: [
+                'Pick an existing branch from the Branches list in the State panel.',
+                'Or create it with "git switch -c <name>" (same as checkout -b).',
+            ],
+        };
+    }
+
+    if (command === 'git reset' && has('Invalid target commit')) {
+        return {
+            severity: 'error',
+            title: 'Invalid reset target',
+            what: 'The commit you asked to reset to does not exist.',
+            fix: [
+                'Use a commit hash shown in the graph, or "HEAD~1" for the previous commit.',
+            ],
+        };
+    }
+
+    if (has('Specify a file')) {
+        return {
+            severity: 'error',
+            title: 'A filename is required',
+            what: `"${command}" needs a specific file to act on.`,
+            fix: [
+                'Provide a filename argument — e.g. a name shown in the Working Dir list.',
+            ],
+        };
+    }
+
+    return null;
+}
 
 export const COMMAND_GROUPS = [
     {

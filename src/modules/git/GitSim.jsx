@@ -13,102 +13,82 @@ import { GitBranchIcon } from '../../components/Icons';
 
 
 
-// ─── Floating Quest Log & Narration HUD ───────────────────────────────────────
-function GitQuestLog({ state, isMobile }) {
-    const [collapsed, setCollapsed] = useState(isMobile);
+// ─── Status Strip: Quest progress + narration (in-flow, under DAG header) ──────
+function GitStatusStrip({ state, narration, isMobile }) {
     const isInitialized = state.initialized;
     const hasFiles = Object.keys(state.workingDirectory || {}).length > 0 || Object.keys(state.stagingArea || {}).length > 0 || Object.keys(state.commits || {}).length > 0;
     const hasStaged = Object.keys(state.stagingArea || {}).length > 0 || Object.keys(state.commits || {}).length > 0;
     const hasCommits = Object.keys(state.commits || {}).length > 0;
 
-    const completedCount = [isInitialized, hasFiles, hasStaged, hasCommits].filter(Boolean).length;
-    if (completedCount === 4) return null;
+    const steps = [
+        { label: 'git init', done: isInitialized },
+        { label: 'Add file', done: hasFiles },
+        { label: 'Stage', done: hasStaged },
+        { label: 'Commit', done: hasCommits },
+    ];
+    const completed = steps.filter(s => s.done).length;
+    const questComplete = completed === 4;
+    const currentIdx = steps.findIndex(s => !s.done);
 
     return (
         <div style={{
-            position: 'absolute',
-            left: isMobile ? 6 : 12,
-            top: isMobile ? '0.4rem' : '2.3rem',
-            background: 'rgba(255, 255, 255, 0.95)',
-            border: '2px solid var(--border)',
-            borderRadius: '6px',
-            boxShadow: '3px 3px 0 var(--border)',
-            padding: collapsed ? '0.3rem 0.5rem' : '0.5rem 0.65rem',
-            width: collapsed ? 'auto' : (isMobile ? '145px' : '185px'),
-            zIndex: 10,
-            fontSize: isMobile ? '0.62rem' : '0.7rem',
-            backdropFilter: 'blur(4px)',
-            transition: 'all 0.2s ease',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: isMobile ? 'stretch' : 'center',
+            gap: isMobile ? '0.4rem' : '0.65rem',
+            padding: isMobile ? '0.4rem 0.5rem' : '0.45rem 0.75rem',
+            borderBottom: '2px solid var(--border)',
+            background: '#f6fbf8',
+            flexShrink: 0,
         }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem', cursor: 'pointer' }} onClick={() => setCollapsed(!collapsed)}>
-                <span style={{ fontWeight: 800, color: '#111' }}>
-                    {collapsed ? 'Quest' : 'Git Quest'}
-                </span>
-                <span style={{ fontSize: '0.62rem', background: completedCount === 4 ? '#e8f5e9' : '#e0f7ff', padding: '0.05rem 0.35rem', borderRadius: 4, fontWeight: 700, color: completedCount === 4 ? '#2e7d32' : '#0288d1' }}>
-                    {completedCount}/4
-                </span>
-            </div>
-            {!collapsed && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.35rem', borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: '0.35rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', opacity: isInitialized ? 0.6 : 1 }}>
-                        <input type="checkbox" checked={isInitialized} readOnly style={{ pointerEvents: 'none', width: 12, height: 12 }} />
-                        <span style={{ textDecoration: isInitialized ? 'line-through' : 'none', fontWeight: 600 }}>1. git init</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', opacity: hasFiles ? 0.6 : 1 }}>
-                        <input type="checkbox" checked={hasFiles} readOnly style={{ pointerEvents: 'none', width: 12, height: 12 }} />
-                        <span style={{ textDecoration: hasFiles ? 'line-through' : 'none', fontWeight: 600 }}>2. Create a file (+ File)</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', opacity: hasStaged ? 0.6 : 1 }}>
-                        <input type="checkbox" checked={hasStaged} readOnly style={{ pointerEvents: 'none', width: 12, height: 12 }} />
-                        <span style={{ textDecoration: hasStaged ? 'line-through' : 'none', fontWeight: 600 }}>3. Stage changes</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', opacity: hasCommits ? 0.6 : 1 }}>
-                        <input type="checkbox" checked={hasCommits} readOnly style={{ pointerEvents: 'none', width: 12, height: 12 }} />
-                        <span style={{ textDecoration: hasCommits ? 'line-through' : 'none', fontWeight: 600 }}>4. Commit snapshot</span>
-                    </div>
+            {/* Quest progress stepper */}
+            {!questComplete && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '0.25rem' : '0.35rem', flexWrap: 'wrap' }}>
+                    <span style={{
+                        fontSize: isMobile ? '0.56rem' : '0.62rem', fontWeight: 800,
+                        background: '#e0f7ff', color: '#0277bd', whiteSpace: 'nowrap',
+                        padding: '0.12rem 0.4rem', borderRadius: 4, border: '2px solid var(--border)',
+                    }}>
+                        QUEST {completed}/4
+                    </span>
+                    {steps.map((s, i) => (
+                        <div key={i} style={{
+                            display: 'flex', alignItems: 'center', gap: '0.25rem',
+                            padding: isMobile ? '0.12rem 0.3rem' : '0.15rem 0.45rem',
+                            border: `2px solid ${i === currentIdx ? '#000' : 'var(--border)'}`,
+                            borderRadius: 5, whiteSpace: 'nowrap',
+                            background: s.done ? '#c8f0d8' : (i === currentIdx ? '#fffbea' : 'var(--white)'),
+                            fontSize: isMobile ? '0.56rem' : '0.66rem', fontWeight: 700,
+                        }}>
+                            <span style={{
+                                fontWeight: 900, color: s.done ? '#2e7d32' : '#999',
+                                fontFamily: s.done ? 'inherit' : 'var(--font-mono)',
+                            }}>{s.done ? '✓' : i + 1}</span>
+                            <span style={{ textDecoration: s.done ? 'line-through' : 'none', color: '#222' }}>{s.label}</span>
+                        </div>
+                    ))}
                 </div>
             )}
-        </div>
-    );
-}
 
-function FloatingNarration({ text, color, isMobile }) {
-    const [collapsed, setCollapsed] = useState(isMobile);
+            {/* Divider */}
+            {!questComplete && !isMobile && (
+                <div style={{ width: 2, alignSelf: 'stretch', background: 'var(--border)', opacity: 0.3, flexShrink: 0 }} />
+            )}
 
-    if (!text) return null;
-
-    return (
-        <div style={{
-            position: 'absolute',
-            right: isMobile ? 6 : 12,
-            top: isMobile ? '0.4rem' : '2.3rem',
-            maxWidth: collapsed ? '90px' : (isMobile ? '160px' : '250px'),
-            background: color || '#e8f5e9',
-            border: '2px solid var(--border)',
-            borderRadius: '6px',
-            boxShadow: '3px 3px 0 var(--border)',
-            padding: collapsed ? '0.3rem 0.5rem' : '0.5rem 0.65rem',
-            zIndex: 10,
-            fontSize: isMobile ? '0.62rem' : '0.72rem',
-            lineHeight: 1.3,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.2rem',
-            backdropFilter: 'blur(4px)',
-            transition: 'all 0.2s ease',
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem', cursor: 'pointer' }} onClick={() => setCollapsed(!collapsed)}>
-                <span style={{
-                    fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.58rem',
-                    background: 'rgba(0,0,0,0.08)', padding: '0.05rem 0.3rem', borderRadius: 3,
-                }}>
-                    INFO
-                </span>
-                <span style={{ fontSize: '0.55rem', opacity: 0.5 }}>{collapsed ? '▼' : '▲'}</span>
-            </div>
-            {!collapsed && (
-                <div style={{ color: '#222', fontWeight: 600, borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '0.3rem', marginTop: '0.15rem' }}>
-                    {text}
+            {/* Narration / info */}
+            {narration && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem', flex: 1, minWidth: 0 }}>
+                    <span style={{
+                        fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.54rem',
+                        background: 'rgba(0,0,0,0.08)', padding: '0.12rem 0.35rem', borderRadius: 3,
+                        flexShrink: 0, marginTop: '0.1rem',
+                    }}>INFO</span>
+                    <span style={{
+                        fontSize: isMobile ? '0.62rem' : '0.72rem', fontWeight: 600,
+                        color: '#222', lineHeight: 1.35, minWidth: 0,
+                        overflow: 'hidden', display: '-webkit-box',
+                        WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                    }}>{narration}</span>
                 </div>
             )}
         </div>
@@ -419,6 +399,25 @@ export default function GitSim() {
     const handleAddFile = useCallback((filename, content) => setState(addFile(stateRef.current, filename, content)), []);
     const handleEditFile = useCallback((filename, content) => setState(editFile(stateRef.current, filename, content)), []);
 
+    // Clear everything and start over from a fresh `git init` repo.
+    const handleReset = useCallback(() => {
+        if (!window.confirm('Reset the simulator? This clears all commits, branches, files and history.')) return;
+        const s = createInitialState();
+        const { state: fresh } = dispatch(s, 'git init', {});
+        clearTimeout(highlightTimerRef.current);
+        setState(fresh);
+        setCommandLog([]);
+        setLastCommand(null);
+        setLastExplanation(null);
+        setOrphanedHashes([]);
+        setHighlightHash(null);
+        setEditorFilename('');
+        setEditorContent('');
+        setEditorOpen(false);
+        setCurrentNarration('Repository reset. Fresh repo initialized — start again from git init.');
+        setIsManualNarration(false);
+    }, []);
+
     // Resizable split handler
     function handleDividerDrag(clientY) {
         if (!containerRef.current) return;
@@ -432,7 +431,7 @@ export default function GitSim() {
 
     // ── Center Content ──────────────────────────────────────────────────────
     const centerContent = (
-        <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        <div ref={containerRef} className="git-scroll" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
 
             {/* DAG Area */}
             <div style={{
@@ -447,16 +446,29 @@ export default function GitSim() {
                     fontSize: isMobile ? '0.6rem' : '0.7rem', fontWeight: 800, flexShrink: 0,
                 }}>
                     <span><GitBranchIcon size={isMobile ? 12 : 14} /> {isMobile ? 'DAG' : `Commit DAG — ${repoName}`}</span>
-                    <span style={{ opacity: 0.5, fontSize: isMobile ? '0.55rem' : 'inherit' }}>{Object.keys(state.commits).length} commit{Object.keys(state.commits).length !== 1 ? 's' : ''}{!isMobile && ` · ${Object.keys(state.branches).length} branch${Object.keys(state.branches).length !== 1 ? 'es' : ''}`}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '0.4rem' : '0.6rem' }}>
+                        <span style={{ opacity: 0.5, fontSize: isMobile ? '0.55rem' : 'inherit' }}>{Object.keys(state.commits).length} commit{Object.keys(state.commits).length !== 1 ? 's' : ''}{!isMobile && ` · ${Object.keys(state.branches).length} branch${Object.keys(state.branches).length !== 1 ? 'es' : ''}`}</span>
+                        <button
+                            onClick={handleReset}
+                            title="Clear everything and start over"
+                            style={{
+                                padding: isMobile ? '0.15rem 0.4rem' : '0.2rem 0.55rem',
+                                fontSize: isMobile ? '0.55rem' : '0.65rem', fontWeight: 800,
+                                border: '2px solid var(--border)', borderRadius: 5, cursor: 'pointer',
+                                background: '#ffd0d0', color: '#111', flexShrink: 0,
+                                boxShadow: '2px 2px 0 var(--border)',
+                            }}
+                            onMouseDown={e => e.currentTarget.style.transform = 'translate(2px,2px)'}
+                            onMouseUp={e => e.currentTarget.style.transform = ''}
+                            onMouseLeave={e => e.currentTarget.style.transform = ''}
+                        >
+                            ↺ Reset
+                        </button>
+                    </div>
                 </div>
 
-                {/* HUD Overlays */}
-                <GitQuestLog state={state} isMobile={isMobile} />
-                <FloatingNarration
-                    text={currentNarration}
-                    color="#e8f5e9"
-                    isMobile={isMobile}
-                />
+                {/* Quest progress + narration strip (in-flow, no overlap) */}
+                <GitStatusStrip state={state} narration={currentNarration} isMobile={isMobile} />
 
                 <div style={{ flex: 1, overflow: 'auto' }}>
                     <CommitGraph
@@ -496,7 +508,7 @@ export default function GitSim() {
                     />
                 </div>
                 <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
-                    <GitTerminal onCommand={handleCommand} commandLog={commandLog} disabled={false} isMobile={isMobile} />
+                    <GitTerminal onCommand={handleCommand} disabled={false} isMobile={isMobile} />
                 </div>
             </div>
         </div>
@@ -526,7 +538,7 @@ export default function GitSim() {
             icon={<GitBranchIcon size={20} />}
             moduleLabel={`Module 5 · Git & GitHub`}
             centerContent={centerContent}
-            leftContent={<GitStatePanel state={state} conceptMode={conceptMode} onFileClick={triggerEditFile} />}
+            leftContent={<GitStatePanel state={state} conceptMode={conceptMode} onFileClick={triggerEditFile} commandLog={commandLog} />}
             rightContent={<GitExplainPanel lastCommand={lastCommand} explanation={lastExplanation} conceptMode={conceptMode} state={state} />}
             hideFooter={true}
             conceptMode={conceptMode}

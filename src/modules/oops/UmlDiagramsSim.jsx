@@ -109,8 +109,29 @@ function parseCode(code) {
     return classes;
 }
 
+/* ── SHARED EDITOR STYLES ── */
+const boxIconBtn = {
+    width: 20, height: 20, lineHeight: '15px', textAlign: 'center',
+    border: '2px solid var(--border)', borderRadius: 4, background: 'var(--white)',
+    cursor: 'pointer', fontSize: '0.7rem', fontWeight: 900, padding: 0, color: '#111',
+    fontFamily: 'var(--font-main)', flexShrink: 0,
+};
+const modalOverlay = {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)',
+    zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+};
+const modalCard = {
+    background: 'var(--white)', border: '3px solid var(--border)', borderRadius: 10,
+    boxShadow: '6px 6px 0 var(--border)', width: '100%', maxWidth: 430, maxHeight: '85vh',
+    display: 'flex', flexDirection: 'column', color: 'var(--text)',
+};
+const editInput = {
+    fontFamily: 'var(--font-mono)', fontSize: '0.75rem', padding: '0.35rem 0.5rem',
+    border: '2px solid var(--border)', borderRadius: 5, width: '100%', background: '#fff', color: 'var(--text)',
+};
+
 /* ── CLASS BOX COMPONENT ── */
-const ClassBox = ({ cls, onDragStart, isActive }) => (
+const ClassBox = ({ cls, onDragStart, isActive, onEdit, onDelete }) => (
     <div onMouseDown={(e) => onDragStart(cls.id, e)}
         style={{
             position: 'absolute', left: cls.x, top: cls.y, width: 230,
@@ -118,17 +139,142 @@ const ClassBox = ({ cls, onDragStart, isActive }) => (
             background: 'var(--white)', boxShadow: isActive ? '0 0 15px rgba(255,217,61,0.5)' : '4px 4px 0 var(--border)',
             cursor: 'grab', userSelect: 'none', zIndex: 10, fontSize: '0.68rem', fontFamily: 'var(--font-mono)',
         }}>
-        <div style={{ padding: '0.4rem 0.6rem', borderBottom: '2px solid var(--border)', fontWeight: 800, textAlign: 'center', background: '#ff8a65', fontSize: '0.78rem', fontFamily: 'var(--font-main)' }}>
+        <div style={{ position: 'relative', padding: '0.4rem 1.9rem', borderBottom: '2px solid var(--border)', fontWeight: 800, textAlign: 'center', background: '#ff8a65', fontSize: '0.78rem', fontFamily: 'var(--font-main)' }}>
             {cls.name}
+            <div style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: 3 }}>
+                <button title="Edit class" onMouseDown={e => e.stopPropagation()} onClick={() => onEdit(cls.id)} style={boxIconBtn}>✎</button>
+                <button title="Delete class" onMouseDown={e => e.stopPropagation()} onClick={() => onDelete(cls.id)} style={{ ...boxIconBtn, background: '#ffd0d0' }}>✕</button>
+            </div>
         </div>
         <div style={{ padding: '0.3rem 0.5rem', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
-            {cls.fields.map((f, i) => <div key={i}>{f}</div>)}
+            {cls.fields.length ? cls.fields.map((f, i) => <div key={i}>{f}</div>) : <div style={{ opacity: 0.35 }}>(no fields)</div>}
         </div>
         <div style={{ padding: '0.3rem 0.5rem' }}>
-            {cls.methods.map((m, i) => <div key={i}>{m}</div>)}
+            {cls.methods.length ? cls.methods.map((m, i) => <div key={i}>{m}</div>) : <div style={{ opacity: 0.35 }}>(no methods)</div>}
         </div>
     </div>
 );
+
+/* ── CLASS EDITOR MODAL ── */
+function ClassEditor({ cls, onUpdate, onDelete, onClose }) {
+    if (!cls) return null;
+    const editItem = (key, i, val) => { const arr = [...cls[key]]; arr[i] = val; onUpdate({ [key]: arr }); };
+    const addItem = (key, def) => onUpdate({ [key]: [...cls[key], def] });
+    const removeItem = (key, i) => onUpdate({ [key]: cls[key].filter((_, idx) => idx !== i) });
+
+    // Rendered as a plain function (not a nested component) so inputs keep focus.
+    const renderList = (title, key, placeholder, defVal) => (
+        <div style={{ marginBottom: '0.9rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.6 }}>{title}</span>
+                <button onClick={() => addItem(key, defVal)} style={{ ...boxIconBtn, width: 'auto', padding: '0 0.45rem', background: '#a8e6cf' }}>+ Add</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                {cls[key].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+                        <input value={item} placeholder={placeholder} onChange={e => editItem(key, i, e.target.value)} style={editInput} />
+                        <button onClick={() => removeItem(key, i)} style={{ ...boxIconBtn, background: '#ffd0d0' }}>✕</button>
+                    </div>
+                ))}
+                {cls[key].length === 0 && <div style={{ opacity: 0.4, fontSize: '0.72rem', fontStyle: 'italic' }}>None yet — click “+ Add”.</div>}
+            </div>
+        </div>
+    );
+
+    return (
+        <div style={modalOverlay} onMouseDown={onClose}>
+            <div style={modalCard} onMouseDown={e => e.stopPropagation()}>
+                <div style={{ padding: '0.6rem 0.8rem', borderBottom: '2px solid var(--border)', background: '#ff8a65', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '7px 7px 0 0' }}>
+                    <span style={{ fontWeight: 800 }}>Edit Class</span>
+                    <button onClick={onClose} style={boxIconBtn}>✕</button>
+                </div>
+                <div className="git-scroll" style={{ padding: '0.8rem', overflowY: 'auto' }}>
+                    <div style={{ marginBottom: '0.9rem' }}>
+                        <div style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.6, marginBottom: '0.35rem' }}>Class Name</div>
+                        <input value={cls.name} onChange={e => onUpdate({ name: e.target.value })} style={{ ...editInput, fontFamily: 'var(--font-main)', fontWeight: 700 }} />
+                    </div>
+                    {renderList('Fields / Attributes', 'fields', '- name: Type', '- field: Type')}
+                    {renderList('Methods', 'methods', '+ method(): Type', '+ method(): void')}
+                    <div style={{ fontSize: '0.65rem', opacity: 0.5, lineHeight: 1.4 }}>
+                        Tip: prefix with <b>-</b> private, <b>+</b> public, <b>#</b> protected.
+                    </div>
+                </div>
+                <div style={{ padding: '0.6rem 0.8rem', borderTop: '2px solid var(--border)', display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+                    <button onClick={() => onDelete(cls.id)} className="btn btn-sm" style={{ background: '#ffd0d0', fontSize: '0.68rem' }}>Delete Class</button>
+                    <button onClick={onClose} className="btn btn-sm btn-cyan" style={{ fontSize: '0.68rem' }}>Done</button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/* ── RELATIONSHIP EDITOR MODAL ── */
+function RelationsEditor({ classes, relations, onAdd, onUpdateRel, onRemoveRel, onClose }) {
+    const [from, setFrom] = useState(classes[0]?.id || '');
+    const [to, setTo] = useState(classes[1]?.id || classes[0]?.id || '');
+    const [type, setType] = useState('association');
+    const [label, setLabel] = useState('');
+    const nameOf = (id) => classes.find(c => c.id === id)?.name || '(deleted)';
+    const relTypes = Object.keys(REL_STYLES);
+    const canAdd = from && to && from !== to;
+    const selStyle = { ...editInput, fontFamily: 'var(--font-main)', cursor: 'pointer' };
+
+    return (
+        <div style={modalOverlay} onMouseDown={onClose}>
+            <div style={{ ...modalCard, maxWidth: 470 }} onMouseDown={e => e.stopPropagation()}>
+                <div style={{ padding: '0.6rem 0.8rem', borderBottom: '2px solid var(--border)', background: '#66d9ef', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '7px 7px 0 0' }}>
+                    <span style={{ fontWeight: 800 }}>Edit Relationships</span>
+                    <button onClick={onClose} style={boxIconBtn}>✕</button>
+                </div>
+                <div className="git-scroll" style={{ padding: '0.8rem', overflowY: 'auto' }}>
+                    <div style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.6, marginBottom: '0.4rem' }}>Existing ({relations.length})</div>
+                    {relations.length === 0 && <div style={{ opacity: 0.4, fontSize: '0.72rem', fontStyle: 'italic', marginBottom: '0.6rem' }}>No relationships yet.</div>}
+                    {relations.map((r, i) => (
+                        <div key={i} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', alignItems: 'center', marginBottom: '0.4rem', padding: '0.4rem', border: '2px solid var(--border)', borderRadius: 6, background: '#f8f9fa' }}>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 700 }}>{nameOf(r.from)} → {nameOf(r.to)}</span>
+                            <select value={r.type} onChange={e => onUpdateRel(i, { type: e.target.value })} style={{ ...selStyle, width: 'auto', flex: 1, minWidth: 120 }}>
+                                {relTypes.map(t => <option key={t} value={t}>{REL_STYLES[t].label}</option>)}
+                            </select>
+                            <input value={r.label || ''} placeholder="label" onChange={e => onUpdateRel(i, { label: e.target.value })} style={{ ...editInput, width: 80 }} />
+                            <button onClick={() => onRemoveRel(i)} style={{ ...boxIconBtn, background: '#ffd0d0' }}>✕</button>
+                        </div>
+                    ))}
+
+                    <div style={{ borderTop: '2px solid var(--border)', marginTop: '0.7rem', paddingTop: '0.7rem' }}>
+                        <div style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.6, marginBottom: '0.4rem' }}>Add Relationship</div>
+                        {classes.length < 2 ? (
+                            <div style={{ opacity: 0.5, fontSize: '0.72rem' }}>Add at least two classes first.</div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+                                    <select value={from} onChange={e => setFrom(e.target.value)} style={selStyle}>
+                                        {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    </select>
+                                    <span style={{ fontWeight: 900 }}>→</span>
+                                    <select value={to} onChange={e => setTo(e.target.value)} style={selStyle}>
+                                        {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    </select>
+                                </div>
+                                <select value={type} onChange={e => setType(e.target.value)} style={selStyle}>
+                                    {relTypes.map(t => <option key={t} value={t}>{REL_STYLES[t].label}</option>)}
+                                </select>
+                                <input value={label} placeholder="label (e.g. has, uses)" onChange={e => setLabel(e.target.value)} style={editInput} />
+                                <button disabled={!canAdd} onClick={() => { onAdd({ from, to, type, label }); setLabel(''); }}
+                                    className="btn btn-sm btn-cyan" style={{ fontSize: '0.68rem', opacity: canAdd ? 1 : 0.4 }}>
+                                    + Add Relationship
+                                </button>
+                                {from === to && <div style={{ fontSize: '0.65rem', color: '#c62828' }}>Pick two different classes.</div>}
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div style={{ padding: '0.6rem 0.8rem', borderTop: '2px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button onClick={onClose} className="btn btn-sm btn-cyan" style={{ fontSize: '0.68rem' }}>Done</button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 
 
@@ -156,7 +302,31 @@ public class Course {
     public void addStudent(Student s) {}
 }`);
     const [parsedClasses, setParsedClasses] = useState([]);
+    const [editingId, setEditingId] = useState(null);
+    const [showRelations, setShowRelations] = useState(false);
     const canvasRef = useRef(null);
+
+    const editingClass = classes.find(c => c.id === editingId) || null;
+
+    /* ── EDIT HANDLERS (work on any class: prebuilt, added, or parsed) ── */
+    const updateClass = useCallback((id, patch) => {
+        setClasses(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
+    }, []);
+    const deleteClass = useCallback((id) => {
+        setClasses(prev => prev.filter(c => c.id !== id));
+        setRelations(prev => prev.filter(r => r.from !== id && r.to !== id));
+        setEditingId(cur => (cur === id ? null : cur));
+    }, []);
+    const addRelation = useCallback((rel) => setRelations(prev => [...prev, rel]), []);
+    const updateRelation = useCallback((i, patch) => setRelations(prev => prev.map((r, idx) => idx === i ? { ...r, ...patch } : r)), []);
+    const removeRelation = useCallback((i) => setRelations(prev => prev.filter((_, idx) => idx !== i)), []);
+
+    // Growable "infinite" canvas: expands to fit the furthest class so you can
+    // always scroll to dragged boxes, with a generous base size to pan around.
+    const maxX = classes.reduce((m, c) => Math.max(m, c.x), 0);
+    const maxY = classes.reduce((m, c) => Math.max(m, c.y), 0);
+    const canvasW = Math.max(1600, maxX + 340);
+    const canvasH = Math.max(1000, maxY + 340);
 
     const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {
@@ -253,25 +423,48 @@ public class Course {
                     }}>{t.icon} {t.name}</button>
                 ))}
             </div>
-            <div style={{ flex: 1, overflow: 'auto' }}>
+            <div className="hide-scrollbar" style={{ flex: 1, overflow: 'auto' }}>
                 {activeTab === 'class' && (
-                    <div style={{ height: '100%' }}>
-                        <div style={{ padding: '0.4rem 0.8rem', background: '#f8f9fa', borderBottom: '2px solid var(--border)', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ padding: '0.4rem 0.8rem', background: '#f8f9fa', borderBottom: '2px solid var(--border)', display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0, flexWrap: 'wrap' }}>
                             <button className="btn btn-sm btn-cyan" onClick={addClass} style={{ fontSize: '0.65rem' }}>+ Add Class</button>
-                            <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.3rem' }}>
+                            <button className="btn btn-sm" onClick={() => setShowRelations(true)} style={{ fontSize: '0.65rem', background: '#66d9ef' }}>⇄ Relationships</button>
+                            <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
                                 {PREBUILT.map((pb, i) => (
                                     <button key={i} className="btn btn-sm" onClick={() => loadPrebuilt(i)}
                                         style={{ fontSize: '0.6rem', background: selectedPrebuilt === i ? '#ff8a65' : 'var(--white)' }}>{pb.name}</button>
                                 ))}
                             </div>
                         </div>
-                        <div ref={canvasRef} onMouseMove={handleDragMove} onMouseUp={handleDragEnd} onMouseLeave={handleDragEnd}
-                            style={{ width: isMobile ? 650 : '100%', height: 500, position: 'relative', background: '#0f172a', backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
-                            <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 5 }}>
-                                {renderRelations()}
-                            </svg>
-                            {classes.map(cls => <ClassBox key={cls.id} cls={cls} onDragStart={handleDragStart} isActive={draggedClass === cls.id} />)}
+                        {/* Scrollable, growable canvas viewport (scrollbar hidden) */}
+                        <div className="hide-scrollbar" style={{ flex: 1, minHeight: 0, overflow: 'auto', background: '#0f172a' }}>
+                            <div ref={canvasRef} onMouseMove={handleDragMove} onMouseUp={handleDragEnd} onMouseLeave={handleDragEnd}
+                                style={{ width: canvasW, height: canvasH, position: 'relative', background: '#0f172a', backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+                                <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 5 }}>
+                                    {renderRelations()}
+                                </svg>
+                                {classes.map(cls => <ClassBox key={cls.id} cls={cls} onDragStart={handleDragStart} isActive={draggedClass === cls.id} onEdit={setEditingId} onDelete={deleteClass} />)}
+                            </div>
                         </div>
+
+                        {editingClass && (
+                            <ClassEditor
+                                cls={editingClass}
+                                onUpdate={(patch) => updateClass(editingClass.id, patch)}
+                                onDelete={deleteClass}
+                                onClose={() => setEditingId(null)}
+                            />
+                        )}
+                        {showRelations && (
+                            <RelationsEditor
+                                classes={classes}
+                                relations={relations}
+                                onAdd={addRelation}
+                                onUpdateRel={updateRelation}
+                                onRemoveRel={removeRelation}
+                                onClose={() => setShowRelations(false)}
+                            />
+                        )}
                     </div>
                 )}
 

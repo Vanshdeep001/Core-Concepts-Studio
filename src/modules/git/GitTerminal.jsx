@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { COMMAND_GROUPS } from './engine/gitEngine';
 
-export default function GitTerminal({ onCommand, commandLog, disabled, isMobile }) {
+export default function GitTerminal({ onCommand, disabled, isMobile }) {
     const [selectedGroup, setSelectedGroup] = useState(0);
     const [argValues, setArgValues] = useState({});
     const [selectedCmd, setSelectedCmd] = useState(null);
@@ -42,7 +42,6 @@ export default function GitTerminal({ onCommand, commandLog, disabled, isMobile 
                 display: 'flex', gap: isMobile ? '0.2rem' : '0.3rem', padding: isMobile ? '0.35rem 0.5rem' : '0.5rem 0.75rem',
                 background: '#f8f9fa', borderBottom: '2px solid var(--border)',
                 overflowX: 'auto', flexShrink: 0,
-                scrollbarWidth: 'none',
                 WebkitOverflowScrolling: 'touch',
             }}>
                 {COMMAND_GROUPS.map((g, i) => (
@@ -61,6 +60,15 @@ export default function GitTerminal({ onCommand, commandLog, disabled, isMobile 
                     </button>
                 ))}
             </div>
+
+            {/* Scrollable command controls (buttons + args) — fills the panel
+                and scrolls natively when the group's commands overflow. */}
+            <div style={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+            }}>
 
             {/* Command Buttons */}
             <div style={{
@@ -153,47 +161,6 @@ export default function GitTerminal({ onCommand, commandLog, disabled, isMobile 
                 )}
             </AnimatePresence>
 
-            {/* Command History */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '0.35rem 0.5rem' : '0.5rem 0.75rem', minHeight: isMobile ? 50 : 80, background: '#1a1a2e' }}>
-                <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', color: '#66d9ef' }}>
-                    History ({commandLog.length})
-                </div>
-                {commandLog.length === 0 ? (
-                    <div style={{ opacity: 0.3, fontSize: '0.8rem', fontStyle: 'italic', color: '#ccc' }}>
-                        Click a command above to run it
-                    </div>
-                ) : (
-                    [...commandLog].reverse().map((entry, i) => (
-                        <motion.div
-                            key={commandLog.length - i}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            style={{
-                                marginBottom: '0.4rem', padding: '0.35rem 0.5rem',
-                                border: '1.5px solid rgba(255,255,255,0.08)', borderRadius: 6,
-                                background: i === 0 ? 'rgba(102,217,239,0.1)' : 'rgba(255,255,255,0.03)',
-                                fontSize: '0.72rem', fontFamily: 'var(--font-mono)',
-                                color: '#ddd',
-                            }}
-                        >
-                            <div>
-                                <span style={{ color: '#666', marginRight: '0.4rem' }}>#{commandLog.length - i}</span>
-                                <span style={{ fontWeight: 700, color: '#a8e6cf' }}>$ {entry.command}</span>
-                                {entry.argsStr && <span style={{ opacity: 0.6 }}> {entry.argsStr}</span>}
-                            </div>
-                            {entry.output && (
-                                <div style={{
-                                    marginTop: '0.2rem', paddingLeft: '1.2rem',
-                                    fontSize: '0.65rem', opacity: 0.55, color: '#ccc',
-                                    whiteSpace: 'pre-wrap', lineHeight: 1.35,
-                                    maxHeight: 40, overflow: 'hidden',
-                                }}>
-                                    {entry.output.split('\n')[0]}
-                                </div>
-                            )}
-                        </motion.div>
-                    ))
-                )}
             </div>
         </div>
     );

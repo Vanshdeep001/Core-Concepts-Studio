@@ -1,6 +1,51 @@
 // GitExplainPanel.jsx — Right panel: Educational explanations + beginner/advanced toggle
 import { motion, AnimatePresence } from 'framer-motion';
 import { CrownIcon, BoxIcon, SaveIcon, TagIcon, ShuffleIcon, SyncIcon, ResetIcon, SendIcon, LightbulbIcon } from '../../components/Icons';
+import { diagnose } from './engine/gitEngine';
+
+// Detailed "why it didn't work + how to fix it" card for failed / no-op commands.
+function TroubleshootCard({ diagnostic }) {
+    const isError = diagnostic.severity === 'error';
+    const accent = isError ? '#c62828' : '#0277bd';
+    const bg = isError ? '#fff2f2' : '#eef7ff';
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+                marginBottom: '1rem', border: `2px solid ${accent}`, borderRadius: 8,
+                overflow: 'hidden', boxShadow: `3px 3px 0 ${accent}`,
+            }}
+        >
+            <div style={{
+                display: 'flex', alignItems: 'center', gap: '0.4rem',
+                padding: '0.4rem 0.6rem', background: accent, color: '#fff',
+                fontWeight: 800, fontSize: '0.72rem',
+            }}>
+                <span>{isError ? '⚠' : 'ℹ'}</span>
+                <span style={{ textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                    {isError ? "That didn't work" : 'Heads up'}
+                </span>
+            </div>
+            <div style={{ padding: '0.6rem 0.7rem', background: bg }}>
+                <div style={{ fontWeight: 800, fontSize: '0.82rem', marginBottom: '0.35rem', color: '#222' }}>
+                    {diagnostic.title}
+                </div>
+                <div style={{ fontSize: '0.78rem', lineHeight: 1.5, color: '#333', marginBottom: '0.5rem' }}>
+                    {diagnostic.what}
+                </div>
+                <div style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.55, marginBottom: '0.3rem', color: accent }}>
+                    How to fix it
+                </div>
+                <ol style={{ margin: 0, paddingLeft: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                    {diagnostic.fix.map((step, i) => (
+                        <li key={i} style={{ fontSize: '0.78rem', lineHeight: 1.45, color: '#333' }}>{step}</li>
+                    ))}
+                </ol>
+            </div>
+        </motion.div>
+    );
+}
 
 function getConceptIcon(iconKey) {
     if (iconKey === 'init') return <CrownIcon size={14} color="var(--yellow)" />;
@@ -137,9 +182,10 @@ function ConceptCard({ concept }) {
 export default function GitExplainPanel({ lastCommand, explanation, conceptMode, state }) {
     const cmdKey = lastCommand?.command;
     const conceptData = CONCEPT_CARDS[cmdKey] || DEFAULT_CONCEPTS;
+    const diagnostic = lastCommand ? diagnose(lastCommand.command, lastCommand.args, lastCommand.output) : null;
 
     return (
-        <div style={{ fontSize: '0.85rem' }}>
+        <div className="git-scroll" style={{ fontSize: '0.85rem' }}>
 
             {/* Mode indicator */}
             <div style={{
@@ -151,6 +197,11 @@ export default function GitExplainPanel({ lastCommand, explanation, conceptMode,
             }}>
                 {conceptMode ? 'Beginner Mode' : 'Advanced Mode'}
             </div>
+
+            {/* Troubleshooting — why the command didn't work + how to fix it */}
+            <AnimatePresence mode="wait">
+                {diagnostic && <TroubleshootCard key={cmdKey + diagnostic.title} diagnostic={diagnostic} />}
+            </AnimatePresence>
 
             {/* Last command output */}
             {lastCommand && (

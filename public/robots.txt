@@ -1,0 +1,7 @@
+# Allow all web crawlers to access all pages
+User-agent: *
+Allow: /
+
+# Host & Sitemap
+Host: https://www.coreconceptsstudio.site
+Sitemap: https://www.coreconceptsstudio.site/sitemap.xml

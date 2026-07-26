@@ -99,6 +99,33 @@ body {
   border: none !important;
 }
 
+/* ===== GIT MODULE — subtle native scrollbars (overrides the global yellow) ===== */
+.git-scroll,
+.git-scroll * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(130, 130, 130, 0.45) transparent;
+}
+.git-scroll::-webkit-scrollbar,
+.git-scroll ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+.git-scroll::-webkit-scrollbar-track,
+.git-scroll ::-webkit-scrollbar-track {
+  background: transparent;
+  border: none;
+}
+.git-scroll::-webkit-scrollbar-thumb,
+.git-scroll ::-webkit-scrollbar-thumb {
+  background: rgba(130, 130, 130, 0.4);
+  border: none;
+  border-radius: 5px;
+}
+.git-scroll::-webkit-scrollbar-thumb:hover,
+.git-scroll ::-webkit-scrollbar-thumb:hover {
+  background: rgba(130, 130, 130, 0.65);
+}
+
 
 /* ===== PAGE WRAPPER ===== */
 .page-wrapper {

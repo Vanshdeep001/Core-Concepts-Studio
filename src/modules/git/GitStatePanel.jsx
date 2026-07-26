@@ -64,7 +64,7 @@ function Section({ title, color, icon, children, count }) {
     );
 }
 
-export default function GitStatePanel({ state, conceptMode, onFileClick }) {
+export default function GitStatePanel({ state, conceptMode, onFileClick, commandLog = [] }) {
     if (!state.initialized) {
         return (
             <div style={{ opacity: 0.4, textAlign: 'center', paddingTop: '2rem', fontSize: '0.85rem' }}>
@@ -82,7 +82,7 @@ export default function GitStatePanel({ state, conceptMode, onFileClick }) {
     const currentFiles = Object.keys(state.currentFiles || {});
 
     return (
-        <div style={{ fontSize: '0.82rem' }}>
+        <div className="git-scroll" style={{ fontSize: '0.82rem' }}>
 
             {/* HEAD */}
             <Section title="HEAD" color="#ffd93d" icon={<EyeIcon size={14} />} count={1}>
@@ -211,6 +211,52 @@ export default function GitStatePanel({ state, conceptMode, onFileClick }) {
                     ))}
                 </Section>
             )}
+
+            {/* Command History */}
+            <Section
+                title="Command History"
+                color="#cfd8dc"
+                icon={<span style={{ fontFamily: 'var(--font-mono)', fontWeight: 900 }}>{'>_'}</span>}
+                count={commandLog.length}
+            >
+                {commandLog.length === 0 ? (
+                    <div style={{ opacity: 0.4, fontSize: '0.75rem', fontStyle: 'italic', paddingLeft: '0.25rem' }}>
+                        No commands run yet
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column-reverse' }}>
+                        {commandLog.map((entry, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                style={{
+                                    marginBottom: '0.3rem', padding: '0.35rem 0.5rem',
+                                    border: '1.5px solid var(--border)', borderRadius: 6,
+                                    background: i === commandLog.length - 1 ? '#eef7ff' : 'var(--white)',
+                                    fontSize: '0.72rem', fontFamily: 'var(--font-mono)',
+                                }}
+                            >
+                                <div>
+                                    <span style={{ color: '#999', marginRight: '0.4rem' }}>#{i + 1}</span>
+                                    <span style={{ fontWeight: 700, color: '#1b7f4b' }}>$ {entry.command}</span>
+                                    {entry.argsStr && <span style={{ opacity: 0.6 }}> {entry.argsStr}</span>}
+                                </div>
+                                {entry.output && (
+                                    <div style={{
+                                        marginTop: '0.2rem', paddingLeft: '1.2rem',
+                                        fontSize: '0.65rem', opacity: 0.6,
+                                        whiteSpace: 'pre-wrap', lineHeight: 1.35,
+                                        maxHeight: 40, overflow: 'hidden',
+                                    }}>
+                                        {entry.output.split('\n')[0]}
+                                    </div>
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
+            </Section>
         </div>
     );
 }

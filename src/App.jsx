@@ -110,36 +110,137 @@ const ROUTE_TITLES = {
   '/systemdesign/microservices': 'Microservices Communication Sim | Core Concepts Studio',
 };
 
+const ROUTE_DESCRIPTIONS = {
+  '/': 'Core Concepts Studio (coreconceptstudio) — Master OS, DBMS, Computer Networks, OOP, Git, System Design, and CS Interviews through interactive visual step-by-step simulators.',
+  '/os': 'Interactive Operating System (OS) simulators covering CPU Scheduling, Page Replacement, Banker\'s Algorithm, Disk Scheduling, and Process Synchronization.',
+  '/os/scheduling': 'Interactive CPU Scheduling Simulator — Visualize FCFS, SJF, SRTF, Round Robin, Priority (Preemptive & Non-Preemptive) algorithms with Gantt charts.',
+  '/os/scheduling/compare': 'Compare CPU Scheduling Algorithms side-by-side with metrics for waiting time, turnaround time, throughput, and Gantt charts.',
+  '/os/page-replacement': 'Page Replacement Simulator — Visualize FIFO, LRU, Optimal, and LFU page replacement algorithms with step-by-step frame allocation.',
+  '/os/bankers': "Banker's Algorithm Simulator — Visual deadlock avoidance and safe state evaluation tool for operating systems.",
+  '/os/disk': 'Disk Scheduling Simulator — Visualize FCFS, SSTF, SCAN, C-SCAN, LOOK, and C-LOOK disk head movement and total seek counts.',
+  '/os/sync': 'Process Synchronization Simulator — Interactive Producer-Consumer, Reader-Writer, and Dining Philosophers semaphore visualizer.',
+  '/dbms': 'Interactive Database Systems (DBMS) visualizers — Master Normalization, SQL Joins, Concurrency, B+ Trees, ER Design, and SQL AST.',
+  '/dbms/normalization': 'Database Normalization Visualizer — Step-by-step guide and simulator for 1NF, 2NF, 3NF, and BCNF relational schema decomposition.',
+  '/dbms/joins': 'Interactive SQL Joins Simulator — Visual execution of Inner Join, Left Join, Right Join, and Full Outer Join with interactive tables.',
+  '/dbms/transactions': 'Transactions & Concurrency Control Simulator — Visualize ACID properties, Serializability, 2PL, and Lock-based protocols.',
+  '/dbms/bplustree': 'B+ Tree Index Data Structure Visualizer — Step-by-step node insertion, deletion, splitting, and search visualization.',
+  '/dbms/er-design': 'Entity-Relationship (ER) Diagram Design Tool — Interactive ER modeling, entities, attributes, and relationships.',
+  '/dbms/sql-visualizer': 'SQL Query Visualizer & AST Parser — Watch SQL queries parse into execution plans and abstract syntax trees visually.',
+  '/networks': 'Interactive Computer Networks visualizers — Master OSI & TCP/IP models, Subnetting, TCP handshakes, Routing, and HTTP/DNS.',
+  '/networks/osi': 'OSI & TCP/IP Model Interactive Visualizer — Step-by-step encapsulation and decapsulation of packets across network layers.',
+  '/networks/tcp-udp': 'TCP vs UDP Simulator — 3-Way Handshake, reliable data transfer, congestion control, and UDP packet flow visualizer.',
+  '/networks/subnetting': 'IP Subnetting Calculator & Visualizer — Network ID, Broadcast address, subnet mask, usable host range, and CIDR breakdown.',
+  '/networks/routing': 'Network Routing Algorithms Visualizer — Interactive Shortest Path (Dijkstra) and Distance Vector Routing visualizer.',
+  '/networks/http-dns': 'HTTP Lifecycle & DNS Lookup Simulator — Visual step-by-step DNS resolution, TCP connection setup, and HTTP headers.',
+  '/oops': 'Interactive Object-Oriented Programming (OOP) visualizers — Four Pillars, Inheritance, Interfaces, Design Patterns, SOLID, and UML.',
+  '/oops/pillars': 'Four Pillars of OOP Simulator — Interactive visualization of Encapsulation, Abstraction, Inheritance, and Polymorphism.',
+  '/oops/inheritance': 'Polymorphism & VTable Dispatch Simulator — Visualize dynamic dispatch, vtables, and multiple inheritance in memory.',
+  '/oops/abstract-interface': 'Abstract Class vs Interface Architecture — Visual tool comparing abstract classes, interfaces, and design patterns.',
+  '/oops/patterns': 'Design Patterns Interactive Visualizer — Learn Strategy, Factory, Observer, and Singleton patterns with execution steps.',
+  '/oops/solid': 'SOLID Principles Simulator — Visual guide and interactive scenarios for Single Responsibility, Open-Closed, Liskov, Interface Segregation, and Dependency Inversion.',
+  '/oops/uml': 'UML Class Diagram Visualizer & Editor — Create and visualize UML class diagrams, relationships, and multiplicity.',
+  '/interview': 'CS Interview Coding & Technical Challenge Simulator — Practice interactive computer science technical interview questions.',
+  '/git': 'Git & GitHub Interactive Visualizer — Learn branch management, commits, merging, rebasing, and version control concepts.',
+  '/git/sim': 'Git Visual Commit & Branch Graph Simulator — Execute git init, commit, branch, checkout, merge, rebase, and cherry-pick visually.',
+  '/systemdesign': 'System Design & Architecture Visualizers — Load Balancing, Redis Caching, DB Scaling, Message Queues, and Microservices.',
+  '/systemdesign/load-balancer': 'Load Balancer Simulator — Visualize Round Robin, Least Connections, IP Hash, and Weighted Round Robin load balancing algorithms.',
+  '/systemdesign/cache-redis': 'Redis Caching Strategies Simulator — Cache-Aside, Write-Through, Write-Back, LRU, LFU, and TTL eviction policies visualizer.',
+  '/systemdesign/db-scaling': 'Database Sharding & Replication Simulator — Primary-Replica replication, horizontal sharding, and consistent hashing.',
+  '/systemdesign/message-queue': 'Message Queue Simulator — Visualize Publish-Subscribe, Kafka partitions, RabbitMQ exchanges, and asynchronous processing.',
+  '/systemdesign/api-lifecycle': 'API Gateway & Lifecycle Simulator — Rate limiting, authentication, payload transformation, and routing visualization.',
+  '/systemdesign/microservices': 'Microservices Communication Visualizer — Synchronous REST/gRPC vs Asynchronous Event-Driven microservice architectures.',
+};
+
+function setMetaTag(selector, attrName, attrValue, content) {
+  let element = document.querySelector(selector);
+  if (!element) {
+    element = document.createElement('meta');
+    element.setAttribute(attrName, attrValue);
+    document.head.appendChild(element);
+  }
+  element.setAttribute('content', content);
+}
+
+function setCanonicalTag(url) {
+  let link = document.querySelector('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.setAttribute('rel', 'canonical');
+    document.head.appendChild(link);
+  }
+  link.setAttribute('href', url);
+}
+
+function setJsonLdBreadcrumbs(pathname) {
+  let script = document.getElementById('schema-breadcrumbs');
+  if (!script) {
+    script = document.createElement('script');
+    script.id = 'schema-breadcrumbs';
+    script.setAttribute('type', 'application/ld+json');
+    document.head.appendChild(script);
+  }
+
+  const parts = pathname.split('/').filter(Boolean);
+  const items = [{
+    '@type': 'ListItem',
+    position: 1,
+    name: 'Home',
+    item: 'https://www.coreconceptsstudio.site/'
+  }];
+
+  let currentPath = '';
+  parts.forEach((part, index) => {
+    currentPath += `/${part}`;
+    const name = ROUTE_TITLES[currentPath]
+      ? ROUTE_TITLES[currentPath].split('|')[0].split('—')[0].trim()
+      : part.toUpperCase();
+    items.push({
+      '@type': 'ListItem',
+      position: index + 2,
+      name: name,
+      item: `https://www.coreconceptsstudio.site${currentPath}`
+    });
+  });
+
+  const schemaData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items
+  };
+
+  script.textContent = JSON.stringify(schemaData);
+}
+
 function SEOHandler() {
   const location = useLocation();
 
   useEffect(() => {
-    // 1. Update document title
+    const canonicalUrl = `https://www.coreconceptsstudio.site${location.pathname}`;
     const title = ROUTE_TITLES[location.pathname] || 'Core Concepts Studio — CS Simulators';
+    const description = ROUTE_DESCRIPTIONS[location.pathname] || 
+      'Core Concepts Studio (coreconceptstudio) is an interactive simulator platform for OS, DBMS, Networks, Git, System Design, and OOP design concepts.';
+
+    // 1. Document Title
     document.title = title;
 
-    // 2. Dynamically update meta description with the keyword coreconceptstudio
-    let metaDescription = document.querySelector('meta[name="description"]');
-    if (!metaDescription) {
-      metaDescription = document.createElement('meta');
-      metaDescription.setAttribute('name', 'description');
-      document.head.appendChild(metaDescription);
-    }
-    
-    let descriptionText = "Core Concepts Studio (coreconceptstudio) is an interactive simulator platform for OS, DBMS, Networks, Git, and OOP design concepts. Watch algorithms execute step-by-step.";
-    if (location.pathname.startsWith('/os')) {
-      descriptionText = "Learn CPU scheduling, Page replacement, Banker's algorithm, and Process synchronization on Core Concepts Studio (coreconceptstudio).";
-    } else if (location.pathname.startsWith('/dbms')) {
-      descriptionText = "Simulate SQL Joins, Database Normalization (1NF to BCNF), B+ Trees, and ER design on Core Concepts Studio (coreconceptstudio).";
-    } else if (location.pathname.startsWith('/oops')) {
-      descriptionText = "Master OOP concepts, SOLID principles, runtime dispatch, and design patterns visually on Core Concepts Studio (coreconceptstudio).";
-    } else if (location.pathname.startsWith('/networks')) {
-      descriptionText = "Visualize OSI layers, Subnetting, TCP/UDP handshakes, and routing protocols on Core Concepts Studio (coreconceptstudio).";
-    } else if (location.pathname.startsWith('/systemdesign')) {
-      descriptionText = "Simulate Load Balancers, Redis Caching, DB Sharding, and Kafka Message Queues on Core Concepts Studio (coreconceptstudio).";
-    }
+    // 2. Meta description
+    setMetaTag('meta[name="description"]', 'name', 'description', description);
 
-    metaDescription.setAttribute('content', descriptionText);
+    // 3. Canonical Link
+    setCanonicalTag(canonicalUrl);
+
+    // 4. OpenGraph Meta Tags
+    setMetaTag('meta[property="og:title"]', 'property', 'og:title', title);
+    setMetaTag('meta[property="og:description"]', 'property', 'og:description', description);
+    setMetaTag('meta[property="og:url"]', 'property', 'og:url', canonicalUrl);
+
+    // 5. Twitter Card Meta Tags
+    setMetaTag('meta[property="twitter:title"]', 'property', 'twitter:title', title);
+    setMetaTag('meta[property="twitter:description"]', 'property', 'twitter:description', description);
+    setMetaTag('meta[property="twitter:url"]', 'property', 'twitter:url', canonicalUrl);
+
+    // 6. Dynamic JSON-LD Breadcrumbs
+    setJsonLdBreadcrumbs(location.pathname);
   }, [location.pathname]);
 
   return null;

@@ -16,21 +16,52 @@ function getBranchColor(name, index) {
 export default function CommitGraph({ commits, branches, HEAD, remote, orphanedHashes = [], highlightHash = null, isMobile = false }) {
     const nodeW = isMobile ? 90 : NODE_W;
     const nodeH = isMobile ? 55 : NODE_H;
-    const { nodes, edges, headHash } = computeDAGLayout(commits, branches, HEAD, remote);
+    const { nodes, edges, headHash, lanes = [] } = computeDAGLayout(commits, branches, HEAD, remote);
 
     if (!nodes.length) {
+        const flow = [
+            { label: '+ File', color: '#a8e6cf' },
+            { label: 'git add', color: '#ffd93d' },
+            { label: 'git commit', color: '#66d9ef' },
+        ];
         return (
             <div style={{
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexDirection: 'column', gap: '0.5rem', opacity: 0.5, padding: isMobile ? '1rem' : '2rem',
-                minHeight: isMobile ? '160px' : '240px',
+                padding: isMobile ? '1rem' : '2rem', minHeight: isMobile ? '160px' : '240px',
             }}>
-                <div style={{ fontSize: isMobile ? '2rem' : '3rem', display: 'flex', justifyContent: 'center' }}><GitBranchIcon size={isMobile ? 36 : 48} color="var(--cyan)" /></div>
-                <div style={{ fontWeight: 800, fontSize: isMobile ? '0.75rem' : '0.85rem', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    No commits in DAG yet
-                </div>
-                <div style={{ fontSize: '0.72rem', color: '#666', textAlign: 'center' }}>
-                    Complete the active quest items to create your first commit.
+                <div style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? '0.6rem' : '0.85rem',
+                    background: 'var(--white)', border: '2px solid var(--border)', borderRadius: 10,
+                    boxShadow: '4px 4px 0 var(--border)',
+                    padding: isMobile ? '1.1rem 1.25rem' : '1.6rem 2rem', maxWidth: isMobile ? 280 : 360, textAlign: 'center',
+                }}>
+                    <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: isMobile ? 52 : 64, height: isMobile ? 52 : 64, borderRadius: '50%',
+                        background: '#e8fbff', border: '2px solid var(--border)', flexShrink: 0,
+                    }}>
+                        <GitBranchIcon size={isMobile ? 28 : 34} color="var(--cyan)" />
+                    </div>
+                    <div style={{ fontWeight: 900, fontSize: isMobile ? '0.85rem' : '1rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text)' }}>
+                        No commits yet
+                    </div>
+                    <div style={{ fontSize: isMobile ? '0.7rem' : '0.78rem', color: '#666', lineHeight: 1.4 }}>
+                        Your commit graph is empty. Make your first snapshot to see it appear here.
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '0.25rem' : '0.4rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '0.1rem' }}>
+                        {flow.map((step, i) => (
+                            <span key={step.label} style={{ display: 'inline-flex', alignItems: 'center', gap: isMobile ? '0.25rem' : '0.4rem' }}>
+                                <span style={{
+                                    fontFamily: 'var(--font-mono)', fontWeight: 800,
+                                    fontSize: isMobile ? '0.6rem' : '0.68rem',
+                                    background: step.color, color: '#111',
+                                    border: '2px solid var(--border)', borderRadius: 5,
+                                    padding: isMobile ? '0.15rem 0.35rem' : '0.2rem 0.5rem', whiteSpace: 'nowrap',
+                                }}>{step.label}</span>
+                                {i < flow.length - 1 && <span style={{ color: '#999', fontWeight: 900, fontSize: isMobile ? '0.65rem' : '0.8rem' }}>→</span>}
+                            </span>
+                        ))}
+                    </div>
                 </div>
             </div>
         );
@@ -79,6 +110,24 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                     </marker>
                 </defs>
 
+                {/* Swimlane rails — one tinted track per branch, so each branch
+                    reads as its own horizontal lane even with a single commit. */}
+                {lanes.map((l) => {
+                    const color = branchColorMap[l.branch] || '#c3aed6';
+                    const x1 = l.minX - nodeW / 2 - 10;
+                    const x2 = l.maxX + nodeW / 2 + 10;
+                    return (
+                        <line
+                            key={`lane-${l.lane}`}
+                            x1={x1} y1={l.y} x2={x2} y2={l.y}
+                            stroke={color}
+                            strokeWidth={nodeH + 24}
+                            strokeLinecap="round"
+                            opacity={0.1}
+                        />
+                    );
+                })}
+
                 {/* Edges */}
                 {edges.map((edge, i) => {
                     const fromNode = nodes.find(n => n.id === edge.from);
@@ -92,13 +141,14 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
 
                     const isMerge = edge.isMergeEdge;
                     const isRebase = fromNode.commit?.isRebase;
+                    // Colour normal edges by the branch they belong to, so each
+                    // lane's line matches its branch badge.
+                    const branchColor = branchColorMap[edge.branch] || 'var(--border)';
 
                     // Curved path for non-linear edges
                     const midX = (x1 + x2) / 2;
                     const midY = (y1 + y2) / 2;
-                    const dx = x2 - x1;
-                    const dy = y2 - y1;
-                    const curveOffset = (isMerge && dy === 0) ? -40 : 0;
+                    const curveOffset = (isMerge && y1 === y2) ? -40 : 0;
 
                     const pathD = curveOffset !== 0
                         ? `M${x1},${y1} Q${midX},${midY + curveOffset} ${x2},${y2}`
@@ -108,8 +158,8 @@ export default function CommitGraph({ commits, branches, HEAD, remote, orphanedH
                         <path
                             key={i}
                             d={pathD}
-                            stroke={isMerge ? '#ff6b9d' : isRebase ? '#66d9ef' : 'var(--border)'}
-                            strokeWidth={isMerge ? 2.5 : 2}
+                            stroke={isMerge ? '#ff6b9d' : isRebase ? '#66d9ef' : branchColor}
+                            strokeWidth={isMerge ? 2.5 : 2.5}
                             strokeDasharray={isRebase ? '6 3' : 'none'}
                             fill="none"
                             markerEnd={`url(#arrow${isMerge ? '-merge' : isRebase ? '-rebase' : ''})`}

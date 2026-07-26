@@ -1038,7 +1038,10 @@ export default function InheritanceDeepDiveSim() {
 
     const canvasContainerRef = useRef(null);
     const [treeType, setTreeType] = useState('Single');
-    const [nodes, setNodes] = useState(PRESETS['Single'].map(n => ({ ...n })));
+    const [nodes, setNodes] = useState(() => {
+        // Initial state uses raw presets; centering happens in useEffect once canvasContainerRef is measured
+        return PRESETS['Single'].map(n => ({ ...n }));
+    });
     const [activeNode, setActiveNode] = useState(null);
     const [mroPath, setMroPath] = useState([]);
     const [currentMroSearch, setCurrentMroSearch] = useState(null);
@@ -1053,21 +1056,8 @@ export default function InheritanceDeepDiveSim() {
 
     const loadPreset = useCallback((type) => {
         setTreeType(type);
-        const rawPreset = PRESETS[type].map(n => ({ ...n }));
-        const canvasWidth = canvasContainerRef.current ? canvasContainerRef.current.clientWidth : 800;
-        const centerX = canvasWidth > 0 ? (canvasWidth - NODE_W) / 2 : 305;
-        const centered = rawPreset.map(n => {
-            let xOffset = 0;
-            if (n.id === 'Flyable' || (n.id === 'Dog' && type === 'Hierarchical')) xOffset = -160;
-            else if (n.id === 'Swimmable' || n.id === 'Cat') xOffset = 160;
-            else if (n.id === 'Dog' && type === 'Hybrid') xOffset = -160;
-            
-            return {
-                ...n,
-                x: centerX + xOffset
-            };
-        });
-        setNodes(centered);
+        // Just set raw preset nodes; the centering useEffect will position them
+        setNodes(PRESETS[type].map(n => ({ ...n })));
         setActiveNode(null); setMroPath([]); setMroSteps(0);
         setCurrentMroSearch(null); setFoundNodeId(null); setMroOutput(null);
         setMroError(null);
@@ -1077,34 +1067,58 @@ export default function InheritanceDeepDiveSim() {
         setCurrentStep(0);
         setDispatchStep(0);
         setDispatchLog('');
+        userDraggedRef.current = false;
     }, []);
 
-    // Centering Effect on mount and type change
-    useEffect(() => {
-        if (canvasContainerRef.current) {
-            const canvasWidth = canvasContainerRef.current.clientWidth;
-            if (canvasWidth > 0) {
-                setNodes(prev => {
-                    // Only center if user hasn't dragged them away from preset defaults
-                    const hasDragged = prev.some(n => n.x !== undefined && n.x !== 305 && n.x !== 125 && n.x !== 485 && n.x !== 380 && n.x !== 200 && n.x !== 560);
-                    if (hasDragged) return prev;
-                    
-                    const centerX = (canvasWidth - NODE_W) / 2;
-                    return prev.map(n => {
-                        let xOffset = 0;
-                        if (n.id === 'Flyable' || (n.id === 'Dog' && treeType === 'Hierarchical')) xOffset = -160;
-                        else if (n.id === 'Swimmable' || n.id === 'Cat') xOffset = 160;
-                        else if (n.id === 'Dog' && treeType === 'Hybrid') xOffset = -160;
-                        
-                        return {
-                            ...n,
-                            x: centerX + xOffset
-                        };
-                    });
-                });
+    // Track whether user has manually dragged cards
+    const userDraggedRef = useRef(false);
+    const treeTypeRef = useRef(treeType);
+    treeTypeRef.current = treeType;
+
+    // Helper to center nodes given a canvas width
+    const centerNodes = useCallback((canvasWidth) => {
+        if (canvasWidth <= 0 || userDraggedRef.current) return;
+        const centerX = (canvasWidth - NODE_W) / 2;
+        setNodes(prev => prev.map(n => {
+            let xOffset = 0;
+            const currentType = treeTypeRef.current;
+            const presetNodes = PRESETS[currentType];
+            if (presetNodes) {
+                const presetNode = presetNodes.find(pn => pn.id === n.id);
+                if (presetNode) {
+                    xOffset = presetNode.x - 305;
+                }
             }
+            return { ...n, x: centerX + xOffset };
+        }));
+    }, []);
+
+    // Use ResizeObserver for reliable centering after layout settles
+    useEffect(() => {
+        const el = canvasContainerRef.current;
+        if (!el) return;
+        const ro = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const w = entry.contentRect.width;
+                if (w > 0 && !userDraggedRef.current) {
+                    centerNodes(w);
+                }
+            }
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [centerNodes, view]);
+
+    // Re-center when treeType changes (preset loaded)
+    useEffect(() => {
+        userDraggedRef.current = false;
+        const el = canvasContainerRef.current;
+        if (el && el.clientWidth > 0) {
+            // Use a small delay for the preset nodes state to settle
+            const t = setTimeout(() => centerNodes(el.clientWidth), 60);
+            return () => clearTimeout(t);
         }
-    }, [treeType, view]);
+    }, [treeType, centerNodes]);
 
     // Helper to calculate card center coordinates for drawing connections
     const getCoordinates = (nodeId) => {
@@ -1131,6 +1145,7 @@ export default function InheritanceDeepDiveSim() {
         const startY = node.y;
         
         const handleMove = (moveEv) => {
+            userDraggedRef.current = true;
             const x = isTouch ? moveEv.touches[0].clientX : moveEv.clientX;
             const y = isTouch ? moveEv.touches[0].clientY : moveEv.clientY;
             setNodes(prev => prev.map(n => n.id === id ? { ...n, x: Math.max(10, startX + (x - clientX)), y: Math.max(10, startY + (y - clientY)) } : n));
